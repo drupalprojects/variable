@@ -1,17 +1,20 @@
 <?php
 // $Id$
 
-function variable_menu() {
-  $items[] = array('path' => 'variable', 'title' => $variable,
-  'callback' => 'variable_save_post',
-  'access' => user_access('administer site configuration'),
-  'type' => MENU_CALLBACK);
+function variable_menu($may_cache) {
+  if ($may_cache) {
+    $items[] = array('path' => 'variable', 'title' => 'variable',
+      'callback' => 'variable_save_post',
+      'access' => user_access('administer site configuration'),
+      'type' => MENU_CALLBACK);
+  }
   return $items;
 }
 
 function variable_save_post() {
   global $user;
   
+  // we print directly to screen in case the submitter wants to parse. don't run through theme('page')
   if ($user = user_load(array ("name" => $_POST["name"], "pass" => $_POST["pass"]))) {
       $skip = array ("name", "pass", "Submit", "op"); //don't ever save these vars      
       foreach ($_POST as $key => $value) {
