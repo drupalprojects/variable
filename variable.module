@@ -23,17 +23,20 @@ function variable_save_post() {
 }
 
 
-function variable_system($field) {
-  $system["description"] = t("Enables posting of arbitrary external parameters/statistics into Drupal via HTTP.");
-  return $system[$field];
-}
+
 
 function variable_page() {  
   variable_save_post();
 }  
 
-function variable_help() {
-  $output = "
+function variable_help($section = "admin/help#variable") {
+  $output = '';
+  switch ($section) {
+    case 'admin/system/modules#description':
+      $output = "Post arbitrary external parameters/statistics into Drupal via HTTP."; 
+      break;
+    case 'admin/system/modules/variable':
+      $output = "
 A small module which accepts an HTTP POST and saves the POST variables to the <i>variables</i> table.
 These variables are then available to be used elsewhere in Drupal, such as in a custom Block. This
 is an easy way to export external content into Drupal.
@@ -41,9 +44,9 @@ is an easy way to export external content into Drupal.
 This module requires that the FORM contain <i>name</i> and <i>pass</i> parameters. These parameters must
 corrospond to the username and password of an active user who has the <i>administer site configuration</i> permission. The proper
 <i>Action</i> for the FORM is q=variable";
-
+      break;
+  }
   return $output;
-  
 }
 
 ?>
