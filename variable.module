@@ -1,21 +1,24 @@
 <?php
 
+function variable_menu() {
+  $items[] = array('path' => 'variable', 'title' => $variable,
+  'callback' => 'variable_save_post',
+  'access' => user_access('administer site configuration'),
+  'type' => MENU_CALLBACK);
+  return $items;
+}
+
 function variable_save_post() {
   global $user;
   
   if ($user = user_load(array ("name" => $_POST["name"], "pass" => $_POST["pass"]))) {
-    if (user_access("administer site configuration")) {
       $skip = array ("name", "pass", "Submit", "op"); //don't ever save these vars      
       foreach ($_POST as $key => $value) {
         if (!in_array($key, $skip)) {
           variable_set($key, $value);
           print t("saved: %k=%v", array ("%k" => $key, "%v" => $value)). "<br />";
         }
-      }  
-    }
-    else {
-      print message_access();
-    }  
+      }
   }
   else {
     print t("unrecognized username/password");;
@@ -23,27 +26,24 @@ function variable_save_post() {
 }
 
 
-function variable_system($field) {
-  $system["description"] = t("Enables posting of arbitrary external parameters/statistics into Drupal via HTTP.");
-  return $system[$field];
-}
-
-function variable_page() {  
-  variable_save_post();
-}  
-
-function variable_help() {
-  $output = "
-A small module which accepts an HTTP POST and saves the POST variables to the <i>variables</i> table.
+function variable_help($section = "admin/help#variable") {
+  $output = "";
+  switch ($section) {
+    case 'admin/modules#description':
+      $output = t("Enables posting of arbitrary external parameters/statistics into Drupal via HTTP.");
+      break;
+    case 'admin/help#variable':
+      $output = t(
+        "A small module which accepts an HTTP POST and saves the POST variables to the <i>variables</i> table.
 These variables are then available to be used elsewhere in Drupal, such as in a custom Block. This
 is an easy way to export external content into Drupal.
   
 This module requires that the FORM contain <i>name</i> and <i>pass</i> parameters. These parameters must
 corrospond to the username and password of an active user who has the <i>administer site configuration</i> permission. The proper
-<i>Action</i> for the FORM is q=variable";
-
+<i>Action</i> for the FORM is q=variable"
+              );
+  }
   return $output;
-  
 }
 
 ?>
