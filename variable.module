@@ -1,12 +1,12 @@
 <?php
 
 function variable_save_post() {
-  global $HTTP_POST_VARS, $user;
+  global $user;
   
-  if ($user = user_load(array ("name" => $HTTP_POST_VARS["name"], "pass" => $HTTP_POST_VARS["pass"]))) {
+  if ($user = user_load(array ("name" => $_POST["name"], "pass" => $_POST["pass"]))) {
     if (user_access("administer site configuration")) {
       $skip = array ("name", "pass", "Submit", "op"); //don't ever save these vars      
-      foreach ($HTTP_POST_VARS as $key => $value) {
+      foreach ($_POST as $key => $value) {
         if (!in_array($key, $skip)) {
           variable_set($key, $value);
           print t("saved: %k=%v", array ("%k" => $key, "%v" => $value)). "<br />";
