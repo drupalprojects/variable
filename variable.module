@@ -22,6 +22,12 @@ function variable_save_post() {
   }  
 }
 
+
+function variable_system($field) {
+  $system["description"] = t("Enables posting of arbitrary external parameters/statistics into Drupal via HTTP.");
+  return $system[$field];
+}
+
 function variable_page() {  
   variable_save_post();
 }  
