@@ -40,7 +40,7 @@ is an easy way to export external content into Drupal.
   
 This module requires that the FORM contain <i>name</i> and <i>pass</i> parameters. These parameters must
 corrospond to the username and password of an active user who has the <i>administer site configuration</i> permission. The proper
-<i>Action</i> for the FORM is module.php?mod=variable&op=save_post";
+<i>Action</i> for the FORM is q=variable";
 
   return $output;
   
