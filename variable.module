@@ -1,0 +1,43 @@
+<?php
+
+function variable_save_post() {
+  global $HTTP_POST_VARS, $user;
+  
+  if ($user = user_load(array ("name" => $HTTP_POST_VARS["name"], "pass" => $HTTP_POST_VARS["pass"]))) {
+    if (user_access("administer site configuration")) {
+      $skip = array ("name", "pass", "Submit", "op"); //don't ever save these vars      
+      foreach ($HTTP_POST_VARS as $key => $value) {
+        if (!in_array($key, $skip)) {
+          variable_set($key, $value);
+          print t("saved: %k=%v", array ("%k" => $key, "%v" => $value)). "<br />";
+        }
+      }  
+    }
+    else {
+      print message_access();
+    }  
+  }
+  else {
+    print t("unrecognized username/password");;
+  }  
+}
+
+function variable_page() {  
+  variable_save_post();
+}  
+
+function variable_help() {
+  $output = "
+A small module which accepts an HTTP POST and saves the POST variables to the <i>variables</i> table.
+These variables are then available to be used elsewhere in Drupal, such as in a custom Block. This
+is an easy way to export external content into Drupal.
+  
+This module requires that the FORM contain <i>name</i> and <i>pass</i> parameters. These parameters must
+corrospond to the username and password of an active user who has the <i>administer site configuration</i> permission. The proper
+<i>Action</i> for the FORM is module.php?mod=variable&op=save_post";
+
+  return $output;
+  
+}
+
+?>
