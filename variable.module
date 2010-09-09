@@ -1,53 +1,437 @@
 <?php
-// $Id$
+/**
+ * @file
+ * Variable API module
+ */
 
-function variable_menu($may_cache) {
-  if ($may_cache) {
-    $items[] = array('path' => 'variable', 'title' => 'variable',
-      'callback' => 'variable_save_post',
-      'access' => user_access('administer site configuration'),
-      'type' => MENU_CALLBACK);
-  }
-  return $items;
-}
-
-function variable_save_post() {
-  global $user;
-  
-  // we print directly to screen in case the submitter wants to parse. don't run through theme('page')
-  if ($user = user_load(array ("name" => $_POST["name"], "pass" => $_POST["pass"]))) {
-      $skip = array ("name", "pass", "Submit", "op"); //don't ever save these vars      
-      foreach ($_POST as $key => $value) {
-        if (!in_array($key, $skip)) {
-          variable_set($key, $value);
-          print t("saved: %k=%v", array ("%k" => $key, "%v" => $value)). "<br />";
-        }
-      }
+/**
+ * Get value for simple scalar variable
+ * 
+ * @param $options
+ *   Options array, it may have the following elements
+ *   - language => Language object
+ *   - realm => Variable realm (string)
+ *   - default => Default value if not set
+ *   - fallback => Whether to use fallback values (for realm and language)
+ * 
+ */
+function variable_get_value($name, $options = array()) {
+  $options = variable_options($options);
+  $value = variable_get_realm_value($options['realm'], $options['langcode'], $name, $options['fallback']);
+  if (isset($value)) {
+    return $value;
   }
   else {
-    print t("unrecognized username/password");;
-  }  
-}
-
-
-function variable_help($section = "admin/help#variable") {
-  $output = "";
-  switch ($section) {
-    case 'admin/modules#description':
-      $output = t("Enables posting of arbitrary external parameters/statistics into Drupal via HTTP.");
-      break;
-    case 'admin/help#variable':
-      $output = t(
-        "A small module which accepts an HTTP POST and saves the POST variables to the <i>variables</i> table.
-These variables are then available to be used elsewhere in Drupal, such as in a custom Block. This
-is an easy way to export external content into Drupal.
-  
-This module requires that the FORM contain <i>name</i> and <i>pass</i> parameters. These parameters must
-corrospond to the username and password of an active user who has the <i>administer site configuration</i> permission. The proper
-<i>Action</i> for the FORM is q=variable"
-              );
+    return isset($options['default']) ? $options['default'] : variable_get_default($name, $options);
   }
-  return $output;
 }
 
-?>
+/**
+ * Get variable default
+ */
+function variable_get_default($name, $options = array()) {
+  $options = variable_options($options);
+  if ($variable = variable_info($name, $options)) {
+    if (isset($variable['default_callback'])) {
+      return call_user_func($variable['default_callback'], $variable, $options);
+    }
+    elseif (isset($variable['default_value'])) {
+      return $variable['default_value'];
+    }
+  }
+  return NULL;
+}
+
+/**
+ * Prepare variable options 
+ */
+function variable_options($options) {
+  static $status, $language_list;
+  if (!isset($status)) {
+    $status = &variable_init_realm();
+  }
+  if (isset($options['language']) && !isset($options['langcode'])) {
+    $options['langcode'] = $options['language']->language;
+  }
+  return $options + $status;
+}
+
+/**
+ * Get variable information
+ */
+function variable_info($name = NULL, $options = array()) {
+  static $info;
+  $options = variable_options($options);
+  if (!isset($info)) {
+    $info = &variable_static('variable_info');
+  }
+  if (!isset($info[$language->language]) {
+    $cid = 'variable_info:' . $language->language;
+    if ($cache = cache_get($cid)) {
+      $info[$language->language] = $cache->data;
+    }
+    else {
+      variable_include();
+      $info[$language->language] = variable_build_info($options);
+      cache_set($cid, $info[$language->language]);
+    }
+  }
+  if ($name) {
+    return isset($info[$language->language][$name]) ? $info[$language->language][$name] : array();
+  }
+  else {
+    return $info[$language->language];
+  }
+}
+
+
+/**
+ * Switch global variable realm
+ */
+function variable_switch_realm($realm = 'default') {
+  global $conf;
+  static $status;
+  if (!isset($status)) {
+    $status = &variable_init_realm();
+  }
+  if ($realm != $status['realm']) {
+    // Note we don't get the values by reference, we don't want Drupal to pollute our array
+    $conf = variable_build_realm($realm, $status['language']);
+  }
+} 
+
+/**
+ * Switch language for global variables
+ * 
+ * @param $langcode
+ *   Language object or code
+ */
+function variable_switch_language($language = 'default') {
+  global $conf;
+
+  $status = &variable_init_realm();
+  if ($language == 'default') {
+    $langcode = 'default';
+    $language = variable_language();     
+  }
+  else {
+    $langcode = $language->language;
+  }
+  if ($langcode != $status['langcode']) {
+    // Note we don't get the values by reference, we don't want Drupal to pollute our array
+    $conf = variable_build_realm($status['realm'], $langcode);
+    $status['language'] = $language;
+    $status['langcode'] = $langcode;
+  }
+}
+
+/**
+ * Build realm with language and default variables
+ * 
+ * The result will be the combined values of
+ * - Selected realm and langcode
+ * - Selected realm and default langcode
+ * - Default realm and langcode
+ * - Default realm and default langcode (default global variables)
+ * 
+ * Realm values take precedence over language values.
+ */
+function &variable_build_realm($realm, $langcode) {
+  $build = &variable_static('variable_build');
+  if (!isset($build[$realm][$langcode])) {
+    $variables = $merge = array();
+    foreach (array($realm, 'default') as $key) {
+      foreach (array($langcode, 'default') as $lang) {
+        if (!isset($merge[$key][$lang])) {
+          $variables += variable_get_realm($key, $lang);
+          $merge[$key][$lang] = TRUE;
+        }
+      }
+    }
+    $build[$realm][$langcode] = $variables;
+  }
+  return $build[$realm][$langcode];
+}
+
+/**
+ * Get realm variable value or all realm variables
+ * 
+ * @param $realm
+ *   Realm name
+ * @param $langcode
+ *   Language code
+ * @param $name
+ *   Optional variable name
+ * @param $cache
+ *   Whether to update the cache
+ */
+function &variable_get_realm($realm, $langcode, $cache = TRUE) {
+  $realms = &variable_static('variable_realms');
+  if (!isset($realms[$realm][$langcode])) {
+    if ($cache = variable_cache_get('variable_realms', $realm, $langcode)) {
+      $realms[$realm][$langcode] = $cache->data;
+    }
+    else {
+      $realms[$realm][$langcode] = variable_load_realm($realm, $langcode);
+      if ($cache) {
+        variable_cache_set('variable_realms', $realms[$realm][$langcode], $realm, $langcode);
+        // If this was marked as updated (changed, uncached), unmark it
+        $updated = &variable_static('variable_update');
+        $updated[$realm][$langcode] = NULL;
+      }
+    }
+  }
+  return $realms[$realm][$langcode];
+}
+
+/**
+ * Get value from realm with optional fallback to default realms
+ * 
+ * Fallback order is
+ * 1. same realm, default language
+ * 2. default realm, same language
+ * 3. default realm, default language
+ */
+function variable_get_realm_value($realm, $langcode, $name, $fallback = TRUE) {
+  $variables = $fallback ? &variable_build_realm($realm, $langcode) : &variable_get_realm($realm, $langcode);
+  return isset($variables[$name]) ? $variables[$name] : NULL;
+}
+
+/**
+ * Set variable value
+ */
+function variable_set_realm_value($realm, $langcode, $name, $value) {
+  // Get realm variables, but don't update cache as we are about to change it
+  $variables = &variable_get_realm($realm, $langcode, FALSE);
+  $variables[$name] = $value;
+  if ($realm == 'default' && $langcode == 'default') {
+    variable_set($name, $value);
+  }
+  else {
+    $serialized_value = serialize($value);
+    db_query("UPDATE {variable_realm} SET value = '%s' WHERE name = '%s' AND realm = '%s' AND langcode = '%s'", $serialized_value, $name, $realm, $langcode);
+    if (!db_affected_rows()) {
+      @db_query("INSERT INTO {variable_realm} (name, realm, langcode, value) VALUES ('%s', '%s', '%s', '%s')", $name, $realm, $langcode, $serialized_value);
+    }
+  }
+  // If it is the first time we update this realm, invalidate cache and rebuild all related variables
+  $updated = &variable_static('variable_update');
+  if (!isset($updated[$realm][$langcode])) {
+    variable_clear_realm($realm, $langcode);
+  }
+  $updated[$realm][$langcode][$name] = $value;
+}
+
+/**
+ * Delete variable
+ */
+function variable_del_realm($realm, $langcode, $name) {
+  // Get realm variables, but don't update cache as we are about to change it
+  $variables = &variable_get_realm($realm, $langcode, FALSE);
+  if (isset($variables[$name])) {
+    unset($variables[$name]);
+    if ($realm == 'default' && $langcode == 'default') {
+      variable_del($name);
+    }
+    else {
+      db_query("DELETE FROM {variable_realm} WHERE name = '%s' AND realm = '%s' AND langcode = '%s'", $name, $realm, $langcode);
+    }
+    variable_clear_realm($realm, $langcode);
+  }
+}
+
+/**
+ * Clear all caches for this realm
+ */
+function variable_clear_realm($realm, $langcode) {
+  $build = &variable_static('variable_build');
+  if ($realm == 'default' && $language == 'default') {
+    // This is the default realm, default language, clean all realm builds
+    $realms = &variable_static('variable_realms');
+    $default = $realms['default']['default'];
+    $realms = array();
+    $realms['default']['default'] = $default;
+    $build = array();
+    return;
+  }
+  // Not default realm & language, first clear specific cache
+  variable_cache_clear('variable_realms', $realm, $langcode);
+  if ($realm == 'default') {
+    // If this is the default realm, clean all builds for this language
+    foreach (array_keys($build) as $key) {
+      if (isset($build[$key][$langcode])) {
+        unset($build[$key][$langcode]);
+      }
+    }
+  }
+  else if ($language == 'default') {
+    // Clean all languages for this realm
+    if (isset($build[$realm])) {
+      unset($build[$realm]);
+    }
+  }
+  else {
+    // No default values, just clean this realm, language
+    if (isset($build[$realm][$langcode])) {
+      unset($build[$realm][$langcode]);
+    }
+  }
+}
+
+/**
+ * Load realm from db
+ */
+function variable_load_realm($realm, $langcode) {
+  $variables = array();
+  $result = db_query("SELECT * FROM {variable_realm} WHERE realm = '%s' AND language = '%s'", $realm, $langcode);
+    while ($variable = db_fetch_object($result)) {
+      $variables[$variable->name] = unserialize($variable->value);
+    }    
+  }
+  return $variables;
+}
+
+/**
+ * Get value from variable cache
+ */
+function variable_cache_get($name, $realm = 'default', $langcode = 'default') {
+  $cid = implode(':', array($name, $realm, $langcode));
+  return cache_get($cid, 'variable_cache');
+}
+
+/**
+ * Set value in cache
+ */
+function variable_cache_set($name, $data, $realm = 'default', $langcode = 'default') {
+  $cid = implode(':', array($name, $realm, $langcode));
+  cache_set($cid, $data, 'variable_cache');
+  //db_query("UPDATE {variable_cache} SET realm = '%s', language = '%s' WHERE cid = '%s'", $realm, $langcode, $cid);
+}
+
+/**
+ * Clear cache
+ */
+function variable_cache_clear($name = NULL, $realm = NULL, $langcode = NULL) {
+  if ($name || $realm || $langcode) {
+    $cids = array(
+      $name ? $name : '%',
+      $realm ? $realm : '%',
+      $langcode ? $langcode : '%',
+    );
+    db_query("DELETE FROM {variable_cache} WHERE cid LIKE '%s'", implode(':', $cids));
+  }
+  else {
+    db_query("TRUNCATE TABLE {variable_cache}");
+  }
+}
+
+/**
+ * Switch global variable language
+ */
+function variable_switch_language($language = NULL) {
+  
+}
+
+/**
+ * Initialize the realm system
+ */
+function &variable_init_realm() {
+  static $status;
+  if (!isset($status)) {
+    $status = &variable_static('variable_status');
+    $realms = &variable_static('variable_realms');
+    // We store the absolute defaults for variables here
+    $realms['default']['default'] = $GLOBALS['conf'];
+    $status = array(
+      'realm' => 'default',
+      'langcode' => 'default',
+      'language' => variable_language(),
+      'fallback' => TRUE,
+    );
+  }
+  return $status;
+}
+
+/**
+ * Get global language object.
+ * 
+ * Initialize the language system if needed as we absolutely need a language here
+ */
+function variable_language() {
+  global $language;
+  if (!isset($language)) {
+    drupal_bootstrap(DRUPAL_BOOTSTRAP_LANGUAGE);
+  }
+  return $language; 
+}
+
+/**
+ * Central static variable storage, Drupal 7 core backport
+ * 
+ * See http://api.drupal.org/api/function/drupal_static/7
+ */
+function &variable_static($name, $default_value = NULL, $reset = FALSE) {
+  static $data = array(), $default = array();
+  if (!isset($name)) {
+    // All variables are reset. This needs to be done one at a time so that
+    // references returned by earlier invocations of drupal_static() also get
+    // reset.
+    foreach ($default as $name => $value) {
+      $data[$name] = $value;
+    }
+    // As the function returns a reference, the return should always be a
+    // variable.
+    return $data;
+  }
+  if ($reset) {
+    // The reset means the default is loaded.
+    if (array_key_exists($name, $default)) {
+      $data[$name] = $default[$name];
+    }
+    else {
+      // Reset was called before a default is set and yet a variable must be
+      // returned.
+      return $data;
+    }
+  }
+  elseif (!array_key_exists($name, $data)) {
+    // Store the default value internally and also copy it to the reference to
+    // be returned.
+    $default[$name] = $data[$name] = $default_value;
+  }
+  return $data[$name];
+}
+
+/**
+ * Get static variable compiling information from modules
+ */
+function &variable_static_invoke($name) {
+  $value = &variable_static($name);
+  if (!isset($value)) {
+    $value = module_invoke_all($name);
+    drupal_alter($name, $value);
+  }
+  return $value;
+}
+
+/**
+ * Reset static variable. Drupal 7 core backport.
+ * 
+ * See http://api.drupal.org/api/function/drupal_static_reset/7
+ * 
+ * @param $name
+ *   Name of the static variable to reset. Omit to reset all variables.
+ */
+function variable_static_reset($name = NULL) {
+  variable_static($name, NULL, NULL, TRUE);
+}
+
+/**
+ * Include extended API
+ */
+function variable_include($name = 'variable') {
+  static $included;
+  if (!isset($included[$name])) {
+    module_load_include('inc', 'variable', $name);
+  }
+}

@@ -1,0 +1,4 @@
+; $Id$
+name = Variable API
+description = Variable API
+core = 6.x
