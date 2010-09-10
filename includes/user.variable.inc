@@ -113,7 +113,7 @@ function user_variable_info($options) {
     'type' => 'boolean',
     'title' => t('Notify user when account is deleted.'),
     'default_value' => FALSE,
-  );
+  ) + $defaults;
   // User signatures.
   $variables['user_signatures'] = array(
     'type' => 'enable',

@@ -1,0 +1,4 @@
+; $Id$
+name = Variable realm
+description = Variable API - Realms
+core = 6.x

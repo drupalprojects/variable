@@ -1,0 +1,42 @@
+<?php
+// $Id$
+/**
+ * @file
+ * Variable API module - Admin UI
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function variable_admin_menu() {
+  $items['admin/settings/variable'] = array(
+    'title' => 'Variables',
+    'description' => 'Edit and delete site variables.',
+    'page callback' => 'variable_admin_page_overview',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'variable_admin.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/settings/variable/groups'] = array(
+    'title' => 'By group',
+    'description' => 'Variables by group.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/settings/variable/modules'] = array(
+    'title' => 'By module',
+    'description' => 'Variables by module.',
+    'page callback' => 'variable_admin_page_modules',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'variable_admin.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/settings/variable/undefined'] = array(
+    'title' => 'Undefined',
+    'description' => 'Unknown variables.',
+    'page callback' => 'variable_admin_page_undefined',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'variable_admin.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}

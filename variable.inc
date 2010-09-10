@@ -1,4 +1,5 @@
 <?php
+// $Id$
 /**
  * @file
  * Variable API module. Extended API.
@@ -13,8 +14,9 @@ function variable_build_info($options) {
   $variables = array();
   $info = module_invoke_all('variable_info', $options);
   foreach ($info as $name => $variable) {
-    $variable += array('name' => $name);
-    $variables += variable_build_variable($variable, $options);
+    $variable += array('name' => $name, 'description' => '');
+    $variable_build = variable_build_variable($variable, $options);
+    $variables += $variable_build;
   }
   // Last chance for modules to alter variable infoa
   drupal_alter('variable_info', $variables, $options);
@@ -94,7 +96,7 @@ function variable_variable_type_defaults() {
   // Select single option from multiple choices
   $types['select'] = array(
     'form_element' => array('#type' => 'radios'),
-  )
+  );
   // Select multiple options from multiple choices
   $types['options'] = array(
     'form_element' => array('#type' => 'checkboxes'),
@@ -105,7 +107,7 @@ function variable_variable_type_defaults() {
 /**
  * Build mail variables
  */
-function variable_type_mail_build($variable, $options) {
+function variable_mail_build($variable, $options) {
   $build[$variable['name']] = $variable;
   $build[$variable['name'] . '_subject'] = array(
     'parent' => $variable['name'],

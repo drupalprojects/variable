@@ -39,7 +39,7 @@ function node_variable_info($options) {
   ) + $defaults;
   $variables['node_preview'] = array(
     'type' => 'options',
-    '#title' => t('Preview post'),
+    'title' => t('Preview post'),
     'default_value' => 0,
     'options' => array(t('Optional'), t('Required')),
     'description' => t('Must users preview posts before submitting?'),
@@ -67,7 +67,6 @@ function node_variable_info($options) {
  * Build content type variables. Spawn for each content type
  */
 function node_variable_content_type_build($variable, $options) {
-  $name = ;
   unset($variable['build_callback']);
   $build = array();
   foreach (node_get_types() as $type) {
