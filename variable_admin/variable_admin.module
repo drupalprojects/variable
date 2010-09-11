@@ -15,7 +15,6 @@ function variable_admin_menu() {
     'page callback' => 'variable_admin_page_overview',
     'access arguments' => array('administer site configuration'),
     'file' => 'variable_admin.pages.inc',
-    'type' => MENU_CALLBACK,
   );
   $items['admin/settings/variable/groups'] = array(
     'title' => 'By group',
@@ -38,5 +37,15 @@ function variable_admin_menu() {
     'file' => 'variable_admin.pages.inc',
     'type' => MENU_LOCAL_TASK,
   );
+  $items['admin/settings/variable/edit/%'] = array(
+    'title' => 'Edit variable',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('variable_edit_form', 4),
+    'access callback' => 'variable_access',
+    'access arguments' => array(4),
+    'file' => 'variable_admin.pages.inc',
+  );  
   return $items;
 }
+
+

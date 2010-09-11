@@ -24,7 +24,9 @@ function variable_admin_page_overview() {
       '#children' => variable_admin_list($variables),
     );
   }
-  return drupal_render($display);
+  $output = drupal_render($display);
+  $output .= drupal_get_form('variable_admin_reset_form');
+  return $output;
 }
 
 /**
@@ -46,7 +48,27 @@ function variable_admin_page_modules() {
       '#children' => variable_admin_list($variables),
     );
   }
-  return drupal_render($display);
+  $output = drupal_render($display);
+  $output .= drupal_get_form('variable_admin_reset_form');
+  return $output;
+}
+
+/**
+ * Admin controls for the pages above
+ */
+function variable_admin_reset_form() {
+  $form['controls'] = array('#type' => 'fieldset');
+  $form['controls']['rebuild'] = array('#type' => 'submit', '#value' => t('Rebuild information'));
+  return $form;  
+}
+
+function variable_admin_reset_form_submit($form, &$form_state) {
+  $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+  switch ($op) {
+    case t('Rebuild information'):
+      variable_cache_clear();
+      break;
+  }
 }
 
 /**
@@ -70,6 +92,14 @@ function variable_admin_page_undefined() {
   else {
     return t('No undefined variables found.');
   }
+}
+
+/**
+ * Edit variable
+ */
+function variable_admin_page_edit($variable) {
+  drupal_set_title($variable['title']);
+  return drupal_get_form('variable_edit_form', $variable);
 }
 
 /**

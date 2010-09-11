@@ -1,0 +1,62 @@
+<?php
+// $Id$
+/**
+ * @file
+ * Variable API module install file
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function variable_realm_schema() {
+  $schema['variable_realm'] = array(
+    'description' => 'Named variable/value pairs created by Drupal core or any other module or theme. All variables are cached in memory at the start of every Drupal request so developers should not be careless about what is stored here.',
+    'fields' => array(
+      'name' => array(
+        'description' => 'The name of the variable.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => ''),
+      'realm' => array(
+        'description' => 'The realm of this variable value.',
+        'type' => 'varchar',
+        'length' => 50,
+        'not null' => TRUE,
+        'default' => ''),
+      'language' => array(
+        'type' => 'varchar',
+        'length' => 12,
+        'not null' => TRUE,
+        'default' => ''),
+      'value' => array(
+        'description' => 'The value of the variable.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big'),
+      'serialized' => array(
+        'description' => 'A flag to indicate whether content is serialized (1) or not (0).',
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => 1),
+    ),
+    'primary key' => array('name', 'realm', 'language'),
+    'indexes' => array('realm_language' => array('realm', 'language')),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install()
+ */
+function variable_realm_install() {
+  drupal_install_schema('variable_realm');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function variable_realm_uninstall() {
+  drupal_uninstall_schema('variable_realm');
+}

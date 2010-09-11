@@ -14,8 +14,7 @@ function variable_build_info($options) {
   $variables = array();
   $info = module_invoke_all('variable_info', $options);
   foreach ($info as $name => $variable) {
-    $variable += array('name' => $name, 'description' => '');
-    $variable_build = variable_build_variable($variable, $options);
+    $variable_build = variable_build_variable($name, $variable, $options);
     $variables += $variable_build;
   }
   // Last chance for modules to alter variable infoa
@@ -28,15 +27,23 @@ function variable_build_info($options) {
  * 
  * Some variables may spawn into multiple ones
  */
-function variable_build_variable($variable, $options) {
+function variable_build_variable($name, $variable, $options) {
   // Set type defaults for each variable
+  $variable += array('name' => $name, 'description' => '');
   $variable += variable_type_defaults($variable['type']);
   if (isset($variable['build_callback'])) {
-    return call_user_func($variable['build_callback'], $variable, $options);
+    $variable_build = call_user_func($variable['build_callback'], $variable, $options);
   }
   else {
-    return array($variable['name'] => $variable);
+    $variable_build = array($name => $variable);
   }
+  if (isset($variable_build[$name]) && $children = array_diff(array_keys($variable_build), array($name))) {
+    $variable_build[$name] += array('children' => $children);
+    foreach ($children as $key) {
+      $variable_build = array_merge($variable_build, variable_build_variable($key, $variable_build[$key], $options));
+    }
+  }
+  return $variable_build;
 }
 
 /**
@@ -74,7 +81,7 @@ function variable_variable_type_defaults() {
     'localize' => TRUE,
   );
   $types['mail_text'] = array(
-    'form_callback' => 'variable_form_element_mail_text',
+    //'form_callback' => 'variable_form_element_mail_text',
     'build_callback' => 'variable_mail_build',
     'multiple' => array('subject', 'body'),
     'localize' => TRUE,
@@ -96,10 +103,12 @@ function variable_variable_type_defaults() {
   // Select single option from multiple choices
   $types['select'] = array(
     'form_element' => array('#type' => 'radios'),
+    'form_callback' => 'variable_form_element_options',
   );
   // Select multiple options from multiple choices
   $types['options'] = array(
     'form_element' => array('#type' => 'checkboxes'),
+    'form_callback' => 'variable_form_element_options',
   );
   return $types;
 }
@@ -123,6 +132,7 @@ function variable_mail_build($variable, $options) {
   );
   return $build;
 }
+
 
 /**
  * General function to include variable definitions for all modules

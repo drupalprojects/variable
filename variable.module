@@ -6,19 +6,75 @@
  */
 
 /**
+ * Implementation of hook_boot()
+ * 
+ * Though we don't do anything here, we ensure the module is loaded at boot stage
+ * for other modules (like variable_realm) to be able to use the API
+ */
+function variable_boot() {
+}
+
+/**
+ * Implementation of hook_elements().
+ */
+function variable_elements() {
+  $type['variable'] = array(
+    '#input' => TRUE,
+    '#pre_render' => array('variable_element_pre_render'),
+    '#post_render' => array('variable_element_post_render'),
+    '#after_build' => array('variable_element_after_build'),
+    '#process' => array('variable_element_process'),
+    '#element_validate' => array('variable_element_validate')
+  );
+  return $type;
+}
+
+/**
+ * Implementation of hook_flush_caches()
+ */
+function variable_flush_caches() {
+  return array('variable_cache');
+}
+
+/**
+ * Check access to variable
+ */
+function variable_access($name, $account = NULL) {
+  $account = $account ? $account : $GLOBALS['user'];
+  $variable = variable_info($name);
+  return $variable && (!empty($variable['access']) && user_access($variable['access'], $account) || user_access('administer site configuration', $account));
+}
+
+/**
+ * Build edit form for one or multiple variables
+ * @param unknown_type $variable
+ */
+function variable_edit_form(&$form_state) {
+  module_load_include('form.inc', 'variable');
+  $args = func_get_args();
+  array_shift($args);
+  $form = array();
+  foreach ($args as $name) {
+    if ($variable = variable_info($name)) {
+      $form[$name] = variable_form_element($variable);
+    }
+  }
+  $form['options']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  $form['options']['reset'] = array('#type' => 'submit', '#value' => t('Reset'));
+  return $form;
+}
+
+/**
  * Get value for simple scalar variable
  * 
  * @param $options
  *   Options array, it may have the following elements
  *   - language => Language object
- *   - realm => Variable realm (string)
  *   - default => Default value if not set
- *   - fallback => Whether to use fallback values (for realm and language)
- * 
  */
 function variable_get_value($name, $options = array()) {
-  $options = variable_options($options);
-  $value = variable_get_realm_value($options['realm'], $options['langcode'], $name, $options['fallback']);
+  $options += variable_status();
+  $value = variable_get($name, NULL);
   if (isset($value)) {
     return $value;
   }
@@ -31,7 +87,7 @@ function variable_get_value($name, $options = array()) {
  * Get variable default
  */
 function variable_get_default($name, $options = array()) {
-  $options = variable_options($options);
+  $options += variable_status();
   if ($variable = variable_info($name, $options)) {
     if (isset($variable['default_callback'])) {
       return call_user_func($variable['default_callback'], $variable, $options);
@@ -44,31 +100,74 @@ function variable_get_default($name, $options = array()) {
 }
 
 /**
- * Prepare variable options 
+ * Get original global variable
  */
-function variable_options($options) {
-  return $options + variable_status();
+function variable_global_get($name) {
+  $original = &variable_static('variable_global', array());
+  if (isset($original[$name])) {
+    return $original[$name];
+  }
+  elseif (isset($GLOBALS[$name])) {
+    return $GLOBALS[$name];
+  }
+  else {
+    return NULL;
+  }
+}
+
+/**
+ * Switch global variable
+ * 
+ * @param $name
+ *   Optional global variable name. If not set, it will reset all global variables to its original value.
+ * @param $value
+ *   Optional new value for global variable. If not set, it will reset the variable to its original value.
+ */
+function variable_global_set($name, $value = NULL) {
+  $original = &variable_static('variable_global', array());
+  if (!isset($original[$name])) {
+    $original[$name] = $GLOBALS[$name];
+  }
+  if (isset($value)) {
+    $GLOBALS[$name] = $value;
+  }
+}
+
+/**
+ * Reset global variables to original values
+ */
+function variable_global_reset($name = NULL) {
+  $original = &variable_static('variable_global', array());
+  if (!$name) {
+    foreach ($original as $key => $value) {
+      $GLOBALS[$key] = $value;
+    }
+  }    
+  elseif (isset($original[$name])) {
+    $GLOBALS[$name] = $original[$name];
+  }
 }
 
 /**
  * Get variable information
+ * 
+ * Variable information is collected from modules and cached by language
  */
 function variable_info($name = NULL, $options = array()) {
   static $info;
-  $options = variable_options($options);
+  $options += variable_status();
   $language = $options['language'];
   if (!isset($info)) {
     $info = &variable_static('variable_info');
   }
   if (!isset($info[$language->language])) {
-    $cid = 'variable_info:' . $language->language;
-    if ($cache = cache_get($cid)) {
+    if ($cache = variable_cache_get('variable_info', $language->language)) {
       $info[$language->language] = $cache->data;
     }
     else {
       variable_include();
       $info[$language->language] = variable_build_info($options);
-      cache_set($cid, $info[$language->language]);
+      variable_cache_set('variable_info', $info[$language->language], $language->language);
     }
   }
   if ($name) {
@@ -82,28 +181,24 @@ function variable_info($name = NULL, $options = array()) {
 /**
  * Get value from variable cache
  */
-function variable_cache_get($name, $realm = 'default', $langcode = 'default') {
-  $cid = implode(':', array($name, $realm, $langcode));
-  return cache_get($cid, 'variable_cache');
+function variable_cache_get($name, $langcode = 'default') {
+  return cache_get($name . ':' . $langcode, 'variable_cache');
 }
 
 /**
  * Set value in cache
  */
-function variable_cache_set($name, $data, $realm = 'default', $langcode = 'default') {
-  $cid = implode(':', array($name, $realm, $langcode));
-  cache_set($cid, $data, 'variable_cache');
-  //db_query("UPDATE {variable_cache} SET realm = '%s', language = '%s' WHERE cid = '%s'", $realm, $langcode, $cid);
+function variable_cache_set($name, $data, $langcode = 'default') {
+  cache_set($name . ':' . $langcode, $data, 'variable_cache');
 }
 
 /**
  * Clear cache
  */
-function variable_cache_clear($name = NULL, $realm = NULL, $langcode = NULL) {
-  if ($name || $realm || $langcode) {
+function variable_cache_clear($name = NULL, $langcode = NULL) {
+  if ($name || $langcode) {
     $cids = array(
       $name ? $name : '%',
-      $realm ? $realm : '%',
       $langcode ? $langcode : '%',
     );
     db_query("DELETE FROM {variable_cache} WHERE cid LIKE '%s'", implode(':', $cids));
@@ -181,12 +276,8 @@ function variable_static_reset($name = NULL) {
 function variable_status($options = NULL) {
   static $status;
   if (!isset($status)) {
-    $status = array(
-      'realm' => 'default',
-      'langcode' => 'default',
-      'language' => variable_language(),
-      'fallback' => TRUE,
-    );
+    $status = &variable_static('variable_status', array());
+    $status += array('language' => variable_language());
   }
   if ($options) {
     $status = array_merge($status, $options);

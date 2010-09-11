@@ -5,6 +5,15 @@
  * Variable API module - Realms
  */
 
+/**
+ * Implementation of hook_boot()
+ * 
+ * We set variable realm and language code as early as possible in the page request. By setting
+ * the language code to 'default' we mean no language specific variables have been loaded yet.
+ */
+function variable_realm_boot() {
+  variable_status(array('realm' => 'default', 'langcode' => 'default'));
+}
 
 /**
  * Build realm with language and default variables
@@ -17,14 +26,14 @@
  * 
  * Realm values take precedence over language values.
  */
-function &variable_build_realm($realm, $langcode) {
+function &variable_realm_build($realm, $langcode) {
   $build = &variable_static('variable_build');
   if (!isset($build[$realm][$langcode])) {
     $variables = $merge = array();
     foreach (array($realm, 'default') as $key) {
       foreach (array($langcode, 'default') as $lang) {
         if (!isset($merge[$key][$lang])) {
-          $variables += variable_get_realm($key, $lang);
+          $variables += variable_realm_get($key, $lang);
           $merge[$key][$lang] = TRUE;
         }
       }
@@ -42,21 +51,19 @@ function &variable_build_realm($realm, $langcode) {
  *   Realm name
  * @param $langcode
  *   Language code
- * @param $name
- *   Optional variable name
  * @param $cache
  *   Whether to update the cache
  */
-function &variable_get_realm($realm, $langcode, $cache = TRUE) {
+function &variable_realm_get($realm, $langcode, $cache = TRUE) {
   $realms = &variable_static('variable_realms');
   if (!isset($realms[$realm][$langcode])) {
-    if ($cache = variable_cache_get('variable_realms', $realm, $langcode)) {
+    if ($cache = variable_cache_get('variable_realms:' . $realm, $langcode)) {
       $realms[$realm][$langcode] = $cache->data;
     }
     else {
-      $realms[$realm][$langcode] = variable_load_realm($realm, $langcode);
+      $realms[$realm][$langcode] = variable_realm_load($realm, $langcode);
       if ($cache) {
-        variable_cache_set('variable_realms', $realms[$realm][$langcode], $realm, $langcode);
+        variable_cache_set('variable_realms:' . $realm, $realms[$realm][$langcode], $langcode);
         // If this was marked as updated (changed, uncached), unmark it
         $updated = &variable_static('variable_update');
         $updated[$realm][$langcode] = NULL;
@@ -75,12 +82,12 @@ function &variable_get_realm($realm, $langcode, $cache = TRUE) {
  * 2. default realm, same language
  * 3. default realm, default language
  */
-function variable_get_realm_value($realm, $langcode, $name, $fallback = TRUE) {
+function variable_realm_get_value($realm, $langcode, $name, $fallback = TRUE) {
   if ($fallback) {
-    $variables = &variable_build_realm($realm, $langcode);
+    $variables = &variable_realm_build($realm, $langcode);
   }
   else {
-    $variables = &variable_get_realm($realm, $langcode);
+    $variables = &variable_realm_get($realm, $langcode);
   }
   return isset($variables[$name]) ? $variables[$name] : NULL;
 }
@@ -88,9 +95,9 @@ function variable_get_realm_value($realm, $langcode, $name, $fallback = TRUE) {
 /**
  * Set variable value
  */
-function variable_set_realm_value($realm, $langcode, $name, $value) {
+function variable_realm_set_value($realm, $langcode, $name, $value) {
   // Get realm variables, but don't update cache as we are about to change it
-  $variables = &variable_get_realm($realm, $langcode, FALSE);
+  $variables = &variable_realm_get($realm, $langcode, FALSE);
   $variables[$name] = $value;
   if ($realm == 'default' && $langcode == 'default') {
     variable_set($name, $value);
@@ -105,7 +112,7 @@ function variable_set_realm_value($realm, $langcode, $name, $value) {
   // If it is the first time we update this realm, invalidate cache and rebuild all related variables
   $updated = &variable_static('variable_update');
   if (!isset($updated[$realm][$langcode])) {
-    variable_clear_realm($realm, $langcode);
+    variable_realm_clear($realm, $langcode);
   }
   $updated[$realm][$langcode][$name] = $value;
 }
@@ -113,9 +120,9 @@ function variable_set_realm_value($realm, $langcode, $name, $value) {
 /**
  * Delete variable
  */
-function variable_del_realm($realm, $langcode, $name) {
+function variable_realm_del($realm, $langcode, $name) {
   // Get realm variables, but don't update cache as we are about to change it
-  $variables = &variable_get_realm($realm, $langcode, FALSE);
+  $variables = &variable_realm_get($realm, $langcode, FALSE);
   if (isset($variables[$name])) {
     unset($variables[$name]);
     if ($realm == 'default' && $langcode == 'default') {
@@ -124,14 +131,14 @@ function variable_del_realm($realm, $langcode, $name) {
     else {
       db_query("DELETE FROM {variable_realm} WHERE name = '%s' AND realm = '%s' AND langcode = '%s'", $name, $realm, $langcode);
     }
-    variable_clear_realm($realm, $langcode);
+    variable_realm_clear($realm, $langcode);
   }
 }
 
 /**
  * Clear all caches for this realm
  */
-function variable_clear_realm($realm, $langcode) {
+function variable_realm_clear($realm, $langcode) {
   $build = &variable_static('variable_build');
   if ($realm == 'default' && $language == 'default') {
     // This is the default realm, default language, clean all realm builds
@@ -169,7 +176,7 @@ function variable_clear_realm($realm, $langcode) {
 /**
  * Load realm from db
  */
-function variable_load_realm($realm, $langcode) {
+function variable_realm_load($realm, $langcode) {
   $variables = array();
   $result = db_query("SELECT * FROM {variable_realm} WHERE realm = '%s' AND language = '%s'", $realm, $langcode);
   while ($variable = db_fetch_object($result)) {
@@ -181,14 +188,14 @@ function variable_load_realm($realm, $langcode) {
 /**
  * Initialize the realm system
  */
-function &variable_init_realm() {
+function &variable_realm_init() {
   static $status;
   if (!isset($status)) {
-    $status = &variable_static('variable_status');
+    $status = &variable_static('variable_status', array());
     $realms = &variable_static('variable_realms');
     // We store the absolute defaults for variables here
-    $realms['default']['default'] = $GLOBALS['conf'];
-    $status = array(
+    $realms['default']['default'] = variable_global_get('conf');
+    $status += array(
       'realm' => 'default',
       'langcode' => 'default',
       'language' => variable_language(),
@@ -202,38 +209,36 @@ function &variable_init_realm() {
 /**
  * Switch global variable realm
  */
-function variable_switch_realm($realm = 'default') {
-  global $conf;
+function variable_realm_switch($realm = 'default') {
   static $status;
   if (!isset($status)) {
-    $status = &variable_init_realm();
+    $status = &variable_realm_init();
   }
   if ($realm != $status['realm']) {
     // Note we don't get the values by reference, we don't want Drupal to pollute our array
-    $conf = variable_build_realm($realm, $status['language']);
+    variable_global_set('conf', variable_realm_build($realm, $status['langcode']));
+    $status['realm'] = $realm;
   }
-} 
+}
 
 /**
  * Switch language for global variables
  * 
  * @param $langcode
- *   Language object or code
+ *   Language object. If not set we switch back to 'default' language
  */
-function variable_switch_language($language = 'default') {
-  global $conf;
-
-  $status = &variable_init_realm();
-  if ($language == 'default') {
-    $langcode = 'default';
-    $language = variable_language();     
+function variable_switch_language($language = NULL) {
+  $status = &variable_realm_init();
+  if ($language) {
+    $langcode = $language->language;    
   }
   else {
-    $langcode = $language->language;
+    $langcode = 'default';
+    $language = variable_global_get('language');
   }
   if ($langcode != $status['langcode']) {
-    // Note we don't get the values by reference, we don't want Drupal to pollute our array
-    $conf = variable_build_realm($status['realm'], $langcode);
+    variable_global_set('language', $language);
+    variable_global_set('conf', variable_realm_build($status['realm'], $langcode));
     $status['language'] = $language;
     $status['langcode'] = $langcode;
   }
