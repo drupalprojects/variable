@@ -9,7 +9,7 @@
  */
 function user_variable_info($options) {
   $language = $options['language'];
-  $defaults = array('module' => 'user', 'access' => 'administer users', 'edit_path' => 'admin/user/settings', 'group' => t('User settings'));
+  $defaults = array('module' => 'user', 'group' => 'user_settings');
 
   // $variables = array('#type' => 'fieldset', 'title' => t('User registration settings'));
   $variables['user_register'] = array(
@@ -162,4 +162,16 @@ function user_variable_info($options) {
   ) + $defaults;
 
   return $variables;
+}
+
+/**
+ * Node module variable groups
+ */
+function user_variable_groups() {
+  $groups['user_settings'] = array(
+    'name' => t('User settings'),
+    'access' => 'administer users',
+    'path' => 'admin/user/settings',
+  );
+  return $groups;
 }

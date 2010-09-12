@@ -10,7 +10,7 @@
 function system_variable_info($options) {
   $language = $options['language'];
   // Site configuration
-  $defaults = array('module' => 'system', 'access' => 'administer site configuration', 'edit_path' => 'admin/settings', 'group' => t('Site information'));
+  $defaults = array('module' => 'system', 'group' => 'system_site_information');
   $variables['site_name'] = array(
     'type' => 'string',
     'title' => t('Name'),
@@ -59,4 +59,21 @@ function system_variable_info($options) {
   ) + $defaults;
 
   return $variables;
+}
+
+/**
+ * Node module variable groups
+ */
+function system_variable_groups() {
+  $groups['system_site_information'] = array(
+    'name' => t('Site information'),
+    'access' => 'administer site configuration',
+    'path' => 'admin/settings'
+  );
+  // Group for variable that have no group
+  $groups['others'] = array(
+    'name' => t('Others'),
+    'access' => 'administer site configuration',
+  );
+  return $groups;
 }

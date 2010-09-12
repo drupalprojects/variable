@@ -12,15 +12,15 @@ function variable_admin_page_overview() {
   $groups = $display = array();
   foreach (variable_info() as $name => $variable) {
     if (empty($variable['parent'])) {
-      $variable += array('group' => t('Others'));
       $groups[$variable['group']][$name] = $variable; 
     }
   }
   foreach ($groups as $group => $variables) {
-    $display[] = array(
+    $group_info = variable_group($group);
+    $display[$group] = array(
       '#type' => 'fieldset',
-      '#title' => $group,
-      '#collapsible' => TRUE,
+      '#title' => $group_info['name'],
+      '#collapsible' => TRUE, '#collapsed' => TRUE,
       '#children' => variable_admin_list($variables),
     );
   }
@@ -44,7 +44,7 @@ function variable_admin_page_modules() {
     $display[$module] = array(
       '#type' => 'fieldset',
       '#title' => $modules[$module]->info['name'],
-      '#collapsible' => TRUE,
+      '#collapsible' => TRUE, '#collapsed' => TRUE,
       '#children' => variable_admin_list($variables),
     );
   }
@@ -97,9 +97,15 @@ function variable_admin_page_undefined() {
 /**
  * Edit variable
  */
-function variable_admin_page_edit($variable) {
+function variable_admin_page_edit($name) {
+  drupal_set_breadcrumb(array(
+    l(t('Administer'), 'admin'),
+    l(t('Site configuration'), 'admin/settings'),
+    l(t('Variables'), 'admin/settings/variable')
+  ));
+  $variable = variable_info($name);
   drupal_set_title($variable['title']);
-  return drupal_get_form('variable_edit_form', $variable);
+  return drupal_get_form('variable_edit_form', $name);
 }
 
 /**

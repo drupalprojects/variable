@@ -179,6 +179,23 @@ function variable_info($name = NULL, $options = array()) {
 }
 
 /**
+ * Get variable group information
+ */
+function variable_group($name = NULL) {
+  $groups = &variable_static('variable_groups');
+  if (!isset($groups)) {
+    variable_include();
+    $groups = variable_build_groups();
+  }
+  if ($name) {
+    return isset($groups[$name]) ? $groups[$name] : NULL;
+  }
+  else {
+    return $groups;
+  }
+}
+
+/**
  * Get value from variable cache
  */
 function variable_cache_get($name, $langcode = 'default') {

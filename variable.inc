@@ -12,14 +12,30 @@ function variable_build_info($options) {
   $options += array('language' => variable_language());
   variable_module_include();
   $variables = array();
-  $info = module_invoke_all('variable_info', $options);
-  foreach ($info as $name => $variable) {
-    $variable_build = variable_build_variable($name, $variable, $options);
-    $variables += $variable_build;
+  foreach (module_implements('variable_info') as $module) {
+    $result = call_user_func($module . '_variable_info', $options);
+    if (isset($result) && is_array($result)) {
+      $defaults = array('module' => $module);
+      foreach ($result as $name => $variable) {
+        $variable_build = variable_build_variable($name, $variable, $options, $defaults);
+        $variables += $variable_build;        
+      }
+    }
   }
+
   // Last chance for modules to alter variable infoa
   drupal_alter('variable_info', $variables, $options);
   return $variables;
+}
+
+/**
+ * Build variable groups information
+ */
+function variable_build_groups() {
+  variable_module_include();
+  $groups = module_invoke_all('variable_groups');
+  drupal_alter('variable_groups', $groups);
+  return $groups;
 }
 
 /**
@@ -27,20 +43,28 @@ function variable_build_info($options) {
  * 
  * Some variables may spawn into multiple ones
  */
-function variable_build_variable($name, $variable, $options) {
-  // Set type defaults for each variable
-  $variable += array('name' => $name, 'description' => '');
+function variable_build_variable($name, $variable, $options, $defaults = array()) {
+  // Set global defaults and type defaults for each variable
+  $variable += $defaults;
+  $variable += array('group' => 'others', 'name' => $name, 'description' => '');
   $variable += variable_type_defaults($variable['type']);
+  // Add group information
+  if (($group_info = variable_group($variable['group'])) && isset($group_info['access']) ) {
+    $variable += array('access' => $group_info['access']);
+  }
   if (isset($variable['build_callback'])) {
     $variable_build = call_user_func($variable['build_callback'], $variable, $options);
   }
   else {
     $variable_build = array($name => $variable);
   }
+  // If the variable has children, we have to build each of them too
   if (isset($variable_build[$name]) && $children = array_diff(array_keys($variable_build), array($name))) {
     $variable_build[$name] += array('children' => $children);
+    $defaults['group'] = $variable['group'];
+    $defaults['parent'] = $name;
     foreach ($children as $key) {
-      $variable_build = array_merge($variable_build, variable_build_variable($key, $variable_build[$key], $options));
+      $variable_build = array_merge($variable_build, variable_build_variable($key, $variable_build[$key], $options, $defaults));
     }
   }
   return $variable_build;

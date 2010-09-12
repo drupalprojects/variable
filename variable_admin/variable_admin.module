@@ -39,8 +39,8 @@ function variable_admin_menu() {
   );
   $items['admin/settings/variable/edit/%'] = array(
     'title' => 'Edit variable',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('variable_edit_form', 4),
+    'page callback' => 'variable_admin_page_edit',
+    'page arguments' => array(4),
     'access callback' => 'variable_access',
     'access arguments' => array(4),
     'file' => 'variable_admin.pages.inc',

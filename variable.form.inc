@@ -59,7 +59,7 @@ function variable_form_element_default($variable) {
 /**
  * Build options variables
  */
-function variable_options_element($variable) {
+function variable_form_element_options($variable) {
   $element = variable_form_element_default($variable);
   $element['#options'] = $variable['options'];
   return $element;

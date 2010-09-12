@@ -10,7 +10,7 @@
 function node_variable_info($options) {
   $language = $options['language'];
   // Post settings
-  $defaults = array('module' => 'node', 'access' => 'administer nodes', 'edit_path' => 'admin/content/node-settings', 'group' => t('Post settings'));
+  $defaults = array('module' => 'node', 'group' => 'node_post_settings');
   $variables['default_nodes_main'] = array(
     'type' => 'select', 
     'title' => t('Number of posts on main page'),
@@ -61,6 +61,18 @@ function node_variable_info($options) {
     'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.'),
   ) + $defaults;
   return $variables;
+}
+
+/**
+ * Node module variable groups
+ */
+function node_variable_groups() {
+  $groups['node_post_settings'] = array(
+    'name' => t('Post settings'),
+    'access' => 'administer nodes',
+    'path' => 'admin/content/node-settings', 
+  );
+  return $groups;
 }
 
 /**
