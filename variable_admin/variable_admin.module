@@ -16,11 +16,19 @@ function variable_admin_menu() {
     'access arguments' => array('administer site configuration'),
     'file' => 'variable_admin.pages.inc',
   );
-  $items['admin/settings/variable/groups'] = array(
+  $items['admin/settings/variable/group'] = array(
     'title' => 'By group',
     'description' => 'Variables by group.',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+  $items['admin/settings/variable/group/%'] = array(
+    'title' => 'Variables group',
+    'description' => 'Edit and delete group variables.',
+    'page callback' => 'variable_admin_page_group',
+    'page arguments' => array(4),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'variable_admin.pages.inc',
+  );  
   $items['admin/settings/variable/modules'] = array(
     'title' => 'By module',
     'description' => 'Variables by module.',

@@ -12,14 +12,18 @@
 function variable_form_element($variable) {
   $name = $variable['name'];
   if (!empty($variable['form_callback'])) {
-    return call_user_func($variable['form_callback'], $variable);
+    $element = call_user_func($variable['form_callback'], $variable);
   }
   elseif (!empty($variable['children'])) {
-    return variable_form_element_multiple($variable);
+    $element = variable_form_element_multiple($variable);
   }
   else {
-    return variable_form_element_default($variable); 
+    $element = variable_form_element_default($variable); 
   }
+  if (!empty($variable['access'])) {
+    $element['#access'] = $variable['access'];
+  }
+  return $element;
 }
 
 /**

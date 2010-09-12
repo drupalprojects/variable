@@ -47,21 +47,20 @@ function variable_access($name, $account = NULL) {
 
 /**
  * Build edit form for one or multiple variables
- * @param unknown_type $variable
+ * 
+ * @param $form_state
+ * @param $variable
+ *   Variable name or array of variable names
  */
-function variable_edit_form(&$form_state) {
+function variable_edit_form(&$form_state, $variable_name) {
   module_load_include('form.inc', 'variable');
-  $args = func_get_args();
-  array_shift($args);
-  $form = array();
+  $args = is_array($variable_name) ? $variable_name : array($variable_name);
   foreach ($args as $name) {
     if ($variable = variable_info($name)) {
       $form[$name] = variable_form_element($variable);
     }
   }
-  $form['options']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
-  $form['options']['reset'] = array('#type' => 'submit', '#value' => t('Reset'));
-  return $form;
+  return system_settings_form($form);
 }
 
 /**

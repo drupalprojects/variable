@@ -9,24 +9,48 @@
  * Variable overview, by group
  */
 function variable_admin_page_overview() {
-  $groups = $display = array();
-  foreach (variable_info() as $name => $variable) {
-    if (empty($variable['parent'])) {
-      $groups[$variable['group']][$name] = $variable; 
-    }
-  }
-  foreach ($groups as $group => $variables) {
+  $display = array();
+  foreach (variable_admin_build_groups() as $group => $variables) {
     $group_info = variable_group($group);
     $display[$group] = array(
       '#type' => 'fieldset',
       '#title' => $group_info['name'],
       '#collapsible' => TRUE, '#collapsed' => TRUE,
       '#children' => variable_admin_list($variables),
+      '#description' => l(t('Edit group variables'), 'admin/settings/variable/group/' . $group),
     );
   }
   $output = drupal_render($display);
   $output .= drupal_get_form('variable_admin_reset_form');
   return $output;
+}
+
+/**
+ * Variable group, edit all variables
+ */
+function variable_admin_page_group($group) {
+  $groups = variable_admin_build_groups();
+  if (!empty($groups[$group]) && $group_info = variable_group($group)) {
+    drupal_set_title($group_info['name']);
+    $variables = array_keys($groups[$group]);
+    return drupal_get_form('variable_edit_form', $variables);
+  }
+  else {
+    drupal_access_denied();
+  }
+}
+
+/**
+ * Build variable groups
+ */
+function variable_admin_build_groups() {
+  $groups = array();
+  foreach (variable_info() as $name => $variable) {
+    if (empty($variable['parent'])) {
+      $groups[$variable['group']][$name] = $variable; 
+    }
+  }
+  return $groups;  
 }
 
 /**
