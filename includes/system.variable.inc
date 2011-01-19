@@ -58,6 +58,13 @@ function system_variable_info($options) {
     'element' => array('#required' => TRUE),
     'required' => TRUE,
   ) + $defaults;
+  $variables['default_nodes_main'] = array(
+    'type' => 'select', 
+    'title' => t('Number of posts on main page'),
+    'default' => 10,
+    'options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30)),
+    'description' => t('The maximum number of posts displayed on overview pages such as the front page.', array(), $options),
+  ) + $defaults;
 
   return $variables;
 }

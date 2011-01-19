@@ -74,16 +74,18 @@ function variable_build_variable($variable, $options = array()) {
   if (!empty($variable['built'])) {
     return $variable;
   }
+  // Mark as built so we don't build it again
+  $variable['built'] = TRUE;
   $options = _variable_options($options);
   $variable = _variable_variable($variable, $options);
   $type = variable_get_type($variable['type']);
   // Add type properties to variable
   $variable += $type;
   // Some of the callback may be in the module's variable.inc file
-  variable_module_include($variable['module']);
-  variable_module_include($type['module']);
+  variable_include($variable);
+
   // Invoke variable callbacks
-  foreach (array('options', 'multiple', 'default') as $key) {
+  foreach (array('options', 'multiple') as $key) {
     if (!empty($variable[$key . ' callback'])) {
       $variable[$key] = call_user_func($variable[$key . ' callback'], $variable, $options);
     }
@@ -91,10 +93,7 @@ function variable_build_variable($variable, $options = array()) {
   if (isset($variable['build callback'])) {
     $variable = call_user_func($variable['build callback'], $variable, $options);
   }
-  elseif (!empty($variable['multiple'])) {
-    $variable = variable_build_multiple($variable, $options);
-  }
-  $variable['built'] = TRUE;
+
   return $variable;
 }
 
@@ -125,86 +124,11 @@ function variable_list_module($module) {
 }
 
 /**
- * Get form element properties for a variable type
- */
-function variable_type_defaults($type) {
-  if (($info = variable_get_type($type)) && isset($info['defaults'])) {
-    return $info['defaults'];
-  } 
-  else {
-    return array();
-  }
-}
-
-/**
- * Build multiple variables
- */
-function variable_build_multiple($variable, $options) {
-  $variable += array('children' => array());
-  if (is_array($variable['multiple'])) {
-    $default = variable_get_default($variable, $options);
-    foreach ($variable['multiple'] as $key => $title) {
-      $name = $variable['name'] . '_' . $key;
-      $variable['children'][$name] = array(
-        'name' => $name, 'index' => $key, 'title' => $title, 
-        'type' => $variable['type'], 'parent' => $variable['name'], 'module' => $variable['module'],
-        'default' => is_array($default) ? (isset($default[$key]) ? $default[$key] : NULL) : $default,
-      );
-    }
-  }
-  return $variable;
-}
-
-/**
  * Fetch options for variable
  */
 function variable_option_list($variable, $options) {
   variable_module_include();
   return module_invoke_all('variable_option_list', $variable, $options);
-}
-
-/**
- * Build multiple mail variable
- */
-function variable_build_mail_text($variable, $options = array()) {
-  $name = $variable['name'];
-  $variable = variable_build_multiple($variable, $options);
-  // For mail text, children have different types
-  $variable['children'][$name . '_subject']['type'] = 'string';
-  $variable['children'][$name . '_body']['type'] = 'text';
-  return $variable;
-}
-
-/**
- * Format select variable
- */
-function variable_format_option($value, $variable, $options = array()) {
-  $variable = variable_build($variable, $options);
-  if (isset($value)) {
-    return isset($variable['options'][$value]) ? $variable['options'][$value] : t('<Invalid option>');
-  }
-  else {
-    return isset($variable['empty']) ? $variable['empty'] : t('Empty');
-  }
-}
-
-/**
- * Format boolean variable
- */
-function variable_format_boolean($value, $variable, $options = array()) {
-  if (isset($value)) {
-    return $value ? t('True') : t('False');
-  }
-  else {
-    return t('Undefined');
-  }
-}
-
-/**
- * Format mail variable
- */
-function variable_format_mail_text($value, $variable, $options = array()) {
-  return check_plain($value['subject']);
 }
 
 /**

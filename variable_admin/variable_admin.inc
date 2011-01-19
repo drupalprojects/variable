@@ -13,7 +13,9 @@ function variable_admin_page_group($group = NULL) {
   if ($group && ($group_info = variable_get_group($group))) {
     drupal_set_title($group_info['title']);
     $list = variable_list_group($group);
-    return drupal_get_form('variable_edit_form', array_keys($list));
+    $build['description']['#markup'] = $group_info['description']; 
+    $build['form'] = drupal_get_form('variable_edit_form', array_keys($list));
+    return $build;
   }
   else {
     // Groups overview
@@ -57,11 +59,16 @@ function variable_admin_group_list($variables) {
 /**
  * Variable overview, by group
  */
-function variable_admin_page_module($module = NULL) {
+function variable_admin_page_module($name = NULL) {
   variable_include();
-  if ($module && (in_array($module, module_list()))) {
-    $list = variable_list_module($module);
-    return drupal_get_form('variable_edit_form', array_keys($list));
+  if ($name && (in_array($name, module_list()))) {
+    $modules = system_list('module_enabled');
+    $module = $modules[$name];
+    drupal_set_title($module->info['name']);
+    $list = variable_list_module($name);
+    $build['description']['#markup'] = $module->info['description']; 
+    $build['form'] = drupal_get_form('variable_edit_form', array_keys($list));
+    return $build;
   }
   else {
     // Groups overview

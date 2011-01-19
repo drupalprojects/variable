@@ -15,24 +15,12 @@ function variable_boot() {
 }
 
 /**
- * Get information from an array of data
- */
-function _variable_info($type, $name = NULL, $options = array()) {
-  $info = &variable_static($type, $options);
-  if ($name) {
-    return isset($info[$name]) ? $info[$name] : array();
-  }
-  else {
-    return $info;
-  } 
-}
-
-/**
- * Implementation of hook_flush_caches()
- */
-function variable_flush_caches() {
-  return array('cache_variable');
-}
+* @defgroup variable_api Variable API
+* @{
+* Get meta-information about variables and extended get/set methods
+*
+* Use these functions if you want to take full advantage of Variable API
+*/
 
 /**
  * Check access to variable
@@ -70,58 +58,19 @@ function variable_access($variable, $account = NULL) {
 }
 
 /**
- * Get value for simple scalar variable
+ * Format printable value
  * 
  * @param $variable
- *   Variable name or array data
- * @param $options
- *   Options array, it may have the following elements
- *   - language => Language object
- *   - default => Default value if not set
  */
-function variable_get_value($variable, $options = array()) {
-  $options = _variable_options($options);
-  $variable = _variable_variable($variable, $options);
-  if (!empty($variable['multiple'])) {
-    return variable_get_multiple($variable, $options);
+function variable_format_value($variable, $options = array()) {
+  $variable = variable_build($variable, $options);
+  $value = variable_get_value($variable, $options);
+  if (isset($value)) {
+    return !empty($variable['format callback']) ? call_user_func($variable['format callback'], $value, $variable, $options) : check_plain($value);
   }
   else {
-    $value = variable_get($variable['name'], NULL);
-    if (isset($value)) {
-      return $value;
-    }
-    else {
-      return isset($options['default']) ? $options['default'] : variable_get_default($variable, $options);
-    }
+    return isset($variable['empty']) ? $variable['empty'] : t('Empty');
   }
-}
-
-/**
- * Get variable default
- * 
- * @param $variable
- *   Variable name or variable information
- */
-function variable_get_default($variable, $options = array()) {
-  $variable = _variable_variable($variable, $options);
-  if (isset($variable['default'])) {
-    return $variable['default'];
-  }
-  elseif (isset($variable['default callback'])) {
-    return call_user_func($variable['default callback'], $variable, _variable_options($options));
-  }
-  return NULL;
-}
-
-/**
- * Set variable value
- * 
- * This basically sets the variable but also invokes hook_variable_update
- */
-function variable_set_value($name, $value, $options = array()) {
-  $old_value = variable_get($name, NULL);
-  variable_set($name, $value);
-  module_invoke_all('variable_update', $name, $value, $old_value);
 }
 
 /**
@@ -140,7 +89,7 @@ function variable_get_info($name = NULL, $options = array()) {
 }
 
 /**
- * Get variable group information
+ * Get variable group information.
  * 
  * @param $group
  *   Group name. Will return all if not name.
@@ -150,7 +99,7 @@ function variable_get_group($group = NULL) {
 }
 
 /**
- * Variable type information
+ * Get variable type information.
  * 
  * @param $type
  *   Type name. Will return all if no name.
@@ -160,20 +109,61 @@ function variable_get_type($type = NULL) {
 }
 
 /**
- * Clear cache
+ * Get value for simple scalar variable
+ * 
+ * @param $variable
+ *   Variable name or array data
+ * @param $options
+ *   Options array, it may have the following elements
+ *   - language => Language object
+ *   - default => Default value if not set
  */
-function variable_cache_clear($name = NULL, $langcode = NULL) {
-  if ($name || $langcode) {
-    $cids = array(
-      $name ? $name : '%',
-      $langcode ? $langcode : '%',
-    );
-    db_query("DELETE FROM {cache_variable} WHERE cid LIKE :cid", array(':cid' => implode(':', $cids)));
+function variable_get_value($variable, $options = array()) {
+  $variable = _variable_variable($variable, $options);
+  if (!empty($variable['value callback'])) {
+    variable_include($variable);
+    return call_user_func($variable['value callback'], $variable, _variable_options($options));    
   }
   else {
-    db_query("TRUNCATE TABLE {cache_variable}");
+    $value = variable_get($variable['name'], NULL);
+    if (isset($value)) {
+      return $value;
+    }
+    else {
+      return isset($options['default']) ? $options['default'] : variable_get_default($variable, $options);
+    }
   }
 }
+
+/**
+ * Set variable value
+ * 
+ * This basically sets the variable but also invokes hook_variable_update
+ */
+function variable_set_value($name, $value, $options = array()) {
+  $old_value = variable_get($name, NULL);
+  variable_set($name, $value);
+  module_invoke_all('variable_update', $name, $value, $old_value);
+}
+
+/**
+ * Get variable default
+ * 
+ * @param $variable
+ *   Variable name or variable information
+ */
+function variable_get_default($variable, $options = array()) {
+  $variable = _variable_variable($variable, $options);
+  if (isset($variable['default'])) {
+    return $variable['default'];
+  }
+  elseif (isset($variable['default callback'])) {
+    variable_include($variable);
+    return call_user_func($variable['default callback'], $variable, _variable_options($options));
+  }
+  return NULL;
+}
+
 
 /**
  * Delete variable (included children variables)
@@ -194,21 +184,32 @@ function variable_delete($variable) {
 }
 
 /**
- * Format printable value
- * 
- * @param $variable
- * 
+* @} End of "defgroup variable_api".
+*/
+
+/**
+ * Build full variable data
  */
-function variable_format_value($variable, $options = array()) {
-  $variable = variable_build($variable, $options);
-  $value = variable_get_value($variable, $options);
-  if (isset($value)) {
-    return !empty($variable['format callback']) ? call_user_func($variable['format callback'], $value, $variable, $options) : check_plain($value);
-  }
-  else {
-    return isset($variable['empty']) ? $variable['empty'] : t('Empty');
-  }
+function variable_build($variable, $options = array()) {
+  variable_include();
+  $variable = _variable_variable($variable, $options);
+  return variable_build_variable($variable, $options);
 }
+
+/**
+ * Clear cache
+ */
+function variable_cache_clear() {
+  cache_clear_all('*', 'cache_variable', TRUE);
+}
+
+/**
+ * Implementation of hook_flush_caches()
+ */
+function variable_flush_caches() {
+  return array('cache_variable');
+}
+
 
 /**
  * Implements hook_hook_info().
@@ -227,86 +228,13 @@ function variable_hook_info() {
 }
 
 /**
- * Get global language object.
- * 
- * Initialize the language system if needed as we absolutely need a language here
- */
-function variable_language() {
-  global $language;
-  if (!isset($language)) {
-    drupal_bootstrap(DRUPAL_BOOTSTRAP_LANGUAGE);
-  }
-  return $language; 
-}
-
-/**
- * Get multiple variable values
- * 
- * @param $variable
- *   Variable name or variable array
- * @return array
- *   Key, value pairs for each sub-variable
- */
-function variable_get_multiple($variable, $options = array()) {
-  $variable = variable_build($variable, $options);
-  $values = array();
-  if ($variable && !empty($variable['children'])) {
-    foreach ($variable['children'] as $name => $child) {
-      $values[$child['index']] = variable_get_value($child, $options);
-    }
-  }
-  return $values;
-}
-
-/**
- * Build full variable data
- */
-function variable_build($variable, $options = array()) {
-  variable_include();
-  $variable = _variable_variable($variable, $options);
-  return variable_build_variable($variable, $options);
-}
-
-/**
- * Normalize variable options
- * 
- * Will fill the following values if not present in the parameters
- * - langcode, Language code
- * - language, Language object
- */
-function _variable_options($options = array()) {
-  if (!empty($options['language'])) {
-    $options['langcode'] = $options['language']->language;
-  }
-  elseif (!empty($options['langcode']) && ($list = language_list()) && isset($list[$options['langcode']])) {
-    $options['language'] = $list[$options['langcode']];
-  }
-  else {
-    $language = variable_language();
-    $options['language'] = $language;
-    $options['langcode'] = $language->language;
-  }
-  return $options;  
-}
-
-/**
- * Include extended API
- */
-function variable_include($name = 'variable') {
-  static $included;
-  if (!isset($included[$name])) {
-    module_load_include('inc', 'variable', $name);
-  }
-}
-
-/**
  * Form for variable list
  * 
  * @param $list
  *   Variable name or list of variable names
  */
 function variable_edit_form($form, $form_state, $list) {
-  variable_include('variable.form');
+  module_load_include('form.inc', 'variable');
   $list = is_array($list) ? $list : array($list);
   $form = array();
   foreach ($list as $name) {
@@ -315,6 +243,26 @@ function variable_edit_form($form, $form_state, $list) {
     }
   }
   return system_settings_form($form);
+}
+
+/**
+ * Include extended API and files related to specific variable
+ * 
+ * @param $variable
+ *   Variable array
+ */
+function variable_include($variable = NULL) {
+  static $included;
+  if (!isset($included)) {
+    module_load_include('inc', 'variable');
+    $included = array();
+  }
+  if ($variable && !isset($included[$variable['name']])) {
+    variable_module_include($variable['module']);
+    $type = variable_get_type($variable['type']);
+    variable_module_include($type['module']);
+    $included[$variable['name']] = TRUE;
+  }
 }
 
 /**
@@ -377,6 +325,55 @@ function &variable_static($type, $options = array()) {
   return $data[$type][$langcode];
 }
 
+
+/**
+ * Get data from a variable module info array.
+ */
+function _variable_info($type, $name = NULL, $options = array()) {
+  $info = &variable_static($type, $options);
+  if ($name) {
+    return isset($info[$name]) ? $info[$name] : array();
+  }
+  else {
+    return $info;
+  } 
+}
+
+/**
+ * Get global language object.
+ * 
+ * Initialize the language system if needed as we absolutely need a language here
+ */
+function _variable_language() {
+  global $language;
+  if (!isset($language)) {
+    drupal_bootstrap(DRUPAL_BOOTSTRAP_LANGUAGE);
+  }
+  return $language; 
+}
+
+/**
+ * Normalize variable options
+ * 
+ * Will fill the following values if not present in the parameters
+ * - langcode, Language code
+ * - language, Language object
+ */
+function _variable_options($options = array()) {
+  if (!empty($options['language'])) {
+    $options['langcode'] = $options['language']->language;
+  }
+  elseif (!empty($options['langcode']) && ($list = language_list()) && isset($list[$options['langcode']])) {
+    $options['language'] = $list[$options['langcode']];
+  }
+  else {
+    $language = _variable_language();
+    $options['language'] = $language;
+    $options['langcode'] = $language->language;
+  }
+  return $options;  
+}
+
 /**
  * Normalize variable data
  */
@@ -388,6 +385,6 @@ function _variable_variable($variable, $options = array()) {
     return $variable;
   }
   else {
-    return array('name' => $variable, 'type' => 'default');
+    return array('name' => $variable, 'type' => 'default', 'module' => 'variable');
   }
 }

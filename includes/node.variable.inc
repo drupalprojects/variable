@@ -8,45 +8,47 @@
  * Node module variables
  */
 function node_variable_info($options) {
-  $language = $options['language'];
-  // Post settings
-  $defaults = array('module' => 'node', 'group' => 'node_post_settings');
-  $variables['default_nodes_main'] = array(
-    'type' => 'select', 
-    'title' => t('Number of posts on main page'),
-    'default' => 10,
-    'options callback' => 'node_variable_option_list',
-    'description' => t('The default maximum number of posts to display per page on overview pages such as the main page.', array(), $options),
-  ) + $defaults;
+  // Per content type options
+  $defaults = array('module' => 'node', 'group' => 'node_type_settings', 'multiple callback' => 'node_type_get_names');
   $variables['teaser_length'] = array(
-    'type' => 'select',
+    'type' => 'multiple',
     'title' => t('Length of trimmed posts'),
-    'default' => 600,
-    'options callback' => 'node_variable_option_list',
+    'multiple values' => array(
+      'type' => 'select',
+      'default' => 600,
+      'options callback' => 'node_variable_option_list',
+    ),
     'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.", array(), $options),
   ) + $defaults;
   $variables['node_preview'] = array(
-    'type' => 'select',
-    'title' => t('Preview post'),
-    'default' => DRUPAL_OPTIONAL,
-    'options callback' => 'node_variable_option_list',
+    'type' => 'multiple',
+    'title' => t('Preview before submitting'),
+    'multiple values' => array(
+      'type' => 'select',
+      'default' => DRUPAL_OPTIONAL,
+      'options callback' => 'node_variable_option_list',
+    ),
     'description' => t('Must users preview posts before submitting?', array(), $options),
   ) + $defaults;
-
-  // Content types
-  $defaults = array('module' => 'node', 'access' => 'administer content types', 'edit_path' => 'admin/content/types', 'group' => t('Content types'));
-  $form['node_options'] = array(
-    'build_callback' => 'node_variable_content_type_build',
-    'type' => 'options',
+  $variables['node_options'] = array(
+    //'build_callback' => 'node_variable_content_type_build',
+    'type' => 'multiple',
     'title' => t('Default options', array(), $options),
-    'default' => array('status', 'promote'),
-    'options' => array(
-      'status' => t('Published'),
-      'promote' => t('Promoted to front page'),
-      'sticky' => t('Sticky at top of lists'),
-      'revision' => t('Create new revision'),
+    'multiple values' => array(
+      'type' => 'options',
+      'default' => array('status', 'promote'),
+      'options callback' => 'node_variable_option_list',
     ),
     'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.', array(), $options),
+  ) + $defaults;
+  $variables['node_submitted'] = array(
+    'type' => 'multiple',
+    'title' => t('Display author and date information.', array(), $options),
+    'multiple values' => array(
+      'default' => TRUE,
+      'type' => 'boolean',
+    ),
+    'description' => t('Author username and publish date will be displayed.', array(), $options),
   ) + $defaults;
   return $variables;
 }
@@ -55,9 +57,7 @@ function node_variable_info($options) {
  * Implements hook_variable_option_list().
  */
 function node_variable_option_list($variable, $options = array()) {
-  switch ($variable['name']) {
-    case 'default_nodes_main':
-      return drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30));
+  switch ($variable['parent']) {
     case 'teaser_length':
       return array(
         0 => t('Unlimited', array(), $options),
@@ -78,6 +78,13 @@ function node_variable_option_list($variable, $options = array()) {
         DRUPAL_OPTIONAL => t('Optional', array(), $options),
         DRUPAL_REQUIRED => t('Required', array(), $options),
       );
+    case 'node_options':
+      return array(
+        'status' => t('Published', array(), $options),
+        'promote' => t('Promoted to front page', array(), $options),
+        'sticky' => t('Sticky at top of lists', array(), $options),
+        'revision' => t('Create new revision', array(), $options),     
+      );
   }
 }
 
@@ -85,9 +92,9 @@ function node_variable_option_list($variable, $options = array()) {
  * Node module variable groups
  */
 function node_variable_group_info() {
-  $groups['node_post_settings'] = array(
-    'title' => t('Post settings'),
-    'description' => t('Node post settings.'),
+  $groups['node_type_settings'] = array(
+    'title' => t('Node type settings'),
+    'description' => t('Settings for each node type.'),
     'access' => 'administer nodes',
     'path' => 'admin/content/node-settings', 
   );
