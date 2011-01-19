@@ -1,4 +1,8 @@
 ; $Id$
 name = Variable API
 description = Variable API
-core = 6.x
+core = 7.x
+
+files[] = includes/node.variable.inc
+files[] = includes/system.variable.inc
+files[] = includes/user.variable.inc

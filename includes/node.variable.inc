@@ -14,35 +14,23 @@ function node_variable_info($options) {
   $variables['default_nodes_main'] = array(
     'type' => 'select', 
     'title' => t('Number of posts on main page'),
-    'default_value' => 10,
-    'options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30)),
-    'description' => t('The default maximum number of posts to display per page on overview pages such as the main page.')
+    'default' => 10,
+    'options' => TRUE,
+    'description' => t('The default maximum number of posts to display per page on overview pages such as the main page.', array(), $options),
   ) + $defaults;
   $variables['teaser_length'] = array(
     'type' => 'select',
     'title' => t('Length of trimmed posts'),
-    'default_value' => 600,
-    'options' => array(
-      0 => t('Unlimited'),
-      200 => t('200 characters'),
-      400 => t('400 characters'),
-      600 => t('600 characters'),
-      800 => t('800 characters'),
-      1000 => t('1000 characters'),
-      1200 => t('1200 characters'),
-      1400 => t('1400 characters'),
-      1600 => t('1600 characters'),
-      1800 => t('1800 characters'),
-      2000 => t('2000 characters'),
-    ),
-    'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.")
+    'default' => 600,
+    'options' => TRUE,
+    'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.", array(), $options),
   ) + $defaults;
   $variables['node_preview'] = array(
     'type' => 'options',
     'title' => t('Preview post'),
-    'default_value' => 0,
+    'default' => 0,
     'options' => array(t('Optional'), t('Required')),
-    'description' => t('Must users preview posts before submitting?'),
+    'description' => t('Must users preview posts before submitting?', array(), $options),
   ) + $defaults;
 
   // Content types
@@ -50,25 +38,50 @@ function node_variable_info($options) {
   $form['node_options'] = array(
     'build_callback' => 'node_variable_content_type_build',
     'type' => 'options',
-    'title' => t('Default options'),
-    'default_value' => array('status', 'promote'),
+    'title' => t('Default options', array(), $options),
+    'default' => array('status', 'promote'),
     'options' => array(
       'status' => t('Published'),
       'promote' => t('Promoted to front page'),
       'sticky' => t('Sticky at top of lists'),
       'revision' => t('Create new revision'),
     ),
-    'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.'),
+    'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.', array(), $options),
   ) + $defaults;
   return $variables;
 }
 
 /**
+ * Implements hook_variable_option_list().
+ */
+function node_variable_option_list($variable, $options = array()) {
+  switch ($variable['name']) {
+    case 'default_nodes_main':
+      return drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30));
+    case 'teaser_length':
+      return array(
+        0 => t('Unlimited', array(), $options),
+        200 => t('200 characters', array(), $options),
+        400 => t('400 characters', array(), $options),
+        600 => t('600 characters', array(), $options),
+        800 => t('800 characters', array(), $options),
+        1000 => t('1000 characters', array(), $options),
+        1200 => t('1200 characters', array(), $options),
+        1400 => t('1400 characters', array(), $options),
+        1600 => t('1600 characters', array(), $options),
+        1800 => t('1800 characters', array(), $options),
+        2000 => t('2000 characters', array(), $options),
+      );   
+  }
+}
+
+/**
  * Node module variable groups
  */
-function node_variable_groups() {
+function node_variable_group_info() {
   $groups['node_post_settings'] = array(
-    'name' => t('Post settings'),
+    'title' => t('Post settings'),
+    'description' => t('Node post settings.'),
     'access' => 'administer nodes',
     'path' => 'admin/content/node-settings', 
   );

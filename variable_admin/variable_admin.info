@@ -1,4 +1,4 @@
 ; $Id$
 name = Variable admin
-description = Variable API - Admin UI
-core = 6.x
+description = Variable API - Administration UI
+core = 7.x

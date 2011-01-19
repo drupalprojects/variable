@@ -5,7 +5,7 @@
  */
 
 /**
- * System module variables
+ * Implements hook_variable_info().
  */
 function system_variable_info($options) {
   $language = $options['language'];
@@ -13,67 +13,64 @@ function system_variable_info($options) {
   $defaults = array('module' => 'system', 'group' => 'system_site_information');
   $variables['site_name'] = array(
     'type' => 'string',
-    'title' => t('Name'),
-    'default_value' => 'Drupal',
-    'description' => t('The name of this website.'),
-    'form_element' => array('#required' => TRUE),
+    'title' => t('Name', array(), $options),
+    'default' => 'Drupal',
+    'description' => t('The name of this website.', array(), $options),
+    'element' => array('#required' => TRUE),
   ) + $defaults;
   $variables['site_mail'] = array(
     'type' => 'mail_address',
-    'title' => t('E-mail address'),
-    'default_value' => ini_get('sendmail_from'),
-    'description' => t("The <em>From</em> address in automated e-mails sent during registration and new password requests, and other notifications. (Use an address ending in your site's domain to help prevent this e-mail being flagged as spam.)"),
-    'form_element' => array('#required' => TRUE),
+    'title' => t('E-mail address', array(), $options),
+    'default' => ini_get('sendmail_from'),
+    'description' => t("The <em>From</em> address in automated e-mails sent during registration and new password requests, and other notifications. (Use an address ending in your site's domain to help prevent this e-mail being flagged as spam.)", array(), $options),
+    'element' => array('#required' => TRUE),
   ) + $defaults;
   $variables['site_slogan'] = array(
     'type' => 'text',
-    'title' => t('Slogan'),
-    'default_value' => '',
-    'description' => t("Your site's motto, tag line, or catchphrase (often displayed alongside the title of the site).")
+    'title' => t('Slogan', array(), $options),
+    'default' => '',
+    'description' => t("Your site's motto, tag line, or catchphrase (often displayed alongside the title of the site).", array(), $options)
   ) + $defaults;
   $variables['site_mission'] = array(
     'type' => 'text',
     'title' => 'Mission',
-    'default_value' => '',
-    'description' => t("Your site's mission or focus statement (often prominently displayed on the front page).")
+    'default' => '',
+    'description' => t("Your site's mission or focus statement (often prominently displayed on the front page).", array(), $options)
   ) + $defaults;
   $variables['site_footer'] = array(
     'type' => 'text',
-    'title' => t('Footer message'),
-    'default_value' => '',
-    'description' => t('This text will be displayed at the bottom of each page. Useful for adding a copyright notice to your pages.')
+    'title' => t('Footer message', array(), $options),
+    'default' => '',
+    'description' => t('This text will be displayed at the bottom of each page. Useful for adding a copyright notice to your pages.', array(), $options)
   ) + $defaults;
   $variables['anonymous'] = array(
     'type' => 'string',
-    'title' => t('Anonymous user'),
-    'default_value' => t('Anonymous', array(), $language->language),
-    'description' => t('The name used to indicate anonymous users.'),
-    'form_element' => array('#required' => TRUE),
+    'title' => t('Anonymous user', array(), $options),
+    'default' => t('Anonymous', array(), $options),
+    'description' => t('The name used to indicate anonymous users.', array(), $options),
+    'element' => array('#required' => TRUE),
   ) + $defaults;
   $variables['site_frontpage'] = array(
     'type' => 'drupal_path',
-    'title' => t('Default front page'),
-    'default_value' => 'node',
-    'description' => t('The home page displays content from this relative URL. If unsure, specify "node".'),
-    'form_element' => array('#required' => TRUE),
+    'title' => t('Default front page', array(), $options),
+    'default' => 'node',
+    'description' => t('The home page displays content from this relative URL. If unsure, specify "node".', array(), $options),
+    'element' => array('#required' => TRUE),
+    'required' => TRUE,
   ) + $defaults;
 
   return $variables;
 }
 
 /**
- * Node module variable groups
+ * Implements hook_variable_group_info().
  */
-function system_variable_groups() {
+function system_variable_group_info() {
   $groups['system_site_information'] = array(
-    'name' => t('Site information'),
+    'title' => t('Site information'),
+    'description' => t('Site information'),
     'access' => 'administer site configuration',
     'path' => 'admin/settings'
-  );
-  // Group for variable that have no group
-  $groups['others'] = array(
-    'name' => t('Others'),
-    'access' => 'administer site configuration',
   );
   return $groups;
 }

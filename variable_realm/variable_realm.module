@@ -27,7 +27,7 @@ function variable_realm_boot() {
  * Realm values take precedence over language values.
  */
 function &variable_realm_build($realm, $langcode) {
-  $build = &variable_static('variable_build');
+  $build = &drupal_static('variable_build');
   if (!isset($build[$realm][$langcode])) {
     $variables = $merge = array();
     foreach (array($realm, 'default') as $key) {
@@ -55,7 +55,7 @@ function &variable_realm_build($realm, $langcode) {
  *   Whether to update the cache
  */
 function &variable_realm_get($realm, $langcode, $cache = TRUE) {
-  $realms = &variable_static('variable_realms');
+  $realms = &drupal_static('variable_realms');
   if (!isset($realms[$realm][$langcode])) {
     if ($cache = variable_cache_get('variable_realms:' . $realm, $langcode)) {
       $realms[$realm][$langcode] = $cache->data;
@@ -65,7 +65,7 @@ function &variable_realm_get($realm, $langcode, $cache = TRUE) {
       if ($cache) {
         variable_cache_set('variable_realms:' . $realm, $realms[$realm][$langcode], $langcode);
         // If this was marked as updated (changed, uncached), unmark it
-        $updated = &variable_static('variable_update');
+        $updated = &drupal_static('variable_update');
         $updated[$realm][$langcode] = NULL;
       }
     }
@@ -110,7 +110,7 @@ function variable_realm_set_value($realm, $langcode, $name, $value) {
     }
   }
   // If it is the first time we update this realm, invalidate cache and rebuild all related variables
-  $updated = &variable_static('variable_update');
+  $updated = &drupal_static('variable_update');
   if (!isset($updated[$realm][$langcode])) {
     variable_realm_clear($realm, $langcode);
   }
@@ -139,10 +139,10 @@ function variable_realm_del($realm, $langcode, $name) {
  * Clear all caches for this realm
  */
 function variable_realm_clear($realm, $langcode) {
-  $build = &variable_static('variable_build');
+  $build = &drupal_static('variable_build');
   if ($realm == 'default' && $language == 'default') {
     // This is the default realm, default language, clean all realm builds
-    $realms = &variable_static('variable_realms');
+    $realms = &drupal_static('variable_realms');
     $default = $realms['default']['default'];
     $realms = array();
     $realms['default']['default'] = $default;
@@ -191,8 +191,8 @@ function variable_realm_load($realm, $langcode) {
 function &variable_realm_init() {
   static $status;
   if (!isset($status)) {
-    $status = &variable_static('variable_status', array());
-    $realms = &variable_static('variable_realms');
+    $status = &drupal_static('variable_status', array());
+    $realms = &drupal_static('variable_realms');
     // We store the absolute defaults for variables here
     $realms['default']['default'] = variable_global_get('conf');
     $status += array(
@@ -241,5 +241,56 @@ function variable_switch_language($language = NULL) {
     variable_global_set('conf', variable_realm_build($status['realm'], $langcode));
     $status['language'] = $language;
     $status['langcode'] = $langcode;
+  }
+}
+
+
+/**
+ * Get original global variable
+ */
+function variable_global_get($name) {
+  $original = &drupal_static('variable_global', array());
+  if (isset($original[$name])) {
+    return $original[$name];
+  }
+  elseif (isset($GLOBALS[$name])) {
+    return $GLOBALS[$name];
+  }
+  else {
+    return NULL;
+  }
+}
+
+/**
+ * Switch global variable
+ * 
+ * @param $name
+ *   Optional global variable name. If not set, it will reset all global variables to its original value.
+ * @param $value
+ *   Optional new value for global variable. If not set, it will reset the variable to its original value.
+ */
+function variable_global_set($name, $value = NULL) {
+  $original = &drupal_static('variable_global', array());
+  if (!isset($original[$name])) {
+    $original[$name] = $GLOBALS[$name];
+  }
+  if (isset($value)) {
+    $GLOBALS[$name] = $value;
+  }
+}
+
+
+/**
+ * Reset global variables to original values
+ */
+function variable_global_reset($name = NULL) {
+  $original = &drupal_static('variable_global', array());
+  if (!$name) {
+    foreach ($original as $key => $value) {
+      $GLOBALS[$key] = $value;
+    }
+  }    
+  elseif (isset($original[$name])) {
+    $GLOBALS[$name] = $original[$name];
   }
 }
