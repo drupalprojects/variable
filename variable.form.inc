@@ -9,7 +9,7 @@
  * Build form element for a variable
  */
 function variable_form_element($variable) {
-  $name = $variable['name'];
+  $variable = variable_build($variable);
   if (!empty($variable['element callback'])) {
     $element = call_user_func($variable['element callback'], $variable);
   }
@@ -36,7 +36,7 @@ function variable_form_element_multiple($variable) {
     '#title' => $variable['title'],
     '#description' => $variable['description'],
   );
-  foreach (variable_build_multiple($variable) as $name => $item) {
+  foreach ($variable['children'] as $name => $item) {
     $element[$name] = variable_form_element($item);
   }
   return $element;
@@ -48,18 +48,21 @@ function variable_form_element_multiple($variable) {
 function variable_form_element_default($variable) {
   $variable += array('element' => array(), 'title' => '', 'description' => '');
   $type = variable_get_type($variable['type']) + array('element' => array());
-  return $variable['element'] + array(
+  $element = $variable['element'] + array(
     '#title' => $variable['title'],
     '#description' => $variable['description'],
-    '#default_value' => variable_get_value($variable),
   ) + $type['element'];
+  $value = variable_get_value($variable);
+  if (isset($value)) {
+    $element['#default_value'] = $value;
+  }
+  return $element;
 }
 
 /**
  * Build options variables
  */
 function variable_form_element_options($variable) {
-  $variable = variable_build_options($variable);
   $element = variable_form_element_default($variable);
   $element['#options'] = $variable['options'];
   return $element;

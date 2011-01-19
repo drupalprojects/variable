@@ -15,21 +15,21 @@ function node_variable_info($options) {
     'type' => 'select', 
     'title' => t('Number of posts on main page'),
     'default' => 10,
-    'options' => TRUE,
+    'options callback' => 'node_variable_option_list',
     'description' => t('The default maximum number of posts to display per page on overview pages such as the main page.', array(), $options),
   ) + $defaults;
   $variables['teaser_length'] = array(
     'type' => 'select',
     'title' => t('Length of trimmed posts'),
     'default' => 600,
-    'options' => TRUE,
+    'options callback' => 'node_variable_option_list',
     'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.", array(), $options),
   ) + $defaults;
   $variables['node_preview'] = array(
-    'type' => 'options',
+    'type' => 'select',
     'title' => t('Preview post'),
-    'default' => 0,
-    'options' => array(t('Optional'), t('Required')),
+    'default' => DRUPAL_OPTIONAL,
+    'options callback' => 'node_variable_option_list',
     'description' => t('Must users preview posts before submitting?', array(), $options),
   ) + $defaults;
 
@@ -71,7 +71,13 @@ function node_variable_option_list($variable, $options = array()) {
         1600 => t('1600 characters', array(), $options),
         1800 => t('1800 characters', array(), $options),
         2000 => t('2000 characters', array(), $options),
-      );   
+      );
+    case 'node_preview':
+      return array(
+        DRUPAL_DISABLED => t('Disabled', array(), $options),
+        DRUPAL_OPTIONAL => t('Optional', array(), $options),
+        DRUPAL_REQUIRED => t('Required', array(), $options),
+      );
   }
 }
 

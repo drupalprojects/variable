@@ -10,7 +10,7 @@
  */
 function variable_variable_group_info() {
   // Group for variable that have no group
-  $groups['other'] = array(
+  $groups['default'] = array(
     'title' => t('Other'),
     'description' => t('Variables that don\'t belong to any other group'),
   );
@@ -52,14 +52,12 @@ function variable_variable_type_info() {
   $type['mail_address'] = array(
     'title' => t('E-mail address'),
     'element' => array('#type' => 'textfield'),
+    'token' => TRUE,
   );
   $type['mail_text'] = array(
     'title' => t('Mail text'),
-    'defaults' => array(
-      'multiple' => array('subject' => t('Subject'), 'body' => t('Body')),
-    ),
-    'element callback' => 'variable_element_mail_text',
-    'multiple callback' => 'variable_build_mail_text',
+    'multiple' => array('subject' => t('Subject'), 'body' => t('Body')),
+    'build callback' => 'variable_build_mail_text',
     'format callback' => 'variable_format_mail_text',
     'localize' => TRUE,
   );
@@ -85,12 +83,14 @@ function variable_variable_type_info() {
     'title' => t('String'),
     'element' => array('#type' => 'textfield'),
     'localize' => TRUE,
+    'token' => TRUE,
   );
   $type['text'] = array(
     'title' => t('Text'),
     'element' => array('#type' => 'textarea'),
     'localize' => TRUE,
     'format callback' => 'filter_xss_admin',
+    'token' => TRUE,
   );
   $type['url'] = array(
     'title' => t('URL'),

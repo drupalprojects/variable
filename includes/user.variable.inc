@@ -17,6 +17,7 @@ function user_variable_info($options) {
     'title' => t('Public registrations'),
     'default' => 1, 
     'options' => TRUE,
+    'options callback' => 'user_variable_option_list',
   ) + $defaults;
   $variables['user_email_verification'] = array(
     'type' => 'boolean',
