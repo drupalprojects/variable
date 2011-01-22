@@ -1,17 +1,18 @@
 <?php
+// $Id$
 /**
  * @file
  * Variable API module. Definition for Drupal core variables
  */
 
 /**
- * Node module variables
+ * Implements hook_variable_info().
  */
 function node_variable_info($options) {
   // Per content type options
-  $defaults = array('module' => 'node', 'group' => 'node_type_settings', 'multiple callback' => 'node_type_get_names');
+  $defaults = array('module' => 'node', 'group' => 'node_type_settings');
   $variables['teaser_length'] = array(
-    'type' => 'multiple',
+    'type' => 'multiple_node_type',
     'title' => t('Length of trimmed posts'),
     'multiple values' => array(
       'type' => 'select',
@@ -21,7 +22,7 @@ function node_variable_info($options) {
     'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.", array(), $options),
   ) + $defaults;
   $variables['node_preview'] = array(
-    'type' => 'multiple',
+    'type' => 'multiple_node_type',
     'title' => t('Preview before submitting'),
     'multiple values' => array(
       'type' => 'select',
@@ -32,7 +33,7 @@ function node_variable_info($options) {
   ) + $defaults;
   $variables['node_options'] = array(
     //'build_callback' => 'node_variable_content_type_build',
-    'type' => 'multiple',
+    'type' => 'multiple_node_type',
     'title' => t('Default options', array(), $options),
     'multiple values' => array(
       'type' => 'options',
@@ -42,7 +43,7 @@ function node_variable_info($options) {
     'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.', array(), $options),
   ) + $defaults;
   $variables['node_submitted'] = array(
-    'type' => 'multiple',
+    'type' => 'multiple_node_type',
     'title' => t('Display author and date information.', array(), $options),
     'multiple values' => array(
       'default' => TRUE,
@@ -53,8 +54,42 @@ function node_variable_info($options) {
   return $variables;
 }
 
+
 /**
- * Implements hook_variable_option_list().
+ * Implements hook_variable_group_info().
+ */
+function node_variable_group_info() {
+  $groups['node_type_settings'] = array(
+    'title' => t('Node type settings'),
+    'description' => t('Settings for each node type.'),
+    'access' => 'administer nodes',
+    'path' => 'admin/content/node-settings', 
+  );
+  return $groups;
+}
+
+/**
+ * Implements hook_variable_type_info()
+ */
+function node_variable_type_info() {
+  // Multiple variable. Per node type options.
+  $type['multiple_node_type'] = array(
+    'title' => t('Node type options'),
+    'multiple callback' => 'node_type_get_names',
+    'element' => array('#type' => 'fieldset'),
+    'build callback' => 'variable_build_multiple',
+    'format callback' => 'variable_format_multiple',
+    'element callback' => 'variable_form_element_multiple',
+    'value callback' => 'variable_multiple_get_value',
+    'default callback' => 'variable_multiple_get_default',
+     // All these callbacks are defined in this module's variable file
+    'module' => 'variable',
+  );
+  return $type;
+}
+
+/**
+ * Callback for variable options
  */
 function node_variable_option_list($variable, $options = array()) {
   switch ($variable['parent']) {
@@ -86,19 +121,6 @@ function node_variable_option_list($variable, $options = array()) {
         'revision' => t('Create new revision', array(), $options),     
       );
   }
-}
-
-/**
- * Node module variable groups
- */
-function node_variable_group_info() {
-  $groups['node_type_settings'] = array(
-    'title' => t('Node type settings'),
-    'description' => t('Settings for each node type.'),
-    'access' => 'administer nodes',
-    'path' => 'admin/content/node-settings', 
-  );
-  return $groups;
 }
 
 /**

@@ -184,6 +184,22 @@ function variable_delete($variable) {
 }
 
 /**
+ * Provide list of variables as array of name => description
+ * 
+ * @param $names
+ *   List of variable names or full variable arrays
+ */
+function variable_list($names) {
+  $list = array();
+  foreach ($names as $name) {
+    if ($variable = _variable_variable($name)) {
+      $list[$variable['name']] = $variable['title'];
+    }
+  }
+  return $list;
+}
+
+/**
 * @} End of "defgroup variable_api".
 */
 
@@ -291,6 +307,18 @@ function variable_modules_uninstalled($modules) {
 }
 
 /**
+ * Implements hook_theme()
+ */
+function variable_theme($existing, $type, $theme, $path) {
+  return array(
+    'variable_table_select' => array(
+      'render element' => 'element',
+      'file' => 'variable.form.inc',
+    ),
+  );
+}
+
+/**
  * Get variable info static data, try the cache, or invoke the hook to collect it.
  * 
  * @param $type
@@ -376,15 +404,28 @@ function _variable_options($options = array()) {
 
 /**
  * Normalize variable data
+ * 
+ * @param $variable
+ *   Variable name or variable info array
+ * @return array
+ *   Variable information
  */
 function _variable_variable($variable, $options = array()) {
   if (is_array($variable)) {
     return $variable;
   }
-  elseif ($variable = variable_get_info($variable, $options)) {
-    return $variable;
+  elseif ($info = variable_get_info($variable, $options)) {
+    return $info;
   }
   else {
-    return array('name' => $variable, 'type' => 'default', 'module' => 'variable');
+    // We don't have meta-information about this variable.
+    return array(
+      'name' => $variable,
+      'title' => $variable,
+      'type' => 'default', 
+      'module' => 'variable',
+      // Space for public service advertisement :-)
+      'description' => t('We have no meta information for this variable. Please, ask module developers to declare their variables. See <a href="http://drupal.org/project/variable">Variable module</a>.'),
+    );
   }
 }

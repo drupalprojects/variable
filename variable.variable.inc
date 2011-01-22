@@ -18,9 +18,21 @@ function variable_variable_group_info() {
 }
 
 /**
- * Implements hook_variable_type_info()
+ * Implements hook_variable_type_info().
  */
 function variable_variable_type_info() {
+  // Array of values
+  $type['array'] = array(
+    'title' => t('Array'),
+    'element' => array('#type' => 'fieldset', '#tree' => TRUE),
+    // Properties for each array item
+    'repeat' => array(
+      'element' => array('#type' => 'textfield'),
+    ),
+    'format callback' => 'variable_format_array',
+    'element callback' => 'variable_form_element_array',
+    'default' => array(),
+  );
   // TRUE / FALSE value, checkbox
   $type['boolean'] = array(
     'title' => t('Boolean'),
@@ -33,21 +45,12 @@ function variable_variable_type_info() {
     'element' => array('#type' => 'textfield'),
     'access' => 'administer site configuration',
   );
-  $type['drupal_path'] = array(
-    'title' => t('Drupal path'),
-    'element' => array('#type' => 'textfield', '#size' => 40),
-  );
   // Enable/Disable 
   $type['enable'] = array(
     'title' => t('Enable'),
     'options' => array(t('Disabled'), t('Enabled')),
     'element' => array('#type' => 'radios'),
     'format callback' => 'variable_format_option',
-  );
-  $type['file_path'] = array(
-    'title' => t('File path'),
-    'default' => conf_path() . '/files',
-    'element' => array('#type' => 'textfield', '#maxlength' => 255, '#after_build' => array('system_check_directory')),
   );
   // Multiple variable that will spawn into multiple elements
   $type['multiple'] = array(
@@ -90,6 +93,13 @@ function variable_variable_type_info() {
     'element callback' => 'variable_form_element_options',
     'format callback' => 'variable_format_option',
   );
+  // Select number from array of values
+  $type['select_number'] = array(
+    'title' => t('Select'),
+    'element' => array('#type' => 'select'),
+    'element callback' => 'variable_form_element_options',
+    'options callback' => 'variable_options_select_number',
+  );
   $type['string'] = array(
     'title' => t('String'),
     'element' => array('#type' => 'textfield'),
@@ -116,34 +126,10 @@ function variable_variable_type_info() {
  */
 function variable_build_mail_text($variable, $options = array()) {
   $name = $variable['name'];
-  $variable = variable_build_multiple($variable, $options);
   // For mail text, children have different types
   $variable['children'][$name . '_subject']['type'] = 'string';
   $variable['children'][$name . '_body']['type'] = 'text';
-  return $variable;
-}
-
-/**
- * Build multiple variables
- */
-function variable_build_multiple($variable, $options) {
-  $variable += array('children' => array(), 'multiple values' => array());
-  if (is_array($variable['multiple'])) {
-    $default = variable_get_default($variable, $options);
-    foreach ($variable['multiple'] as $key => $title) {
-      $name = $variable['name'] . '_' . $key;
-      // Be careful to respect previously set properties, add but do not override.
-      $child = isset($variable['children'][$name]) ? $variable['children'][$name] : array();
-      $child += $variable['multiple values'];
-      $child += array(
-        'name' => $name, 'index' => $key, 'title' => $title, 
-        'type' => 'default', 'parent' => $variable['name'], 'module' => $variable['module'],
-        'default' => is_array($default) ? (isset($default[$key]) ? $default[$key] : NULL) : $default,
-      );
-      $child += variable_get_type($child['type']);
-      $variable['children'][$name] = $child;
-    }
-  }
+  $variable = variable_build_multiple($variable, $options);
   return $variable;
 }
 
@@ -161,6 +147,13 @@ function variable_format_option($value, $variable, $options = array()) {
 }
 
 /**
+ * Format array variable
+ */
+function variable_format_array($value, $variable, $options = array()) {
+  return empty($value) ? t('Empty') : implode(', ', array_map('check_plain', $value));
+}
+
+/**
  * Format boolean variable
  */
 function variable_format_boolean($value, $variable, $options = array()) {
@@ -173,13 +166,6 @@ function variable_format_boolean($value, $variable, $options = array()) {
 }
 
 /**
- * Format multiple variable
- */
-function variable_format_multiple($value, $variable, $options = array()) {
-  return t('<Multiple>', array(), $options);
-}
-
-/**
  * Format mail variable
  */
 function variable_format_mail_text($value, $variable, $options = array()) {
@@ -187,25 +173,8 @@ function variable_format_mail_text($value, $variable, $options = array()) {
 }
 
 /**
- * Get value for multiple variable
+ * Options callback for numeric select
  */
-function variable_multiple_get_value($variable, $options = array()) {
-  $variable = variable_build($variable, $options);
-  $values = array();
-  foreach ($variable['children'] as $child) {
-    $values[$child['index']] = variable_get_value($child, $options);
-  }
-  return $values;
-}
-
-/**
- * Get defaults for multiple variable
- */
-function variable_multiple_get_default($variable, $options = array()) {
-  $variable = variable_build($variable, $options);
-  $values = array();
-  foreach ($variable['children'] as $child) {
-    $values[$child['index']] = variable_get_default($child, $options);
-  }  
-  return $values;
+function variable_options_select_number($variable, $options = array()) {
+  return drupal_map_assoc($variable['options']);
 }

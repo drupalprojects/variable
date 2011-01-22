@@ -11,6 +11,7 @@
 function variable_admin_page_group($group = NULL) {
   variable_include();
   if ($group && ($group_info = variable_get_group($group))) {
+    $group_info += array('description' => '');
     drupal_set_title($group_info['title']);
     $list = variable_list_group($group);
     $build['description']['#markup'] = $group_info['description']; 
@@ -27,7 +28,7 @@ function variable_admin_page_group($group = NULL) {
         '#type' => 'fieldset',
         '#title' => $info['title'],
         '#collapsible' => TRUE, '#collapsed' => TRUE,
-        '#description' => $info['description'] . ' ' . l(t('Edit group variables'), 'admin/config/system/variable/group/' . $group),
+        '#description' => (!empty($info['description']) ? $info['description'] . ' ' : '') . l(t('Edit group variables'), 'admin/config/system/variable/group/' . $group),
       );
       $build['groups'][$group]['list'] = variable_admin_group_list(variable_list_group($group));
     }

@@ -65,6 +65,31 @@ function variable_invoke_all() {
   return $return;
 }
 
+
+/**
+ * Build multiple variables
+ */
+function variable_build_multiple($variable, $options) {
+  $variable += array('children' => array(), 'multiple values' => array());
+  if (is_array($variable['multiple'])) {
+    $default = variable_get_default($variable, $options);
+    foreach ($variable['multiple'] as $key => $title) {
+      $name = $variable['name'] . '_' . $key;
+      // Be careful to respect previously set properties, add but do not override.
+      $child = isset($variable['children'][$name]) ? $variable['children'][$name] : array();
+      $child += $variable['multiple values'];
+      $child += array(
+        'name' => $name, 'index' => $key, 'title' => $title, 
+        'type' => 'default', 'parent' => $variable['name'], 'module' => $variable['module'],
+        'default' => is_array($default) ? (isset($default[$key]) ? $default[$key] : NULL) : $default,
+      );
+      $child += variable_get_type($child['type']);
+      $variable['children'][$name] = $child;
+    }
+  }
+  return $variable;
+}
+
 /**
  * Build single variable
  * 
@@ -135,7 +160,7 @@ function variable_option_list($variable, $options) {
  * General function to include variable definitions for all modules
  */
 function variable_module_include($modules = NULL) {
-  static $core_modules = array('system', 'node', 'user', 'taxonomy');
+  static $core_modules = array('locale', 'forum', 'menu', 'node', 'system', 'taxonomy', 'translation', 'user');
   static $included = array();
   $modules = $modules ? (is_array($modules) ? $modules : array($modules)) : $core_modules;
   foreach ($modules as $module) {
@@ -161,4 +186,36 @@ function variable_module_uninstall($module) {
   foreach (variable_list_module($module) as $name => $variable) {
     variable_delete($variable);
   }
+}
+
+
+/**
+ * Format multiple variable
+ */
+function variable_format_multiple($value, $variable, $options = array()) {
+  return t('<Multiple>', array(), $options);
+}
+
+/**
+ * Get value for multiple variable
+ */
+function variable_multiple_get_value($variable, $options = array()) {
+  $variable = variable_build($variable, $options);
+  $values = array();
+  foreach ($variable['children'] as $child) {
+    $values[$child['index']] = variable_get_value($child, $options);
+  }
+  return $values;
+}
+
+/**
+ * Get defaults for multiple variable
+ */
+function variable_multiple_get_default($variable, $options = array()) {
+  $variable = variable_build($variable, $options);
+  $values = array();
+  foreach ($variable['children'] as $child) {
+    $values[$child['index']] = variable_get_default($child, $options);
+  }  
+  return $values;
 }
