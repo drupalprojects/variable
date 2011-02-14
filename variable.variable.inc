@@ -147,10 +147,19 @@ function variable_format_option($value, $variable, $options = array()) {
 }
 
 /**
- * Format array variable
+ * Format array variable, handling nested arrays
  */
-function variable_format_array($value, $variable, $options = array()) {
-  return empty($value) ? t('Empty') : implode(', ', array_map('check_plain', $value));
+function variable_format_array($value, $variable = NULL, $options = array()) {
+  if (empty($value)) {
+    return t('Empty');
+  }
+  else {
+    $elements = array();
+    foreach ($value as $item) {
+      $elements[] = is_array($item) ? '(' . variable_format_array($item) . ')' : check_plain($item);
+    }
+    return implode(', ', $elements);
+  }
 }
 
 /**

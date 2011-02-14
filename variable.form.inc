@@ -27,28 +27,38 @@ function variable_form_element($variable, $options = array()) {
  * Build array form element
  */
 function variable_form_element_array($variable, $options = array()) {
-  // This will be possibly a textfield with tree value
+  // This will be possibly a fieldset with tree value
   $element = variable_form_element_default($variable, $options);
   // We may have a multiple element base that will default to plain textfield
   $item = $variable['repeat'];
   $value = variable_get_value($variable, $options);
+  // Compile names and defaults for all elements
+  $names = $defaults = array();
   if (!empty($variable['multiple'])) {
     // If we've got a multiple value, it will be an array with known elements
-    foreach ($variable['multiple'] as $key => $title) {
-      $element[$key] = $item['element'] + array('#title' => $title, '#default_value' => isset($value[$key]) ? $value[$key] : '');
-    }
+    $names = $variable['multiple'];
   }
   else {
-    // Undefined array, add all the elements plus a blank field
-    if (!in_array('', $value)) {
-      $value[] = '';
+    // Array with unknown elements, we add an element for each existing one
+    $names = array_combine(array_keys($value), array_keys($value));
+  }
+  // Now build elements with the right names
+  foreach ($names as $key => $title) {
+    if (isset($value[$key]) && is_array($value[$key])) {
+      // This element is an array, we cannot edit it but we need to add it to the form
+      $element[$key] = array('#type' => 'value', '#value' => $value[$key]);
+      $element['variable_element_array_' . $key] = array('#type' => 'item', '#title' => $title, '#markup' => variable_format_array($value[$key]));
     }
-    foreach ($value as $key => $item_value) {
-      $element[$key] = $item['element'] + array('#default_value' => isset($value[$key]) ? $value[$key] : '');
-    }
+    else {
+      $element[$key] = $item['element'] + array('#title' => $title, '#default_value' => isset($value[$key]) ? $value[$key] : '');
+    }  
   }
   return $element;
 }
+
+/**
+ * 
+ */
 
 /**
  * Build multiple form element

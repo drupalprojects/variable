@@ -10,7 +10,7 @@
  */
 function variable_admin_menu() {
   $items['admin/config/system/variable'] = array(
-    'title' => 'Misc settings',
+    'title' => 'Variables',
     'description' => 'Variable settings for mixed modules.',
     'page callback' => 'variable_admin_page_group',
     'file' => 'variable_admin.inc',

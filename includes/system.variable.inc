@@ -160,6 +160,31 @@ function system_variable_info($options) {
     'default' => t('@site is currently under maintenance. We should be back shortly. Thank you for your patience.', array('@site' => variable_get('site_name', 'Drupal')), $options),
     'description' => t('Message to show visitors when the site is in maintenance mode.')
   ) + $defaults;
+  // Theme settings, we may want to localize the logo
+  $variables['theme_settings'] = array(
+    'type' => 'array',
+    'title' => t('Global theme settings.'),
+    'group' => 'system_theme_settings',
+    'default' => array(
+      'default_logo' => 1, 
+      'logo_path' => '', 
+      'default_favicon' => 1, 
+      'favicon_path' => '',
+      'favicon_mimetype' => 'image/vnd.microsoft.icon',
+    ),
+    'localize' => TRUE,
+  );
+  // One different variable for each theme
+  foreach (list_themes() as $theme) {
+    $variables['theme_' . $theme->name . '_settings'] = array(
+      'type' => 'array',
+      'title' => t('Theme settings for @name', array('@name' => $theme->info['name']), $options),
+      'description' => t('Logo, icons and other specific theme settings.'),
+      'default' => $variables['theme_settings']['default'],
+      'group' => 'system_theme_settings',
+      'localize' => TRUE,
+    );
+  }
   return $variables;
 }
 
@@ -183,6 +208,11 @@ function system_variable_group_info() {
     'description' => t('Regional settings'),
     'access' => 'administer site configuration',
   );
+  $groups['system_theme_settings'] = array(
+    'title' => t('Theme settings'),
+    'description' => t('Theme settings'),
+    'access' => 'administer site configuration',
+  );  
   return $groups;
 }
 

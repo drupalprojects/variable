@@ -57,6 +57,31 @@ function variable_access($variable, $account = NULL) {
   }
 }
 
+
+/**
+ * Get list of variables expanding multiple ones
+ * 
+ * @param $names
+ *   List of variable names or full variable arrays
+ *   
+ * @return array()
+ *   List variable names with spawned multiple variables
+ */
+function variable_children($names) {
+  $list = array();
+  foreach ($names as $name) {
+    // We need to build the variable, it may be multiple
+    $variable = variable_build($name);
+    if (!empty($variable['children'])) {
+      $list = array_merge($list, array_keys($variable['children']));
+    }
+    else {
+      $list[] = $name;
+    }
+  }
+  return $list;
+}
+
 /**
  * Format printable value
  * 
@@ -172,7 +197,7 @@ function variable_delete($variable) {
   $variable = _variable_variable($variable);
   variable_include();
   // We need to build the variable, it may be multiple
-  $variable = variable_build($variable, $options);
+  $variable = variable_build($variable);
   if (!empty($variable['children'])) {
     array_map('variable_del', array_keys($variable['children']));
   }
@@ -184,10 +209,12 @@ function variable_delete($variable) {
 }
 
 /**
- * Provide list of variables as array of name => description
+ * Provide list of variable titles
  * 
  * @param $names
  *   List of variable names or full variable arrays
+ * @return array()
+ *   List of name => title
  */
 function variable_list($names) {
   $list = array();
