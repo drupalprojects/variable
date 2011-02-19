@@ -27,7 +27,7 @@ function variable_store_schema() {
         'not null' => TRUE,
         'default' => ''),
       'realm_key' => array(
-        'description' => 'The realm key of this variable.'
+        'description' => 'The realm key of this variable.',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,

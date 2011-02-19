@@ -253,6 +253,30 @@ function variable_flush_caches() {
   return array('cache_variable');
 }
 
+/**
+ * Implements hook_element_info()
+ */
+function variable_element_info() {
+  // A fieldset with variable list
+  $types['variable_fieldset'] = array(
+    '#collapsible' => FALSE, 
+    '#collapsed' => FALSE, 
+    '#value' => NULL, 
+    '#process' => array('variable_element_process_fieldset', 'form_process_fieldset', 'ajax_process_form'), 
+    '#pre_render' => array('form_pre_render_fieldset'), 
+    '#theme_wrappers' => array('fieldset'),
+    '#variable_list' => array(),
+  );
+  return $types;
+}
+
+/**
+ * Process variable fieldset
+ */
+function variable_element_process_fieldset($element) {
+  $element += variable_edit_subform($element['#variable_list']);
+  return $element;
+}
 
 /**
  * Implements hook_hook_info().
@@ -277,6 +301,14 @@ function variable_hook_info() {
  *   Variable name or list of variable names
  */
 function variable_edit_form($form, $form_state, $list) {
+  $form += variable_edit_subform($list);
+  return system_settings_form($form);
+}
+
+/**
+ * Form elements for variable list
+ */
+function variable_edit_subform($list) {
   module_load_include('form.inc', 'variable');
   $list = is_array($list) ? $list : array($list);
   $form = array();
@@ -285,7 +317,7 @@ function variable_edit_form($form, $form_state, $list) {
       $form[$name] = variable_form_element($variable);
     }
   }
-  return system_settings_form($form);
+  return $form;
 }
 
 /**
@@ -313,7 +345,7 @@ function variable_include($variable = NULL) {
  */
 function variable_module_form($form, $form_state, $module) {
   variable_include();
-  return variable_edit_form($form, $form_state, array_keys(variable_module_list($module)));
+  return variable_edit_form($form, $form_state, array_keys(variable_list_module($module)));
 }
 
 /**
@@ -321,7 +353,7 @@ function variable_module_form($form, $form_state, $module) {
  */
 function variable_group_form($form, $form_state, $group) {
   variable_include();
-  return variable_edit_form($form, $form_state, array_keys(variable_group_list($module)));
+  return variable_edit_form($form, $form_state, array_keys(variable_list_group($group)));
 }
 
 /**

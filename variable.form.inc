@@ -57,10 +57,6 @@ function variable_form_element_array($variable, $options = array()) {
 }
 
 /**
- * 
- */
-
-/**
  * Build multiple form element
  */
 function variable_form_element_multiple($variable, $options = array()) {

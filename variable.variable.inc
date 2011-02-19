@@ -12,7 +12,11 @@ function variable_variable_group_info() {
   // Group for variable that have no group
   $groups['default'] = array(
     'title' => t('Other'),
-    'description' => t('Variables that don\'t belong to any other group'),
+    'description' => t("Variables that don't belong to any other group."),
+  );
+  $groups['debug'] = array(
+    'title' => t('Debug'),
+    'description' => t('Debug and development options.'),
   );
   return $groups;
 }
@@ -125,10 +129,10 @@ function variable_variable_type_info() {
  * Build multiple mail variable
  */
 function variable_build_mail_text($variable, $options = array()) {
-  $name = $variable['name'];
+  $name = str_replace('[mail_part]', '', $variable['name']);
   // For mail text, children have different types
-  $variable['children'][$name . '_subject']['type'] = 'string';
-  $variable['children'][$name . '_body']['type'] = 'text';
+  $variable['children'][$name . 'subject']['type'] = 'string';
+  $variable['children'][$name . 'body']['type'] = 'text';
   $variable = variable_build_multiple($variable, $options);
   return $variable;
 }

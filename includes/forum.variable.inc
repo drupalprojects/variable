@@ -45,7 +45,6 @@ function forum_variable_info($options) {
   $variables['forum_containers'] = array(
     'type' => 'array',
     'title' => t('Forum containers'),
-    'title' => t('Forum containers'),
     'group' => 'forum_settings',    
   );
   return $variables;

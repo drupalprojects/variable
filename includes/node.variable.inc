@@ -11,7 +11,7 @@
 function node_variable_info($options) {
   // Per content type options
   $defaults = array('module' => 'node', 'group' => 'node_type_settings');
-  $variables['teaser_length'] = array(
+  $variables['teaser_length_[node_type]'] = array(
     'type' => 'multiple_node_type',
     'title' => t('Length of trimmed posts'),
     'multiple values' => array(
@@ -21,7 +21,7 @@ function node_variable_info($options) {
     ),
     'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.", array(), $options),
   ) + $defaults;
-  $variables['node_preview'] = array(
+  $variables['node_preview_[node_type]'] = array(
     'type' => 'multiple_node_type',
     'title' => t('Preview before submitting'),
     'multiple values' => array(
@@ -31,8 +31,7 @@ function node_variable_info($options) {
     ),
     'description' => t('Must users preview posts before submitting?', array(), $options),
   ) + $defaults;
-  $variables['node_options'] = array(
-    //'build_callback' => 'node_variable_content_type_build',
+  $variables['node_options_[node_type]'] = array(
     'type' => 'multiple_node_type',
     'title' => t('Default options', array(), $options),
     'multiple values' => array(
@@ -42,7 +41,7 @@ function node_variable_info($options) {
     ),
     'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.', array(), $options),
   ) + $defaults;
-  $variables['node_submitted'] = array(
+  $variables['node_submitted_[node_type]'] = array(
     'type' => 'multiple_node_type',
     'title' => t('Display author and date information.', array(), $options),
     'multiple values' => array(
@@ -93,7 +92,7 @@ function node_variable_type_info() {
  */
 function node_variable_option_list($variable, $options = array()) {
   switch ($variable['parent']) {
-    case 'teaser_length':
+    case 'teaser_length_[node_type]':
       return array(
         0 => t('Unlimited', array(), $options),
         200 => t('200 characters', array(), $options),
@@ -107,13 +106,13 @@ function node_variable_option_list($variable, $options = array()) {
         1800 => t('1800 characters', array(), $options),
         2000 => t('2000 characters', array(), $options),
       );
-    case 'node_preview':
+    case 'node_preview_[node_type]':
       return array(
         DRUPAL_DISABLED => t('Disabled', array(), $options),
         DRUPAL_OPTIONAL => t('Optional', array(), $options),
         DRUPAL_REQUIRED => t('Required', array(), $options),
       );
-    case 'node_options':
+    case 'node_options_[node_type]':
       return array(
         'status' => t('Published', array(), $options),
         'promote' => t('Promoted to front page', array(), $options),
@@ -130,7 +129,7 @@ function node_variable_content_type_build($variable, $options) {
   unset($variable['build_callback']);
   $build = array();
   foreach (node_get_types() as $type) {
-    $name = $variable['name'] . '_' . $type->type;
+    $name = str_replace('[node_type]', $type->type, $variable['name']);
     $build[$name] = $variable;
     $build[$name]['title'] .= ' (' . $type->name . ')';
     $build[$name]['name'] = $name;

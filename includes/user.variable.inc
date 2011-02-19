@@ -37,31 +37,31 @@ function user_variable_info($options) {
   // These email tokens are shared for all settings, so just define
   // the list once to help ensure they stay in sync.
   $email_token_help = t('Available variables are:') .' !username, !site, !password, !uri, !uri_brief, !mailto, !date, !login_uri, !edit_uri, !login_url.';
-  $variables['user_mail_register_admin_created'] = array(
+  $variables['user_mail_register_admin_created_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Welcome, new user created by administrator'),
     'default callback' => 'user_variable_mail_default',
     'description' => t('Customize welcome e-mail messages sent to new member accounts created by an administrator.') .' '. $email_token_help,
   ) + $defaults;
-  $variables['user_mail_register_no_approval_required'] = array(
+  $variables['user_mail_register_no_approval_required_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Welcome, no approval required'),
     'default callback' => 'user_variable_mail_default',
     'description' => t('Customize welcome e-mail messages sent to new members upon registering, when no administrator approval is required.') .' '. $email_token_help
   ) + $defaults;
-  $variables['user_mail_register_pending_approval'] = array(
+  $variables['user_mail_register_pending_approval_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Welcome, awaiting administrator approval'),
     'default callback' => 'user_variable_mail_default',
     'description' => t('Customize welcome e-mail messages sent to new members upon registering, when administrative approval is required.') .' '. $email_token_help,
   ) + $defaults;
-  $variables['user_mail_password_reset'] = array(
+  $variables['user_mail_password_reset_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Password recovery email'),
     'default callback' => 'user_variable_mail_default',
     'description' => t('Customize e-mail messages sent to users who request a new password.') .' '. $email_token_help,
   ) + $defaults;
-  $variables['user_mail_status_activated'] = array(
+  $variables['user_mail_status_activated_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Account activation email'),
     'default callback' => 'user_variable_mail_default',
@@ -72,7 +72,7 @@ function user_variable_info($options) {
     'title' => t('Notify user when account is activated.'),
     'default' => TRUE,
   ) + $defaults;
-  $variables['user_mail_status_blocked'] = array(
+  $variables['user_mail_status_blocked_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Account blocked email'),
     'default callback' => 'user_variable_mail_default',
@@ -83,7 +83,7 @@ function user_variable_info($options) {
     'title' => t('Notify user when account is blocked.'),
     'default' => FALSE,
   ) + $defaults;
-  $variables['user_mail_status_canceled'] = array(
+  $variables['user_mail_status_canceled_[mail_part]'] = array(
     'type' => 'mail_text',
     'title' => t('Account deleted email'),
     'default callback' => 'user_variable_mail_default',
@@ -162,12 +162,13 @@ function user_variable_group_info() {
  * Default callback for user mail variables
  */
 function user_variable_mail_default($variable, $options) {
-  // Remove 'user_mail_' prefix
-  $key = substr($variable['name'], 10);
+  // Remove 'user_mail_' prefix and '[mail_part]' suffix
+  $name = substr($variable['name'], 10);
+  $name = substr($name, 0, strpos($name, '['));
   $language = $options['language'];
   return array(
-    'subject' => _user_mail_text($key . '_subject', $language), 
-    'body' =>  _user_mail_text($key . '_body', $language),
+    'subject' => _user_mail_text($name . 'subject', $language), 
+    'body' =>  _user_mail_text($name . 'body', $language),
   );
 }
 

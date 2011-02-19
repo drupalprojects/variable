@@ -74,7 +74,7 @@ function variable_build_multiple($variable, $options) {
   if (is_array($variable['multiple'])) {
     $default = variable_get_default($variable, $options);
     foreach ($variable['multiple'] as $key => $title) {
-      $name = $variable['name'] . '_' . $key;
+      $name = preg_replace('/\[\w+\]/', $key, $variable['name']);
       // Be careful to respect previously set properties, add but do not override.
       $child = isset($variable['children'][$name]) ? $variable['children'][$name] : array();
       $child += $variable['multiple values'];
