@@ -14,12 +14,10 @@ function variable_build_info($type, $options) {
     case 'variable':
       return variable_build_list_info($options);
     case 'group':
-      $info = variable_invoke_all('variable_group_info');
-      drupal_alter('variable_group_info', $info);
-      return $info;
     case 'type':
-      $info = variable_invoke_all('variable_type_info');
-      drupal_alter('variable_type_info', $info);
+    case 'option':  
+      $info = variable_invoke_all('variable_' . $type . '_info');
+      drupal_alter('variable_' . $type . '_info', $info);
       return $info;
   }  
 }
@@ -33,8 +31,18 @@ function variable_build_list_info($options) {
     $result = call_user_func($module . '_variable_info', $options);
     if (isset($result) && is_array($result)) {
       foreach ($result as $name => $variable) {
-        $variable += array('name' => $name, 'module' => $module, 'group' => 'default', 'type' => 'default');
-        $variables[$name] = $variable + variable_get_type($variable['type']);      
+        $variable += array('name' => $name, 'module' => $module);
+        // Check variable name for multiple values
+        if (preg_match('/\[(\w+)\]/', $name, $matches)) {
+          $multiple = $matches[1];
+          $variable += array('type' => 'multiple');
+        }  
+        $variable += array('group' => 'default', 'type' => 'default');
+        $variables[$name] = $variable + variable_get_type($variable['type']);
+        // Add this at the end so it doesn't override type properties
+        if (!empty($multiple)) {
+          $variables[$name] += array('multiple' => $multiple);
+        }
       }
     }
   }
@@ -70,22 +78,42 @@ function variable_invoke_all() {
  * Build multiple variables
  */
 function variable_build_multiple($variable, $options) {
-  $variable += array('children' => array(), 'multiple values' => array());
-  if (is_array($variable['multiple'])) {
-    $default = variable_get_default($variable, $options);
+  // Invoke variable callbacks
+  if (!empty($variable['multiple callback'])) {
+    $variable['multiple'] = call_user_func($variable['multiple callback'], $variable, $options);
+  }
+  if (isset($variable['multiple'])) {
+    if (!is_array($variable['multiple'])) {
+      $variable['multiple'] = variable_option_list($variable['multiple'], $variable, $options);
+    }
+    $variable += array('children' => array(), 'repeat' => array());
+    // Build chilcren variables with the name => value array 
     foreach ($variable['multiple'] as $key => $title) {
       $name = preg_replace('/\[\w+\]/', $key, $variable['name']);
       // Be careful to respect previously set properties, add but do not override.
       $child = isset($variable['children'][$name]) ? $variable['children'][$name] : array();
-      $child += $variable['multiple values'];
+      $child += $variable['repeat'];
       $child += array(
         'name' => $name, 'index' => $key, 'title' => $title, 
         'type' => 'default', 'parent' => $variable['name'], 'module' => $variable['module'],
-        'default' => is_array($default) ? (isset($default[$key]) ? $default[$key] : NULL) : $default,
       );
       $child += variable_get_type($child['type']);
       $variable['children'][$name] = $child;
     }
+  }
+  return $variable;
+}
+
+/**
+ * Build variable with options
+ */
+function variable_build_options($variable, $options) {
+  $variable = variable_build_variable($variable, $options);
+  if (isset($variable['options callback'])) {
+    $variable['options'] = call_user_func($variable['options callback'], $variable, $options);
+  }
+  if (!empty($variable['options']) && !is_array($variable['options'])) {
+    $variable['options'] = variable_option_list($variable['options'], $variable, $options);
   }
   return $variable;
 }
@@ -96,29 +124,18 @@ function variable_build_multiple($variable, $options) {
  * Some variables may spawn into multiple ones
  */
 function variable_build_variable($variable, $options = array()) {
-  if (!empty($variable['built'])) {
-    return $variable;
-  }
-  // Mark as built so we don't build it again
-  $variable['built'] = TRUE;
-  $options = _variable_options($options);
-  $variable = _variable_variable($variable, $options);
-  $type = variable_get_type($variable['type']);
-  // Add type properties to variable
-  $variable += $type;
-  // Some of the callback may be in the module's variable.inc file
-  variable_include($variable);
-
-  // Invoke variable callbacks
-  foreach (array('options', 'multiple') as $key) {
-    if (!empty($variable[$key . ' callback'])) {
-      $variable[$key] = call_user_func($variable[$key . ' callback'], $variable, $options);
+  if (empty($variable['built'])) {
+    // Mark as built so we don't build it again
+    $variable['built'] = TRUE;
+    $options = _variable_options($options);
+    $variable = _variable_variable($variable, $options);
+    // Some of the callback may be in the module's variable.inc file
+    variable_include($variable);    
+    // If the variable has a build callback, go for it
+    if (isset($variable['build callback'])) {
+      $variable = call_user_func($variable['build callback'], $variable, $options);
     }
   }
-  if (isset($variable['build callback'])) {
-    $variable = call_user_func($variable['build callback'], $variable, $options);
-  }
-
   return $variable;
 }
 
@@ -151,9 +168,22 @@ function variable_list_module($module) {
 /**
  * Fetch options for variable
  */
-function variable_option_list($variable, $options) {
-  variable_module_include();
-  return module_invoke_all('variable_option_list', $variable, $options);
+function variable_option_list($type, $variable, $options) {
+  $cache = &drupal_static(__FUNCTION__);
+  if (isset($cache[$type])) {
+    return $cache[$type];
+  }
+  elseif ($info = variable_get_option($type)) {
+    variable_module_include($info['module']);
+    $list = call_user_func($info['callback'], $variable, $options);
+    if (!empty($info['cache'])) {
+      $cache[$type] = $list;
+    }
+    return $list;
+  }
+  else {
+    return array();
+  }
 }
 
 /**
@@ -174,6 +204,18 @@ function variable_module_include($modules = NULL) {
         }
       }
     }
+  }
+}
+
+/**
+ * Include variable type files
+ */
+function variable_type_include($type) {
+  $info = variable_get_type($type);
+  variable_module_include($info['module']);
+  // Include subtype if any
+  if (!empty($info['type'])) {
+    variable_type_include($info['type']);
   }
 }
 

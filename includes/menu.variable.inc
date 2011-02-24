@@ -12,20 +12,19 @@ function menu_variable_info($options) {
   $variables['menu_main_links_source'] = array(
     'type' => 'select',
     'title' => t('Source for the Main links'),
+    'options' => 'menu',
     'default' => 'main-menu',
     'element' => array('#empty_option' => t('No Main links')),
     'description' => t('Select what should be displayed as the Main links (typically at the top of the page).', array(), $options),
     'group' => 'menu_settings'
   );
-  // @todo get rid of this complex variables for description
-  $menu_options = menu_get_menus();  
-  $main = variable_get('menu_main_links_source', 'main-menu');
   $variables['menu_secondary_links_source'] = array(
-    'type' => 'select_menu',
+    'type' => 'select',
     'title' => t('Source for the Secondary links'),
+    'options' => 'menu',  
     'default' => 'user-menu',
     'element' => array('#empty_option' => t('No Secondary links')),
-    'description' => t('Select the source for the Secondary links. An advanced option allows you to use the same source for both Main links (currently %main) and Secondary links: if your source menu has two levels of hierarchy, the top level menu links will appear in the Main links, and the children of the active link will appear in the Secondary links.', array('%main' => $menu_options[$main]), $options),
+    'description' => t('Select the source for the Secondary links.', array() , $options),
     'group' => 'menu_settings'
   );
   return $variables;
@@ -44,16 +43,19 @@ function menu_variable_group_info() {
 }
 
 /**
- * Implements hook_variable_type_info()
+ * Implements hook_variable_option_info()
  */
-function menu_variable_type_info() {
-  $type['select_menu'] = array(
+function menu_variable_option_info() {
+  $options['menu'] = array(
     'title' => t('Menu'),
-    'element' => array('#type' => 'select'),
-    'options callback' => 'menu_get_menus',
-    'element callback' => 'variable_form_element_options',
-    'format callback' => 'variable_format_option',
-    'localize' => TRUE,
+    'callback' => 'menu_variable_menu_list',
   );
-  return $type;
+  return $options;
+}
+
+/**
+ * Menu option list
+ */
+function menu_variable_menu_list($variable, $options) {
+  return menu_get_menus();
 }

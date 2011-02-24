@@ -130,7 +130,19 @@ function variable_get_group($group = NULL) {
  *   Type name. Will return all if no name.
  */
 function variable_get_type($type = NULL) {
-  return _variable_info('type', $type);
+  $info = _variable_info('type', $type);
+  if ($type && !empty($info['type'])) {
+    // Add subtipe properties, recursive
+    $info += variable_get_type($info['type']);
+  }
+  return $info;
+}
+
+/**
+ * Get variable option information.
+ */
+function variable_get_option($type = NULL) {
+  return _variable_info('option', $type);
 }
 
 /**
@@ -288,6 +300,9 @@ function variable_hook_info() {
   $hooks['variable_group_info'] = array(
     'group' => 'variable',
   );
+  $hooks['variable_option_info'] = array(
+    'group' => 'variable',
+  );
   $hooks['variable_type_info'] = array(
     'group' => 'variable',
   );
@@ -334,9 +349,7 @@ function variable_include($variable = NULL) {
   }
   if ($variable && !isset($included[$variable['name']])) {
     variable_module_include($variable['module']);
-    $type = variable_get_type($variable['type']);
-    variable_module_include($type['module']);
-    $included[$variable['name']] = TRUE;
+    variable_type_include($variable['type']);
   }
 }
 
@@ -480,7 +493,7 @@ function _variable_variable($variable, $options = array()) {
     // We don't have meta-information about this variable.
     return array(
       'name' => $variable,
-      'title' => $variable,
+      'title' => t('Unknown variable'),
       'type' => 'default', 
       'module' => 'variable',
       // Space for public service advertisement :-)

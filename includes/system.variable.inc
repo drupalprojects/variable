@@ -108,25 +108,26 @@ function system_variable_info($options) {
   // Regional settings
   $defaults = array('module' => 'system', 'group' => 'system_regional_settings');  
   $variables['site_default_country'] = array(
-    'type' => 'select_country',
+    'type' => 'select',
+    'options' => 'country',
     'title' => t('Default country'),
   ) + $defaults;
   $variables['date_first_day'] = array(
     'type' => 'select',
+    'options' => 'weekday',
     'title' => t('First day of week'),
     'default' => 0,
-    'options callback' => 'system_variable_options_weekday',
   ) + $defaults;
   $variables['date_default_timezone'] = array(
     'type' => 'select',
+    'options' => 'timezone',
     'title' => t('Default time zone'),
     'default callback' => 'date_default_timezone_get',
-    'options callback' => 'system_time_zones',
   ) + $defaults;
   $variables['configurable_timezones'] = array(
-    'type' => 'options',
+    'type' => 'boolean',
     'title' => t('Users may set their own time zone.'),
-    'default_value' => 1,
+    'default' => 1,
   ) + $defaults;
   $variables['empty_timezone_message'] = array(
     'type' => 'boolean',
@@ -165,26 +166,21 @@ function system_variable_info($options) {
     'type' => 'array',
     'title' => t('Global theme settings.'),
     'group' => 'system_theme_settings',
-    'default' => array(
-      'default_logo' => 1, 
-      'logo_path' => '', 
-      'default_favicon' => 1, 
-      'favicon_path' => '',
-      'favicon_mimetype' => 'image/vnd.microsoft.icon',
-    ),
+    'default callback' => 'system_variable_theme_defaults',
     'localize' => TRUE,
   );
-  // One different variable for each theme
-  foreach (list_themes() as $theme) {
-    $variables['theme_' . $theme->name . '_settings'] = array(
+  $variables['theme_[theme]_settings'] = array(
+    'type' => 'multiple',
+    'multiple' => 'theme',
+    'title' => t('Theme settings', array(), $options),
+    'description' => t('Logo, icons and other specific theme settings.'),
+    'repeat' => array(
       'type' => 'array',
-      'title' => t('Theme settings for @name', array('@name' => $theme->info['name']), $options),
-      'description' => t('Logo, icons and other specific theme settings.'),
-      'default' => $variables['theme_settings']['default'],
-      'group' => 'system_theme_settings',
-      'localize' => TRUE,
-    );
-  }
+      'default callback' => 'system_variable_theme_defaults',
+    ),
+    'group' => 'system_theme_settings',
+    'localize' => TRUE,
+  );
   return $variables;
 }
 
@@ -226,6 +222,7 @@ function system_variable_type_info() {
       '#type' => 'textfield', '#size' => 40,
       '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q='),
     ),
+    'localize' => TRUE,
   );  
   $type['file_path'] = array(
     'title' => t('File path'),
@@ -244,9 +241,46 @@ function system_variable_type_info() {
 }
 
 /**
+ * Implements hook_variable_option_info()
+ */
+function system_variable_option_info() {
+  $options['weekday'] = array(
+    'title' => t('Day of week'),
+    'callback' => 'system_variable_option_weekday',
+  );
+  $options['theme'] = array(
+    'title' => t('Theme'),
+    'callback' => 'system_variable_option_theme',
+    'cache' => TRUE,
+  );
+  $options['country'] = array(
+    'title' => t('Country'),
+    'callback' => 'country_get_list',
+    'cache' => TRUE,
+  );
+  $options['timezone'] = array(
+    'title' => t('Time zone'),
+    'callback' => 'system_time_zones',
+    'cache' => TRUE,
+  );
+  return $options;
+}
+
+/**
+ * Callback for theme options
+ */
+function system_variable_option_theme($variable, $options) {
+  $list = array();
+  foreach (list_themes() as $theme) {
+    $list[$theme->name] = $theme->info['name'];
+  }
+  return $list;  
+}
+
+/**
  * Callback for weekday options
  */
-function system_variable_options_weekday($variable, $options) {
+function system_variable_option_weekday($variable, $options) {
   return array (
     0 => t('Sunday', array(), $options),
     1 => t('Monday', array(), $options),
@@ -256,4 +290,17 @@ function system_variable_options_weekday($variable, $options) {
     5 => t('Friday', array(), $options),
     6 => t('Saturday', array(), $options)
   );  
+}
+
+/**
+ * Callback for default theme settings
+ */
+function system_variable_theme_defaults($variable, $options) {
+  return array(
+    'default_logo' => 1, 
+    'logo_path' => '', 
+    'default_favicon' => 1, 
+    'favicon_path' => '',
+    'favicon_mimetype' => 'image/vnd.microsoft.icon',
+  );
 }

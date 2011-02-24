@@ -9,7 +9,8 @@
  * Build form element for a variable
  */
 function variable_form_element($variable, $options = array()) {
-  $variable = variable_build($variable, $options);
+  $variable = variable_build($variable);
+  $variable = variable_build_options($variable, $options);
   if (!empty($variable['element callback'])) {
     $element = call_user_func($variable['element callback'], $variable, $options);
   }
@@ -95,6 +96,10 @@ function variable_form_element_default($variable, $options = array()) {
 function variable_form_element_options($variable, $options = array()) {
   $element = variable_form_element_default($variable, $options);
   $element['#options'] = $variable['options'];
+  // Depending on the number of options this may be radios or a drop-down
+  if (empty($element['#type'])) {
+    $element['#type'] = count($variable['options']) <= 4 ? 'radios' : 'select';
+  }
   return $element;
 }
 

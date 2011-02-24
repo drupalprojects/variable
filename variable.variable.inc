@@ -53,6 +53,7 @@ function variable_variable_type_info() {
   $type['enable'] = array(
     'title' => t('Enable'),
     'options' => array(t('Disabled'), t('Enabled')),
+    'default' => 0,
     'element' => array('#type' => 'radios'),
     'format callback' => 'variable_format_option',
   );
@@ -75,9 +76,8 @@ function variable_variable_type_info() {
     'title' => t('Mail text'),
     'multiple' => array('subject' => t('Subject'), 'body' => t('Body')),
     'build callback' => 'variable_build_mail_text',
-    'format callback' => 'variable_format_mail_text',
-    'element callback' => 'variable_form_element_multiple',
     'localize' => TRUE,
+    'type' => 'multiple',
   );
   $type['number'] = array(
     'title' => t('Number'),
@@ -86,6 +86,7 @@ function variable_variable_type_info() {
   // Select multiple options from multiple choices
   $type['options'] = array(
     'title' => t('Options'),
+    'options' => TRUE,
     'element' => array('#type' => 'checkboxes'),
     'element callback' => 'variable_form_element_options',
     'format callback' => 'variable_format_option',
@@ -93,14 +94,15 @@ function variable_variable_type_info() {
   // Select single option from multiple choices
   $type['select'] = array(
     'title' => t('Select'),
-    'element' => array('#type' => 'radios'),
+    'options' => TRUE,
+    // This will become radios or drop-down depending on the number of options
     'element callback' => 'variable_form_element_options',
     'format callback' => 'variable_format_option',
   );
   // Select number from array of values
   $type['select_number'] = array(
     'title' => t('Select'),
-    'element' => array('#type' => 'select'),
+    'options' => TRUE,
     'element callback' => 'variable_form_element_options',
     'options callback' => 'variable_options_select_number',
   );
@@ -141,7 +143,7 @@ function variable_build_mail_text($variable, $options = array()) {
  * Format select variable
  */
 function variable_format_option($value, $variable, $options = array()) {
-  $variable = variable_build($variable, $options);
+  $variable = variable_build_options($variable, $options);
   if (isset($value)) {
     return isset($variable['options'][$value]) ? $variable['options'][$value] : t('<Invalid option>');
   }

@@ -36,7 +36,8 @@ function forum_variable_info($options) {
   ); 
   // Some hidden variables that we may want exposed, localized, etc..
   $variables['forum_nav_vocabulary'] = array(
-    'type' => 'select_taxonomy_vocabulary',
+    'type' => 'select',
+    'options' => 'vocabulary_vid',
     'title' => t('Forum navigation vocabulary'),
     'default' => 0,
     'group' => 'forum_settings',

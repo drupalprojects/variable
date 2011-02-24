@@ -10,13 +10,13 @@
  */
 function locale_variable_info($options) {
   // This variable will be altered by translation module. See translation.variable.inc
-  $variables['language_content_type'] = array(
-    'type' => 'multiple_node_type',
+  $variables['language_content_type_[node_type]'] = array(
+    'type' => 'multiple',
     'title' => t('Multilingual support'),
-    'multiple values' => array(
-      'type' => 'select',
-      'default' => 0,
-      'options' => array(t('Disabled', array(), $options), t('Enabled', array(), $options)),
+    'repeat' => array(
+      'type' => 'enable',
+       // Set options here so translation module can add some more 
+      'options' => array(t('Disabled'), t('Enabled')),
     ),
     'description' => t('Enable multilingual support for this content type. If enabled, a language selection field will be added to the editing form, allowing you to select from one of the <a href="!languages">enabled languages</a>. If disabled, new posts are saved with the default language. Existing content will not be affected by changing this option.', array('!languages' => url('admin/config/regional/language', $options)), $options),
     'group' => 'node_type_settings',
@@ -39,6 +39,17 @@ function locale_variable_type_info() {
     ),
   );
   return $type;
+}
+
+/**
+ * Implements hook_variable_option_info().
+ */
+function locale_variable_option_info() {
+  $options['language'] = array(
+    'title' => t('Language'),
+    'options callback' => 'locale_variable_options_language',
+  );
+  return $options;
 }
 
 /**
