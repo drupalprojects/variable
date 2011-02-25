@@ -1,4 +1,3 @@
-// $Id$
 
 Drupal module: Variable API Database storage
 ============================================

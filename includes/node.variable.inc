@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Variable API module. Definition for Drupal core variables

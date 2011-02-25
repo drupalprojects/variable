@@ -1,4 +1,3 @@
-; $Id$
 name = Variable store
 description = Variable API - Database storage for variable realms
 dependencies[] = variable_realm
