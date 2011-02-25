@@ -169,6 +169,15 @@ function system_variable_info($options) {
     'group' => 'system_theme_settings',
     'localize' => TRUE,
   );
+  $variables['date_format_[date_type]'] = array(
+    'type' => 'multiple',
+    'title' => t('Date format'),
+    'repeat' => array(
+      'type' => 'select',
+      'options' => 'date_format',
+    ),
+    'group' => 'system_regional_settings',
+  );
   return $variables;
 }
 
@@ -196,7 +205,7 @@ function system_variable_group_info() {
     'title' => t('Theme settings'),
     'description' => t('Theme settings'),
     'access' => 'administer site configuration',
-  );  
+  );
   return $groups;
 }
 
@@ -251,6 +260,14 @@ function system_variable_option_info() {
     'callback' => 'system_time_zones',
     'cache' => TRUE,
   );
+  $options['date_type'] = array(
+    'title' => t('Date type'),
+    'callback' => 'system_variable_option_date_type',
+  );
+  $options['date_format'] = array(
+    'title' => t('Date format'),
+    'callback' => 'system_variable_option_date_format',
+  );
   return $options;
 }
 
@@ -278,6 +295,37 @@ function system_variable_option_weekday($variable, $options) {
     5 => t('Friday', array(), $options),
     6 => t('Saturday', array(), $options)
   );  
+}
+
+/**
+ * Callback for date types
+ */
+function system_variable_option_date_type($variable, $options) {
+  $list = array();
+  foreach (system_get_date_types() as $type => $info) {
+    $list[$type] = check_plain($info['title']);
+  }
+  return $list;
+}
+
+/**
+ * Callback for date types
+ * 
+ * @todo These should be different for some variables
+ */
+function system_variable_option_date_format($variable, $options) {
+  // Get list of all available date formats.
+  $all_formats = array();
+  foreach (system_get_date_formats() as $type => $format_info) {
+    $all_formats = array_merge($all_formats, $format_info);
+  }
+  if ($custom_formats = system_get_date_formats('custom')) {
+    $all_formats = array_merge($all_formats, $custom_formats);
+  }
+  foreach ($all_formats as $f => $format) {
+    $list[$f] = format_date(REQUEST_TIME, 'custom', $f);
+  }
+  return $list;
 }
 
 /**
