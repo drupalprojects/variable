@@ -30,18 +30,6 @@ function system_variable_info($options) {
     'default' => '',
     'description' => t("Your site's motto, tag line, or catchphrase (often displayed alongside the title of the site).", array(), $options)
   ) + $defaults;
-  $variables['site_mission'] = array(
-    'type' => 'text',
-    'title' => 'Mission',
-    'default' => '',
-    'description' => t("Your site's mission or focus statement (often prominently displayed on the front page).", array(), $options)
-  ) + $defaults;
-  $variables['site_footer'] = array(
-    'type' => 'text',
-    'title' => t('Footer message', array(), $options),
-    'default' => '',
-    'description' => t('This text will be displayed at the bottom of each page. Useful for adding a copyright notice to your pages.', array(), $options)
-  ) + $defaults;
   $variables['anonymous'] = array(
     'type' => 'string',
     'title' => t('Anonymous user', array(), $options),
