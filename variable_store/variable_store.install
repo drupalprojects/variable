@@ -28,7 +28,7 @@ function variable_store_schema() {
       'realm_key' => array(
         'description' => 'The realm key of this variable.',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 50,
         'not null' => TRUE,
         'default' => ''),
       'name' => array(
@@ -53,4 +53,12 @@ function variable_store_schema() {
     'indexes' => array('realm_value' => array('realm', 'realm_key')),
   );
   return $schema;
+}
+
+/**
+ * Reduce realm key field length so it can be used on the primary key
+ */
+function variable_store_update_7000() {
+  $schema = variable_store_schema();
+  db_change_field('variable_store', 'realm_key', 'realm_key', $schema['variable_store']['fields']['realm_key']);
 }
