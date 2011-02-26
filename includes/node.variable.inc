@@ -144,3 +144,20 @@ function node_variable_option_list($variable, $options = array()) {
       );
   }
 }
+
+/**
+ * Build subform for variables for node type
+ * 
+ * @param $type
+ *   Node type name
+ * @param $list
+ *   List of variables to include
+ */
+function node_variable_type_subform($type, $list) {
+  module_load_include('form.inc', 'variable');
+  foreach ($list as $name) {
+    $variable = variable_get_child($name . '_[node_type]', $type);
+    $form[$name] = variable_form_element($variable);  
+  }
+  return $form;
+}

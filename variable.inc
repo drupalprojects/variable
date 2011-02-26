@@ -238,18 +238,6 @@ function variable_module_include($modules = NULL) {
 }
 
 /**
- * Include variable type files
- */
-function variable_type_include($type) {
-  $info = variable_get_type($type);
-  variable_module_include($info['module']);
-  // Include subtype if any
-  if (!empty($info['type'])) {
-    variable_type_include($info['type']);
-  }
-}
-
-/**
  * Uninstall variables for module
  * 
  * This will be called from variable_modules_uninstalled(), no need to implement it directly.

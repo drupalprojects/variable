@@ -98,6 +98,22 @@ function variable_format_value($variable, $options = array()) {
 }
 
 /**
+ * Get variable child element from multiple variable
+ */
+function variable_get_child($parent, $key, $options = array()) {
+  $variable = variable_build($parent, $options);
+  $name = preg_replace('/\[\w+\]/', $key, $variable['name']);
+  $child = $variable['children'][$name];
+  // Replace title and description
+  foreach (array('title', 'description') as $property) {
+    if (isset($variable[$property])) {
+      $child[$property] = $variable[$property];
+    }
+  }
+  return $child;
+}
+
+/**
  * Get variable information
  * 
  * Variable information is collected from modules and cached by language
@@ -353,6 +369,19 @@ function variable_include($variable = NULL) {
     // Include module.variable.inc files related to the variable and the variable type.
     variable_module_include($variable['module']);
     variable_type_include($variable['type']);
+  }
+}
+
+/**
+ * Include variable type files
+ */
+function variable_type_include($type) {
+  variable_include();
+  $info = variable_get_type($type);
+  variable_module_include($info['module']);
+  // Include subtype if any
+  if (!empty($info['type'])) {
+    variable_type_include($info['type']);
   }
 }
 
