@@ -31,24 +31,9 @@ function locale_variable_type_info() {
   $type['language'] = array(
     'title' => t('Language'),
     'options callback' => 'locale_variable_options_language',
-    'element callback' => 'variable_form_element_options',
-    'format callback' => 'variable_format_option',
-    'element' => array(
-      '#type' => 'select',
-    ),
+    'type' => 'select',
   );
   return $type;
-}
-
-/**
- * Implements hook_variable_option_info().
- */
-function locale_variable_option_info() {
-  $options['language'] = array(
-    'title' => t('Language'),
-    'options callback' => 'locale_variable_options_language',
-  );
-  return $options;
 }
 
 /**

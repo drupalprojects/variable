@@ -228,47 +228,46 @@ function system_variable_type_info() {
   );  
   $type['select_country'] = array(
     'title' => t('Country'),
-    'element callback' => 'variable_form_element_options',
-    'format callback' => 'variable_format_option',
     'default' => '',
-    'options callback' => 'country_get_list',
     'element' => array('#type' => 'select', '#attributes' => array('class' => array('country-detect'))),
+    'options' => 'country',
+    'type' => 'select'
+  );
+  // These are just ofr option list
+  $type['weekday'] = array(
+    'title' => t('Day of week'),
+    'type' => 'select',
+    'options callback' => 'system_variable_option_weekday',
+  );
+  $type['theme'] = array(
+    'title' => t('Theme'),
+    'type' => 'select',
+    'options callback' => 'system_variable_option_theme',
+    'cache' => TRUE,
+  );
+  $type['country'] = array(
+    'title' => t('Country'),
+    'type' => 'select', 
+    'options callback' => 'country_get_list',
+    'cache' => TRUE,
+  );
+  $type['timezone'] = array(
+    'title' => t('Time zone'),
+    'type' => 'select',
+    'options callback' => 'system_time_zones',
+    'cache' => TRUE,
+  );
+  $type['date_type'] = array(
+    'title' => t('Date type'),
+    'type' => 'select',
+    'options callback' => 'system_variable_option_date_type',
+  );
+  $type['date_format'] = array(
+    'title' => t('Date format'),
+    'type' => 'select',
+    'options callback' => 'system_variable_option_date_format',
   );
   return $type;
-}
-
-/**
- * Implements hook_variable_option_info()
- */
-function system_variable_option_info() {
-  $options['weekday'] = array(
-    'title' => t('Day of week'),
-    'callback' => 'system_variable_option_weekday',
-  );
-  $options['theme'] = array(
-    'title' => t('Theme'),
-    'callback' => 'system_variable_option_theme',
-    'cache' => TRUE,
-  );
-  $options['country'] = array(
-    'title' => t('Country'),
-    'callback' => 'country_get_list',
-    'cache' => TRUE,
-  );
-  $options['timezone'] = array(
-    'title' => t('Time zone'),
-    'callback' => 'system_time_zones',
-    'cache' => TRUE,
-  );
-  $options['date_type'] = array(
-    'title' => t('Date type'),
-    'callback' => 'system_variable_option_date_type',
-  );
-  $options['date_format'] = array(
-    'title' => t('Date format'),
-    'callback' => 'system_variable_option_date_format',
-  );
-  return $options;
 }
 
 /**

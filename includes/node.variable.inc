@@ -84,9 +84,19 @@ function node_variable_option_info() {
 /**
  * Implements hook_variable_type_info()
  * 
- * @todo Obsolete, remove
+ * @todo Obsolete, remove 'multiple_node_type¡
  */
 function node_variable_type_info() {
+  $type['node_type'] = array(
+    'title' => t('Node type'),
+    'options callback' => 'node_type_get_names',
+    'type' => 'select',
+  );
+  $type['text_length'] = array(
+    'title' => t('Text length'),
+    'options callback' => 'node_variable_option_text_length',
+    'type' => 'select',
+  );  
   $type['multiple_node_type'] = array(
     'title' => t('Node type'),
     'multiple' => 'node_type',

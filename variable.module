@@ -88,9 +88,9 @@ function variable_children($names) {
  */
 function variable_format_value($variable, $options = array()) {
   $variable = variable_build($variable, $options);
-  $value = variable_get_value($variable, $options);
-  if (isset($value)) {
-    return !empty($variable['format callback']) ? call_user_func($variable['format callback'], $value, $variable, $options) : check_plain($value);
+  $variable['value'] = variable_get_value($variable, $options);
+  if (isset($variable['value'])) {
+    return !empty($variable['format callback']) ? variable_callback($variable['format callback'], $variable, $options) : check_plain($variable['value']);
   }
   else {
     return isset($variable['empty']) ? $variable['empty'] : t('Empty');
@@ -156,9 +156,11 @@ function variable_get_option($type = NULL) {
  */
 function variable_get_value($variable, $options = array()) {
   $variable = _variable_variable($variable, $options);
-  if (!empty($variable['value callback'])) {
-    variable_include($variable);
-    return call_user_func($variable['value callback'], $variable, _variable_options($options));    
+  if (isset($variable['value'])) {
+    return $variable['value'];
+  }
+  elseif (!empty($variable['value callback'])) {
+    return variable_callback($variable['value callback'], $variable, _variable_options($options));    
   }
   else {
     $value = variable_get($variable['name'], NULL);

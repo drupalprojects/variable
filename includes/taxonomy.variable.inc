@@ -5,18 +5,18 @@
  */
 
 /**
- * Implements hook_variable_option_info()
+ * Implements hook_variable_type_info()
  */
-function taxonomy_variable_option_info() {
-  $options['vocabulary_vid'] = array(
+function taxonomy_variable_type_info() {
+  $type['vocabulary_vid'] = array(
     'title' => t('Vocabulary'),
-    'callback' => 'taxonomy_variable_vocabulary_vid_list',
+    'options callback' => 'taxonomy_variable_vocabulary_vid_list',
   );
-  $options['vocabulary_name'] = array(
+  $type['vocabulary_name'] = array(
     'title' => t('Vocabulary'),
-    'callback' => 'taxonomy_variable_vocabulary_name_list',
+    'options callback' => 'taxonomy_variable_vocabulary_name_list',
   );
-  return $options;
+  return $type;
 }
 
 /**

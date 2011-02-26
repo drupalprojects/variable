@@ -115,25 +115,18 @@ function variable_variable_type_info() {
     'title' => t('Text'),
     'element' => array('#type' => 'textarea'),
     'localize' => TRUE,
-    'format callback' => 'filter_xss_admin',
+    'format callback' => 'variable_format_text',
     'token' => TRUE,
   );
   $type['url'] = array(
     'title' => t('URL'),
     'element' => array('#type' => 'textfield', '#size' => 30, '#maxlength' => 255),
   );
-  return $type;
-}
-
-/**
- * Implements hook_variable_option_info()
- */
-function variable_variable_option_info() {
-  $options['mail_part'] = array(
+  $type['mail_part'] = array(
     'title' => t('Mail parts'),
     'options' => array('subject' => t('Subject'), 'body' => t('Body')),
   );
-  return $options;
+  return $type;
 }
 
 /**
@@ -151,27 +144,27 @@ function variable_build_mail_text($variable, $options = array()) {
 /**
  * Format select variable
  */
-function variable_format_option($value, $variable, $options = array()) {
+function variable_format_option($variable, $options = array()) {
   $variable = variable_build_options($variable, $options);
-  if (isset($value)) {
-    return isset($variable['options'][$value]) ? $variable['options'][$value] : t('<Invalid option>');
+  if (isset($variable['value'])) {
+    return isset($variable['options'][$variable['value']]) ? $variable['options'][$variable['value']] : t('<Invalid option>');
   }
   else {
-    return isset($variable['empty']) ? $variable['empty'] : t('Empty');
+    return variable_format_empty($variable);
   }
 }
 
 /**
  * Format array variable, handling nested arrays
  */
-function variable_format_array($value, $variable = NULL, $options = array()) {
-  if (empty($value)) {
-    return t('Empty');
+function variable_format_array($variable = NULL, $options = array()) {
+  if (empty($variable['value'])) {
+    return variable_format_empty($variable);
   }
   else {
     $elements = array();
-    foreach ($value as $item) {
-      $elements[] = is_array($item) ? '(' . variable_format_array($item) . ')' : check_plain($item);
+    foreach ($variable['value'] as $item) {
+      $elements[] = is_array($item) ? '(' . variable_format_array(array('value' => $item), $options) . ')' : check_plain($item);
     }
     return implode(', ', $elements);
   }
@@ -180,9 +173,9 @@ function variable_format_array($value, $variable = NULL, $options = array()) {
 /**
  * Format boolean variable
  */
-function variable_format_boolean($value, $variable, $options = array()) {
-  if (isset($value)) {
-    return $value ? t('True') : t('False');
+function variable_format_boolean($variable, $options = array()) {
+  if (isset($variable['value'])) {
+    return $variable['value'] ? t('True') : t('False');
   }
   else {
     return t('Undefined');
@@ -190,10 +183,24 @@ function variable_format_boolean($value, $variable, $options = array()) {
 }
 
 /**
+ * Format variable empty value
+ */
+function variable_format_empty($variable) {
+  return isset($variable['empty']) ? $variable['empty'] : t('Empty');
+}
+
+/**
+ * Format text variable
+ */
+function variable_format_text($variable, $options = array()) {
+  return isset($variable['value']) ? filter_xss_admin($variable['value']) : variable_format_empty($variable);
+}
+
+/**
  * Format mail variable
  */
-function variable_format_mail_text($value, $variable, $options = array()) {
-  return check_plain($value['subject']);
+function variable_format_mail_text($variable, $options = array()) {
+  return 'Mail text'; //check_plain($variable['value']['subject']);
 }
 
 /**

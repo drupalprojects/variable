@@ -42,14 +42,15 @@ function menu_variable_group_info() {
 }
 
 /**
- * Implements hook_variable_option_info()
+ * Implements hook_variable_type_info()
  */
-function menu_variable_option_info() {
-  $options['menu'] = array(
+function menu_variable_type_info() {
+  $type['menu'] = array(
     'title' => t('Menu'),
-    'callback' => 'menu_variable_menu_list',
+    'type' => 'select',
+    'options callback' => 'menu_variable_menu_list',
   );
-  return $options;
+  return $type;
 }
 
 /**

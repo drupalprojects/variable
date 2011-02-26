@@ -142,17 +142,24 @@ function variable_build_variable($variable, $options = array()) {
  * Invoke variable callback
  * 
  * @param $callback
- *   Function name or array with 'callback' and 'module' to include.
+ *   Function name to invoke or array with module and funcion in this order
  * @param $variable
  *   Array of variable information.
  * @param $options
  *   Options to pass to the callback
+ * @param $module
+ *   Optional module to include its '*.variable.inc' file if the function not found
  */
 function variable_callback($callback, $variable, $options = array()) {
-  $function = is_array($callback) ? $callback['callback'] : $callback;
+  if (is_array($callback)) {
+    list($module, $function) = $callback;
+  }
+  else {
+    $function = $callback;
+  }
   if (!function_exists($function)) {
-    if (is_array($callback) && !empty($callback['module'])) {
-      variable_module_include($info['module']);
+    if (isset($module)) {
+      variable_module_include($module);
     }
     else {
       variable_include($variable);
@@ -195,17 +202,14 @@ function variable_option_list($type, $variable, $options) {
   if (isset($cache[$type])) {
     return $cache[$type];
   }
-  elseif ($info = variable_get_option($type)) {
-    if (isset($info['options'])) {
-      $list = $info['options'];
-    }
-    else {
-      $list = variable_callback($info, $variable, $options);
+  elseif ($info = variable_get_type($type)) {
+    if (isset($info['options callback'])) {
+      $info['options'] = variable_callback(array($info['module'], $info['options callback']), $variable, $options);
     }
     if (!empty($info['cache'])) {
-      $cache[$type] = $list;
+      $cache[$type] = $info['options'];
     }
-    return $list;
+    return $info['options'];
   }
   else {
     return array();
