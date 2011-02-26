@@ -98,7 +98,7 @@ function variable_variable_type_info() {
     'element callback' => 'variable_form_element_options',
     'format callback' => 'variable_format_option',
   );
-  // Select number from array of values
+  // Select number from array of values. Options array that can be list of numbers will be converted to a value => value
   $type['select_number'] = array(
     'title' => t('Select'),
     'options' => TRUE,

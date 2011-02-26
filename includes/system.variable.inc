@@ -99,6 +99,7 @@ function system_variable_info($options) {
     'type' => 'select',
     'options' => 'country',
     'title' => t('Default country'),
+    'element' => array('#type' => 'select', '#attributes' => array('class' => array('country-detect'))),
   ) + $defaults;
   $variables['date_first_day'] = array(
     'type' => 'select',
@@ -225,15 +226,8 @@ function system_variable_type_info() {
     'title' => t('File path'),
     'default' => conf_path() . '/files',
     'element' => array('#type' => 'textfield', '#maxlength' => 255, '#after_build' => array('system_check_directory')),
-  );  
-  $type['select_country'] = array(
-    'title' => t('Country'),
-    'default' => '',
-    'element' => array('#type' => 'select', '#attributes' => array('class' => array('country-detect'))),
-    'options' => 'country',
-    'type' => 'select'
   );
-  // These are just ofr option list
+  // These are just for option lists
   $type['weekday'] = array(
     'title' => t('Day of week'),
     'type' => 'select',
