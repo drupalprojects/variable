@@ -343,10 +343,12 @@ function variable_edit_subform($list) {
 function variable_include($variable = NULL) {
   static $included;
   if (!isset($included)) {
+    // As a first step, include main variable API
     module_load_include('inc', 'variable');
     $included = array();
   }
   if ($variable && !isset($included[$variable['name']])) {
+    // Include module.variable.inc files related to the variable and the variable type.
     variable_module_include($variable['module']);
     variable_type_include($variable['type']);
   }

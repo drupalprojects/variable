@@ -30,6 +30,8 @@ function variable_build_list_info($options) {
     $result = call_user_func($module . '_variable_info', $options);
     if (isset($result) && is_array($result)) {
       foreach ($result as $name => $variable) {
+        // Support name => title declarations
+        $variable = is_array($variable) ? $variable : array('title' => $variable);
         $variable += array('name' => $name, 'module' => $module);
         // Check variable name for multiple values
         if (preg_match('/\[(\w+)\]/', $name, $matches)) {
@@ -79,7 +81,7 @@ function variable_invoke_all() {
 function variable_build_multiple($variable, $options) {
   // Invoke variable callbacks
   if (!empty($variable['multiple callback'])) {
-    $variable['multiple'] = call_user_func($variable['multiple callback'], $variable, $options);
+    $variable['multiple'] = variable_callback($variable['multiple callback'], $variable, $options);
   }
   if (isset($variable['multiple'])) {
     if (!is_array($variable['multiple'])) {
@@ -109,7 +111,7 @@ function variable_build_multiple($variable, $options) {
 function variable_build_options($variable, $options) {
   $variable = variable_build_variable($variable, $options);
   if (isset($variable['options callback'])) {
-    $variable['options'] = call_user_func($variable['options callback'], $variable, $options);
+    $variable['options'] = variable_callback($variable['options callback'], $variable, $options);
   }
   if (!empty($variable['options']) && !is_array($variable['options'])) {
     $variable['options'] = variable_option_list($variable['options'], $variable, $options);
@@ -128,14 +130,35 @@ function variable_build_variable($variable, $options = array()) {
     $variable['built'] = TRUE;
     $options = _variable_options($options);
     $variable = _variable_variable($variable, $options);
-    // Some of the callback may be in the module's variable.inc file
-    variable_include($variable);    
     // If the variable has a build callback, go for it
     if (isset($variable['build callback'])) {
-      $variable = call_user_func($variable['build callback'], $variable, $options);
+      $variable = variable_callback($variable['build callback'], $variable, $options);
     }
   }
   return $variable;
+}
+
+/**
+ * Invoke variable callback
+ * 
+ * @param $callback
+ *   Function name or array with 'callback' and 'module' to include.
+ * @param $variable
+ *   Array of variable information.
+ * @param $options
+ *   Options to pass to the callback
+ */
+function variable_callback($callback, $variable, $options = array()) {
+  $function = is_array($callback) ? $callback['callback'] : $callback;
+  if (!function_exists($function)) {
+    if (is_array($callback) && !empty($callback['module'])) {
+      variable_module_include($info['module']);
+    }
+    else {
+      variable_include($variable);
+    }
+  }
+  return call_user_func($function, $variable, $options);
 }
 
 /**
@@ -173,8 +196,12 @@ function variable_option_list($type, $variable, $options) {
     return $cache[$type];
   }
   elseif ($info = variable_get_option($type)) {
-    variable_module_include($info['module']);
-    $list = call_user_func($info['callback'], $variable, $options);
+    if (isset($info['options'])) {
+      $list = $info['options'];
+    }
+    else {
+      $list = variable_callback($info, $variable, $options);
+    }
     if (!empty($info['cache'])) {
       $cache[$type] = $list;
     }

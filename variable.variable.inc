@@ -125,6 +125,16 @@ function variable_variable_type_info() {
   return $type;
 }
 
+/**
+ * Implements hook_variable_option_info()
+ */
+function variable_variable_option_info() {
+  $options['mail_part'] = array(
+    'title' => t('Mail parts'),
+    'options' => array('subject' => t('Subject'), 'body' => t('Body')),
+  );
+  return $options;
+}
 
 /**
  * Build multiple mail variable
