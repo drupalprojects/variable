@@ -106,6 +106,7 @@ function system_variable_info($options) {
     'options' => 'weekday',
     'title' => t('First day of week'),
     'default' => 0,
+    'localize' => TRUE,
   ) + $defaults;
   $variables['date_default_timezone'] = array(
     'type' => 'select',
@@ -133,7 +134,8 @@ function system_variable_info($options) {
       DRUPAL_USER_TIMEZONE_EMPTY   => t('Empty time zone.', array(), $options),
       DRUPAL_USER_TIMEZONE_SELECT  => t('Users may set their own time zone at registration.', array(), $options),
     ),
-    'description' => t('Only applied if users may set their own time zone.')
+    'description' => t('Only applied if users may set their own time zone.'),
+    'localize' => TRUE,
   ) + $defaults;
   
   // Regional settings

@@ -317,9 +317,6 @@ function variable_hook_info() {
   $hooks['variable_group_info'] = array(
     'group' => 'variable',
   );
-  $hooks['variable_option_info'] = array(
-    'group' => 'variable',
-  );
   $hooks['variable_type_info'] = array(
     'group' => 'variable',
   );
