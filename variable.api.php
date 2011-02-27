@@ -90,7 +90,7 @@ function hook_variable_info($options) {
     'title' => t('Name', array(), $options),
     'default' => 'Drupal',
     'description' => t('The name of this website.', array(), $options),
-    'element' => array('#required' => TRUE),
+    'required' => TRUE,
   );
   $variables['site_403'] = array(
     'type' => 'drupal_path',

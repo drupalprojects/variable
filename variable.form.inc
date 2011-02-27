@@ -20,6 +20,9 @@ function variable_form_element($variable, $options = array()) {
     $element = variable_form_element_default($variable, $options); 
   }
   $element += array('#access' => variable_access($variable));
+  if (!empty($variable['required'])) {
+    $element += array('#required' => TRUE);
+  }
   return $element;
 }
 

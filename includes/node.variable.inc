@@ -8,8 +8,7 @@
  * Implements hook_variable_info().
  */
 function node_variable_info($options) {
-  // Per content type options
-  $defaults = array('module' => 'node', 'group' => 'node_type_settings');
+  // Per content type options. Group 'node_type_settings'.
   $variables['teaser_length_[node_type]'] = array(
     'type' => 'multiple',
     'title' => t('Length of trimmed posts'),
@@ -19,7 +18,8 @@ function node_variable_info($options) {
       'options' => 'text_length',
     ),
     'description' => t("The maximum number of characters used in the trimmed version of a post. Drupal will use this setting to determine at which offset long posts should be trimmed. The trimmed version of a post is typically used as a teaser when displaying the post on the main page, in XML feeds, etc. To disable teasers, set to 'Unlimited'. Note that this setting will only affect new or updated content and will not affect existing teasers.", array(), $options),
-  ) + $defaults;
+    'group' => 'node_type_settings',
+  );
   $variables['node_preview_[node_type]'] = array(
     'type' => 'multiple',
     'title' => t('Preview before submitting'),
@@ -29,7 +29,8 @@ function node_variable_info($options) {
       'options callback' => 'node_variable_option_list',
     ),
     'description' => t('Must users preview posts before submitting?', array(), $options),
-  ) + $defaults;
+    'group' => 'node_type_settings',
+  );
   $variables['node_options_[node_type]'] = array(
     'type' => 'multiple',
     'title' => t('Default options', array(), $options),
@@ -39,7 +40,8 @@ function node_variable_info($options) {
       'options callback' => 'node_variable_option_list',
     ),
     'description' => t('Users with the <em>administer nodes</em> permission will be able to override these options.', array(), $options),
-  ) + $defaults;
+    'group' => 'node_type_settings',
+  );
   $variables['node_submitted_[node_type]'] = array(
     'type' => 'multiple',
     'title' => t('Display author and date information.', array(), $options),
@@ -48,7 +50,8 @@ function node_variable_info($options) {
       'type' => 'boolean',
     ),
     'description' => t('Author username and publish date will be displayed.', array(), $options),
-  ) + $defaults;
+    'group' => 'node_type_settings',
+  );
   return $variables;
 }
 
@@ -61,30 +64,13 @@ function node_variable_group_info() {
     'title' => t('Node type settings'),
     'description' => t('Settings for each node type.'),
     'access' => 'administer nodes',
-    'path' => 'admin/content/node-settings', 
+    'path' => 'admin/structure/types', 
   );
   return $groups;
 }
 
 /**
- * Implements hook_variable_option_info()
- */
-function node_variable_option_info() {
-  $options['node_type'] = array(
-    'title' => t('Node type'),
-    'callback' => 'node_type_get_names',
-  );
-  $options['text_length'] = array(
-    'title' => t('Text length'),
-    'callback' => 'node_variable_option_text_length',
-  );
-  return $options;
-}
-
-/**
  * Implements hook_variable_type_info()
- * 
- * @todo Obsolete, remove 'multiple_node_type¡
  */
 function node_variable_type_info() {
   $type['node_type'] = array(
@@ -96,11 +82,6 @@ function node_variable_type_info() {
     'title' => t('Text length'),
     'options callback' => 'node_variable_option_text_length',
     'type' => 'select',
-  );  
-  $type['multiple_node_type'] = array(
-    'title' => t('Node type'),
-    'multiple' => 'node_type',
-    'type' => 'multiple',
   );
   return $type;
 }

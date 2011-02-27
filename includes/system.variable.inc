@@ -14,7 +14,7 @@ function system_variable_info($options) {
     'title' => t('Name', array(), $options),
     'default' => 'Drupal',
     'description' => t('The name of this website.', array(), $options),
-    'element' => array('#required' => TRUE),
+    'required' => TRUE,
     'group' => 'site_information',
   );
   $variables['site_mail'] = array(
@@ -22,7 +22,7 @@ function system_variable_info($options) {
     'title' => t('E-mail address', array(), $options),
     'default' => ini_get('sendmail_from'),
     'description' => t("The <em>From</em> address in automated e-mails sent during registration and new password requests, and other notifications. (Use an address ending in your site's domain to help prevent this e-mail being flagged as spam.)", array(), $options),
-    'element' => array('#required' => TRUE),
+    'required' => TRUE,
     'group' => 'site_information',
   );
   $variables['site_slogan'] = array(
@@ -37,7 +37,7 @@ function system_variable_info($options) {
     'title' => t('Anonymous user', array(), $options),
     'default' => t('Anonymous', array(), $options),
     'description' => t('The name used to indicate anonymous users.', array(), $options),
-    'element' => array('#required' => TRUE),
+    'required' => TRUE,
     'group' => 'site_information',
   );
   $variables['site_frontpage'] = array(
@@ -45,7 +45,6 @@ function system_variable_info($options) {
     'title' => t('Default front page', array(), $options),
     'default' => 'node',
     'description' => t('The home page displays content from this relative URL. If unsure, specify "node".', array(), $options),
-    'element' => array('#required' => TRUE),
     'required' => TRUE,
     'group' => 'site_information',
   );
@@ -232,6 +231,7 @@ function system_variable_group_info() {
  * Implements hook_variable_type_info().
  */
 function system_variable_type_info() {
+  // Internal Drupal path as used by menu items.
   $type['drupal_path'] = array(
     'title' => t('Drupal path'),
     'element' => array(
@@ -239,13 +239,14 @@ function system_variable_type_info() {
       '#field_prefix' => url(NULL, array('absolute' => TRUE)) . (variable_get('clean_url', 0) ? '' : '?q='),
     ),
     'localize' => TRUE,
-  );  
+  );
+  // File system path, relative to Drupal installation.
   $type['file_path'] = array(
     'title' => t('File path'),
     'default' => conf_path() . '/files',
     'element' => array('#type' => 'textfield', '#maxlength' => 255, '#after_build' => array('system_check_directory')),
   );
-  // These are just for option lists
+  // These are just for option lists though they can be used as variable type to have a selectable value.
   $type['weekday'] = array(
     'title' => t('Day of week'),
     'type' => 'select',
