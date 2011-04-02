@@ -1,5 +1,5 @@
-name = Variable API
-description = Variable API
+name = Variable
+description = Variable Information and basic variable API
 core = 7.x
 
 files[] = includes/node.variable.inc

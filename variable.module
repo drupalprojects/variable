@@ -99,6 +99,11 @@ function variable_format_value($variable, $options = array()) {
 
 /**
  * Get variable child element from multiple variable
+ * 
+ * @param $parent
+ *   Parent variable
+ * @param $key
+ *   Key of the children variable (not the full name, just the piece of string that makes the difference)
  */
 function variable_get_child($parent, $key, $options = array()) {
   $variable = variable_build($parent, $options);
