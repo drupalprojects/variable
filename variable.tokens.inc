@@ -20,7 +20,7 @@ function variable_token_info() {
     if (!empty($info['token'])) {
       $variable[$name] = array(
         'name' => $info['title'],
-        'description' => $info['description'],
+        'description' => !empty($info['description']) ? $info['description'] : t('Value of variable !name', array('!name' => $info['title'])),
       );
     }
   }
