@@ -527,7 +527,7 @@ function _variable_variable($variable, $options = array()) {
     // We don't have meta-information about this variable.
     return array(
       'name' => $variable,
-      'title' => t('Unknown variable'),
+      'title' => t('Unknown variable') . ' ' . check_plain($variable),
       'type' => 'default', 
       'module' => 'variable',
       // Space for public service advertisement :-)

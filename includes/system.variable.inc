@@ -11,7 +11,7 @@ function system_variable_info($options) {
   // Site configuration, site information
   $variables['site_name'] = array(
     'type' => 'string',
-    'title' => t('Name', array(), $options),
+    'title' => t('Site name', array(), $options),
     'default' => 'Drupal',
     'description' => t('The name of this website.', array(), $options),
     'required' => TRUE,
@@ -19,7 +19,7 @@ function system_variable_info($options) {
   );
   $variables['site_mail'] = array(
     'type' => 'mail_address',
-    'title' => t('E-mail address', array(), $options),
+    'title' => t('Site e-mail address', array(), $options),
     'default' => ini_get('sendmail_from'),
     'description' => t("The <em>From</em> address in automated e-mails sent during registration and new password requests, and other notifications. (Use an address ending in your site's domain to help prevent this e-mail being flagged as spam.)", array(), $options),
     'required' => TRUE,
@@ -27,7 +27,7 @@ function system_variable_info($options) {
   );
   $variables['site_slogan'] = array(
     'type' => 'text',
-    'title' => t('Slogan', array(), $options),
+    'title' => t('Site slogan', array(), $options),
     'default' => '',
     'description' => t("Your site's motto, tag line, or catchphrase (often displayed alongside the title of the site).", array(), $options),
     'group' => 'site_information',
