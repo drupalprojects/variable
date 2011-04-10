@@ -43,7 +43,7 @@ function variable_form_element_array($variable, $options = array()) {
   }
   else {
     // Array with unknown elements, we add an element for each existing one
-    $names = array_combine(array_keys($value), array_keys($value));
+    $names = $value ? array_combine(array_keys($value), array_keys($value)) : array();
   }
   // Now build elements with the right names
   foreach ($names as $key => $title) {

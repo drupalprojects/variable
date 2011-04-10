@@ -33,6 +33,7 @@ function variable_build_list_info($options) {
         $variable = is_array($variable) ? $variable : array('title' => $variable);
         $variable += array('name' => $name, 'module' => $module);
         // Check variable name for multiple values
+        $multiple = NULL;
         if (preg_match('/\[(\w+)\]/', $name, $matches)) {
           $multiple = $matches[1];
           $variable += array('type' => 'multiple');
