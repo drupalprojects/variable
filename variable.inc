@@ -126,6 +126,7 @@ function variable_build_options($variable, $options) {
  */
 function variable_build_variable($variable, $options = array()) {
   if (empty($variable['built'])) {
+    variable_include($variable);
     // Mark as built so we don't build it again
     $variable['built'] = TRUE;
     $options = _variable_options($options);

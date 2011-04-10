@@ -213,12 +213,12 @@ function variable_set_value($name, $value, $options = array()) {
  */
 function variable_get_default($variable, $options = array()) {
   $variable = _variable_variable($variable, $options);
-  if (isset($variable['default'])) {
-    return $variable['default'];
-  }
-  elseif (isset($variable['default callback'])) {
+  if (isset($variable['default callback'])) {
     variable_include($variable);
     return call_user_func($variable['default callback'], $variable, _variable_options($options));
+  }
+  elseif (isset($variable['default'])) {
+    return $variable['default'];
   }
   return NULL;
 }
