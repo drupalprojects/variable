@@ -67,6 +67,7 @@ function variable_access($variable, $account = NULL) {
  *   List variable names with spawned multiple variables
  */
 function variable_children($names) {
+  $names = is_array($names) ? $names : array($names);
   $list = array();
   foreach ($names as $name) {
     // We need to build the variable, it may be multiple
@@ -79,6 +80,39 @@ function variable_children($names) {
     }
   }
   return $list;
+}
+
+/**
+ * Find variable information for all types of variables
+ */
+function variable_find($name) {
+  if ($info = variable_get_info($name)) {
+    return $info;
+  }
+  elseif ($parent = variable_parent($name)) {
+    $info = variable_build(variable_get_info($parent));
+    return $info['children'][$name];
+  }
+  else {
+    return _variable_unknown($name);
+  }
+}
+
+/**
+ * Map children variables to parent variables
+ */
+function variable_parent($name) {
+  $map = &drupal_static(__FUNCTION__);
+  if (!isset($map)) {
+    foreach (array_keys(variable_get_info()) as $key) {
+      if ($children = variable_children($key)) {
+        foreach ($children as $child) {
+          $map[$child] = $key;
+        }
+      }
+    }
+  }
+  return isset($map[$name]) ? $map[$name] : NULL;
 }
 
 /**
@@ -525,13 +559,20 @@ function _variable_variable($variable, $options = array()) {
   }
   else {
     // We don't have meta-information about this variable.
-    return array(
-      'name' => $variable,
-      'title' => t('Unknown variable') . ' ' . check_plain($variable),
-      'type' => 'default', 
-      'module' => 'variable',
-      // Space for public service advertisement :-)
-      'description' => t('We have no meta information for this variable. Please, ask module developers to declare their variables. See <a href="http://drupal.org/project/variable">Variable module</a>.'),
-    );
+    return _variable_unknown($variable);
   }
+}
+
+/**
+ * Unknown variable
+ */
+function _variable_unknown($name) {
+  return array(
+    'name' => $name,
+    'title' => t('Unknown variable') . ' ' . check_plain($name),
+    'type' => 'default', 
+    'module' => 'variable',
+    // Space for public service advertisement :-)
+    'description' => t('We have no meta information for this variable. Please, ask module developers to declare their variables. See <a href="http://drupal.org/project/variable">Variable module</a>.'),
+  );
 }

@@ -19,7 +19,7 @@ function system_variable_info($options) {
   );
   $variables['site_mail'] = array(
     'type' => 'mail_address',
-    'title' => t('Site e-mail address', array(), $options),
+    'title' => t('Site email address', array(), $options),
     'default' => ini_get('sendmail_from'),
     'description' => t("The <em>From</em> address in automated e-mails sent during registration and new password requests, and other notifications. (Use an address ending in your site's domain to help prevent this e-mail being flagged as spam.)", array(), $options),
     'required' => TRUE,
