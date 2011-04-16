@@ -114,7 +114,8 @@ function theme_variable_table_select($variables) {
   $fields = array_keys($header);
   $rows = array();
   foreach (element_children($element) as $name) {
-    $variable = _variable_variable($name);
+    $variable_name = isset($element[$name]['#variable_name']) ? $element[$name]['#variable_name'] : $name;
+    $variable = _variable_variable($variable_name);
     $row = array();
     foreach ($fields as $field) {
       if ($field == 'element') {
