@@ -118,6 +118,14 @@ function variable_variable_type_info() {
     'format callback' => 'variable_format_text',
     'token' => TRUE,
   );
+  // Default type for variables with no other type
+  $type['unknown'] = array(
+    'title' => t('Unknown'),
+    'access' => 'administer site configuration',
+    'format' => 'variable_format_unknown',
+    'element callback' => 'variable_form_element_unknown',
+    'element' => array('#type' => 'item'),
+  );
   $type['url'] = array(
     'title' => t('URL'),
     'element' => array('#type' => 'textfield', '#size' => 30, '#maxlength' => 255),
@@ -203,6 +211,12 @@ function variable_format_mail_text($variable, $options = array()) {
   return 'Mail text'; //check_plain($variable['value']['subject']);
 }
 
+/**
+ * Format unknown variable
+ */
+function variable_format_unknown($variable, $options = array()) {
+  return '<pre>' . check_plain(print_r($variable['value'], TRUE)) . '</pre>';
+}
 /**
  * Options callback for numeric select
  */

@@ -93,6 +93,22 @@ function variable_form_element_default($variable, $options = array()) {
 }
 
 /**
+ * Build form element for unknown variable.
+ * 
+ * This is not an editable form element but a form item.
+ */
+function variable_form_element_unknown($variable, $options = array()) {
+  $variable += array('element' => array(), 'title' => '', 'description' => '');
+  $type = variable_get_type($variable['type']) + array('element' => array());
+  $element = $variable['element'] + array(
+    '#title' => $variable['title'],
+    '#description' => $variable['description'],
+    '#markup' => variable_format_value($variable, $options),
+  ) + $type['element'];
+  return $element;
+}
+
+/**
  * Build options variables
  */
 function variable_form_element_options($variable, $options = array()) {

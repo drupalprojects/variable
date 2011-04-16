@@ -83,22 +83,6 @@ function variable_children($names) {
 }
 
 /**
- * Find variable information for all types of variables
- */
-function variable_find($name) {
-  if ($info = variable_get_info($name)) {
-    return $info;
-  }
-  elseif ($parent = variable_parent($name)) {
-    $info = variable_build(variable_get_info($parent));
-    return $info['children'][$name];
-  }
-  else {
-    return _variable_unknown($name);
-  }
-}
-
-/**
  * Map children variables to parent variables
  */
 function variable_parent($name) {
@@ -164,7 +148,26 @@ function variable_get_child($parent, $key, $options = array()) {
  *   - 'langcode', Language code
  */
 function variable_get_info($name = NULL, $options = array()) {
-  return _variable_info('variable', $name, _variable_options($options));
+  $options = _variable_options($options);
+  if (!$name) {
+    return _variable_info('variable', NULL, $options);
+  }
+  elseif ($info = _variable_info('variable', $name, $options)) {
+    return $info;
+  }
+  elseif ($parent = variable_parent($name)) {
+    $info = variable_build(variable_get_info($parent));
+    $child = $info['children'][$name];
+    // Copy over some values from parent to child to add some context to it.
+    $child['title'] = $info['title'] . ' [' . $child['title'] . ']';
+    if (isset($info['description'])) {
+      $child['description'] = $info['description'];
+    }
+    return $child;
+  }
+  else {
+    return NULL;
+  }
 }
 
 /**
@@ -570,7 +573,7 @@ function _variable_unknown($name) {
   return array(
     'name' => $name,
     'title' => t('Unknown variable') . ' ' . check_plain($name),
-    'type' => 'default', 
+    'type' => 'unknown', 
     'module' => 'variable',
     // Space for public service advertisement :-)
     'description' => t('We have no meta information for this variable. Please, ask module developers to declare their variables. See <a href="http://drupal.org/project/variable">Variable module</a>.'),
