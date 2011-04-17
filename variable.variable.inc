@@ -54,7 +54,7 @@ function variable_variable_type_info() {
     'options' => array(t('Disabled'), t('Enabled')),
     'default' => 0,
     'element' => array('#type' => 'radios'),
-    'format callback' => 'variable_format_option',
+    'format callback' => 'variable_format_selection',
   );
   // Multiple variable that will spawn into multiple elements
   $type['multiple'] = array(
@@ -88,7 +88,7 @@ function variable_variable_type_info() {
     'options' => TRUE,
     'element' => array('#type' => 'checkboxes'),
     'element callback' => 'variable_form_element_options',
-    'format callback' => 'variable_format_option',
+    'format callback' => 'variable_format_options',
   );
   // Select single option from multiple choices
   $type['select'] = array(
@@ -96,7 +96,7 @@ function variable_variable_type_info() {
     'options' => TRUE,
     // This will become radios or drop-down depending on the number of options
     'element callback' => 'variable_form_element_options',
-    'format callback' => 'variable_format_option',
+    'format callback' => 'variable_format_selection',
   );
   // Select number from array of values. Options array that can be list of numbers will be converted to a value => value
   $type['select_number'] = array(
@@ -152,10 +152,32 @@ function variable_build_mail_text($variable, $options = array()) {
 /**
  * Format select variable
  */
-function variable_format_option($variable, $options = array()) {
+function variable_format_selection($variable, $options = array()) {
   $variable = variable_build_options($variable, $options);
   if (isset($variable['value'])) {
     return isset($variable['options'][$variable['value']]) ? $variable['options'][$variable['value']] : t('<Invalid option>');
+  }
+  else {
+    return variable_format_empty($variable);
+  }
+}
+
+/**
+ * Format options variable. Value is an array of options.
+ */
+function variable_format_options($variable, $options = array()) {
+  $variable = variable_build_options($variable, $options);
+  $names = array();
+  if (isset($variable['value']) && $variable['value']) {
+    if (is_array($variable['value'])) {
+      foreach ($variable['value'] as $index => $value) {
+         $names[$index] = isset($variable['options'][$value]) ? $variable['options'][$value] : t('<Invalid option>');
+      }
+      return implode(', ', $names);
+    }
+    else {
+      return t('<Invalid value>');
+    }
   }
   else {
     return variable_format_empty($variable);
