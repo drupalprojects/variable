@@ -1,6 +1,6 @@
 name = Variable API
 description = Variable API
-core = 7.x
+core = 6.x
 
 files[] = includes/node.variable.inc
 files[] = includes/system.variable.inc
