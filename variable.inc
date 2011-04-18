@@ -36,6 +36,7 @@ function variable_build_list_info($options) {
         $variable = is_array($variable) ? $variable : array('title' => $variable);
         $variable += array('name' => $name, 'module' => $module);
         // Check variable name for multiple values
+        $multiple = NULL;
         if (preg_match('/\[(\w+)\]/', $name, $matches)) {
           $multiple = $matches[1];
           $variable += array('type' => 'multiple');
@@ -128,6 +129,7 @@ function variable_build_options($variable, $options) {
  */
 function variable_build_variable($variable, $options = array()) {
   if (empty($variable['built'])) {
+    variable_include($variable);
     // Mark as built so we don't build it again
     $variable['built'] = TRUE;
     $options = _variable_options($options);

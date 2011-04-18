@@ -43,7 +43,7 @@ function variable_form_element_array($variable, $options = array()) {
   }
   else {
     // Array with unknown elements, we add an element for each existing one
-    $names = array_combine(array_keys($value), array_keys($value));
+    $names = $value ? array_combine(array_keys($value), array_keys($value)) : array();
   }
   // Now build elements with the right names
   foreach ($names as $key => $title) {
@@ -93,6 +93,22 @@ function variable_form_element_default($variable, $options = array()) {
 }
 
 /**
+ * Build form element for unknown variable.
+ * 
+ * This is not an editable form element but a form item.
+ */
+function variable_form_element_unknown($variable, $options = array()) {
+  $variable += array('element' => array(), 'title' => '', 'description' => '');
+  $type = variable_get_type($variable['type']) + array('element' => array());
+  $element = $variable['element'] + array(
+    '#title' => $variable['title'],
+    '#description' => $variable['description'],
+    '#markup' => variable_format_value($variable, $options),
+  ) + $type['element'];
+  return $element;
+}
+
+/**
  * Build options variables
  */
 function variable_form_element_options($variable, $options = array()) {
@@ -114,7 +130,8 @@ function theme_variable_table_select($variables) {
   $fields = array_keys($header);
   $rows = array();
   foreach (element_children($element) as $name) {
-    $variable = _variable_variable($name);
+    $variable_name = isset($element[$name]['#variable_name']) ? $element[$name]['#variable_name'] : $name;
+    $variable = _variable_variable($variable_name);
     $row = array();
     foreach ($fields as $field) {
       if ($field == 'element') {
