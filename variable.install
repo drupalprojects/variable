@@ -5,6 +5,20 @@
  */
 
 /**
+ * Implements hook_install()
+ */
+function variable_install() {
+  drupal_install_schema('variable');
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function variable_uninstall(){
+  drupal_uninstall_schema('variable');
+}
+
+/**
  * Implementation of hook_schema().
  */
 function variable_schema() {
@@ -20,6 +34,12 @@ function variable_schema() {
       ),
       'data' => array(
         'description' => 'A collection of data to cache.',
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big',
+      ),
+      'headers' => array(
+        'description' => 'Headers',
         'type' => 'blob',
         'not null' => FALSE,
         'size' => 'big',

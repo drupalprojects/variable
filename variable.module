@@ -90,7 +90,29 @@ function variable_format_value($variable, $options = array()) {
   $variable = variable_build($variable, $options);
   $variable['value'] = variable_get_value($variable, $options);
   if (isset($variable['value'])) {
-    return !empty($variable['format callback']) ? variable_callback($variable['format callback'], $variable, $options) : check_plain($variable['value']);
+    // @change
+    if(!empty($variable['format callback'])) {
+      $ret[] = variable_callback($variable['format callback'], $variable, $options);
+    }
+    else {
+      if(is_array($variable['value'])){
+        foreach($variable['value'] as $value){
+          if(is_array($value)) {
+            foreach($value as $sub){
+              $ret[] = check_plain($sub);
+            }
+          }
+          else {
+            $ret[] = check_plain($value);
+          }
+        }
+      }
+      else {
+        check_plain($value);
+      }
+    }
+    return $ret;
+   // @end change
   }
   else {
     return isset($variable['empty']) ? $variable['empty'] : t('Empty');

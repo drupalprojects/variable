@@ -1,6 +1,8 @@
 name = Variable API
 description = Variable API
 core = 6.x
+dependencies[] = autoload
+dependencies[] = drupal_static
 
 files[] = includes/node.variable.inc
 files[] = includes/system.variable.inc

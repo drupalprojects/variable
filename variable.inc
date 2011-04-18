@@ -26,6 +26,9 @@ function variable_build_info($type, $options) {
 function variable_build_list_info($options) {
   $variables = array();
   foreach (module_implements('variable_info') as $module) {
+    // @change
+    $options = $options->langcode;
+    // @end change
     $result = call_user_func($module . '_variable_info', $options);
     if (isset($result) && is_array($result)) {
       foreach ($result as $name => $variable) {

@@ -1,4 +1,4 @@
 name = Variable realm
 description = Variable API - Realms
 dependencies[] = variable
-core = 7.x
+core = 6.x
