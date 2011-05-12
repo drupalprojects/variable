@@ -36,7 +36,7 @@ function variable_access($variable, $account = NULL) {
     return TRUE;
   }
   elseif ($variable = _variable_variable($variable)) {
-    $group = variable_get_group($variable['group']);
+    $group = isset($variable['group']) ? variable_get_group($variable['group']) : array();
     if (!isset($group['access']) && !isset($variable['access'])) {
       return FALSE;
     }
