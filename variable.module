@@ -408,6 +408,7 @@ function variable_include($variable = NULL) {
     // Include module.variable.inc files related to the variable and the variable type.
     variable_module_include($variable['module']);
     variable_type_include($variable['type']);
+    $included[$variable['name']] = TRUE;
   }
 }
 
