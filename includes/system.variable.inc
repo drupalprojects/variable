@@ -195,7 +195,6 @@ function system_variable_info($options) {
     'group' => 'theme_settings',
     'localize' => TRUE,
   );
-
   return $variables;
 }
 

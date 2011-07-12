@@ -1,0 +1,4 @@
+name = Variable advanced
+description = Provides access to advanced low level variables. By using this you will be able to break your site badly.
+dependencies[] = variable
+core = 7.x

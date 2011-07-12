@@ -23,7 +23,7 @@ function locale_variable_info($options) {
   $variables['language_default'] = array(
     'title' => t('Site default language'),
     'type' => 'select',
-    'group' => 'advanced',
+    'group' => 'regional_settings',
     'options callback' => 'locale_variable_options_language', 
     'format callback' => 'locale_variable_language_default_format',
     'element callback' => 'locale_variable_language_default_element',
