@@ -17,6 +17,10 @@ function variable_variable_group_info() {
     'title' => t('Debug'),
     'description' => t('Debug and development options.'),
   );
+  $groups['advanced'] = array(
+    'title' => t('Advanced options'),
+    'description' => t('Advanced settings not usually exposed.'),
+  );
   return $groups;
 }
 
