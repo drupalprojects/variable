@@ -193,5 +193,6 @@ function hook_variable_group_info() {
     'title' => t('Feed settings'),
     'description' => t('Feed settings'),
     'access' => 'administer site configuration',
-  );  
+  );
+  return $groups;
 }
