@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * @file
  * Variable module hook implementations
@@ -48,7 +48,7 @@ function variable_variable_type_info() {
     'element' => array('#type' => 'textfield'),
     'access' => 'administer site configuration',
   );
-  // Enable/Disable 
+  // Enable/Disable
   $type['enable'] = array(
     'title' => t('Enable'),
     'options' => array(t('Disabled'), t('Enabled')),
@@ -133,6 +133,13 @@ function variable_variable_type_info() {
   $type['mail_part'] = array(
     'title' => t('Mail parts'),
     'options' => array('subject' => t('Subject'), 'body' => t('Body')),
+  );
+  $type['text_format'] = array(
+    'title' => t('Formatted text'),
+    'element' => array('#type' => 'text_format'),
+    'element callback' => 'variable_form_element_text_format',
+    'format callback' => 'variable_format_text_format',
+    'default callback' => 'variable_text_format_default',
   );
   return $type;
 }
@@ -244,4 +251,37 @@ function variable_format_unknown($variable, $options = array()) {
  */
 function variable_options_select_number($variable, $options = array()) {
   return drupal_map_assoc($variable['options']);
+}
+
+/**
+ * Default callback for text_format.
+ */
+function variable_text_format_default($variable, $options = array()) {
+  $out = array(
+    'value' => '',
+    'format' => filter_default_format(),
+  );
+  if (!empty($variable['default'])) {
+    if (is_string($variable['default'])) {
+      $out['value'] = $variable['default'];
+    }
+    elseif (is_array($variable['default'])) {
+      if (isset($variable['default']['value'])) {
+        $out['value'] = $variable['default']['value'];
+      }
+      if (isset($variable['default']['format'])) {
+        $out['format'] = $variable['default']['format'];
+      }
+    }
+  }
+  return $out;
+}
+
+
+
+/**
+ * Format text_format.
+ */
+function variable_format_text_format($variable, $options = array()) {
+  return check_markup($variable['value']['value'], $variable['value']['format']);
 }

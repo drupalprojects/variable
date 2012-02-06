@@ -18,7 +18,7 @@ function variable_realm_boot() {
 /**
  * Get variable realm data by reference.
  * 
- * The first time this function is inoked we initialize the realm system and store global variables
+ * The first time this function is invoked we initialize the realm system and store global variables
  * 
  * @param $realm
  *   Optional realm to get
@@ -182,6 +182,17 @@ function variable_realm_status($realm = NULL, $key = NULL) {
 
 /**
  * Switch current variable realms
+ * 
+ * @see variable_realm_weight()
+ * 
+ * @param $realm
+ *   Realm name. Example 'language'.
+ * @param $key
+ *   Realm key. Example, for language will be a language code, 'en'
+ * @param $variables
+ *   Array of key value pairs of variables to set for this realm
+ * @param $weight
+ *   Optional numeric value for realm weight
  */
 function variable_realm_switch($realm, $key, $variables = NULL, $weight = NULL) {
   variable_realm_add($realm, $key, $variables, $weight, FALSE);
