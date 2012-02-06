@@ -1,5 +1,6 @@
 name = Variable
 description = Variable Information and basic variable API
+package = Variable
 core = 7.x
 
 files[] = includes/node.variable.inc

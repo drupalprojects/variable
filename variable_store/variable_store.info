@@ -1,4 +1,5 @@
 name = Variable store
 description = Database storage for variable realms. This is an API module.
 dependencies[] = variable_realm
+package = Variable
 core = 7.x
