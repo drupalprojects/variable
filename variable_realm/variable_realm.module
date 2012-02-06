@@ -26,11 +26,13 @@ function variable_realm_boot() {
  *   Optional realm key to get
  */
 function &variable_realm($realm = NULL, $key = NULL) {
-  static $variable_realm;
-  if (!isset($variable_realm)) {
-    $variable_realm = &drupal_static(__FUNCTION__);
-    $variable_realm['global']['default'] = $GLOBALS['conf'];
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['realm'] = &drupal_static(__FUNCTION__);
+    $drupal_static_fast['realm']['global']['default'] = $GLOBALS['conf'];
   }
+  $variable_realm = &$drupal_static_fast['realm'];
+  
   if ($realm && $key) {
     if (!isset($variable_realm[$realm][$key])) {
       $variable_realm[$realm][$key] = array();
