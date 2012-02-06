@@ -7,12 +7,12 @@
  * Implements hook_menu().
  */
 function variable_example_menu() {
-  $items['admin/config/system/variable/example'] = array(
-    'title' => 'Example',
+  $items['admin/config/system/variable_example'] = array(
+    'title' => 'Variable example',
+    'description' => 'Example of auto generated settings form.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('variable_group_form', 'variable_example'),
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
   );
   return $items;
 }

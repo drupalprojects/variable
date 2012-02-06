@@ -31,7 +31,7 @@ function variable_example_variable_info($options) {
     'type' => 'mail_text',
     'title' => t('Example mail', array(), $options),
     'default' => array(
-    	'subject' => t('Example mail subject', array(), $options),
+      'subject' => t('Example mail subject', array(), $options),
       'body' => t('Example mail body.', array(), $options),
     ),
     'description' => t('Example mail variable with subject and body.', array(), $options),

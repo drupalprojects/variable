@@ -36,36 +36,36 @@ function user_variable_info($options) {
 
   // These email tokens are shared for all settings, so just define
   // the list once to help ensure they stay in sync.
-  $email_token_help = t('Available variables are: [site:name], [site:url], [user:name], [user:mail], [site:login-url], [site:url-brief], [user:edit-url], [user:one-time-login-url], [user:cancel-url].', array(), $options);
+  $email_token_help = ' ' . t('Available variables are: [site:name], [site:url], [user:name], [user:mail], [site:login-url], [site:url-brief], [user:edit-url], [user:one-time-login-url], [user:cancel-url].', array(), $options);
 
   $variables['user_mail_register_admin_created_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Welcome, new user created by administrator', array(), $options),
-    'description' => t('Customize welcome e-mail messages sent to new member accounts created by an administrator.', array(), $options) .' '. $email_token_help,
+    'description' => t('Customize welcome e-mail messages sent to new member accounts created by an administrator.', array(), $options) . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_register_no_approval_required_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Welcome, no approval required', array(), $options),
-    'description' => t('Customize welcome e-mail messages sent to new members upon registering, when no administrator approval is required.', array(), $options) .' '. $email_token_help,
+    'description' => t('Customize welcome e-mail messages sent to new members upon registering, when no administrator approval is required.', array(), $options) . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_register_pending_approval_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Welcome, awaiting administrator approval', array(), $options),
-    'description' => t('Customize welcome e-mail messages sent to new members upon registering, when administrative approval is required.', array(), $options) .' '. $email_token_help,
+    'description' => t('Customize welcome e-mail messages sent to new members upon registering, when administrative approval is required.', array(), $options) . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_password_reset_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Password recovery email'),
-    'description' => t('Customize e-mail messages sent to users who request a new password.') .' '. $email_token_help,
+    'description' => t('Customize e-mail messages sent to users who request a new password.') . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_status_activated_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Account activation email', array(), $options),
-    'description' => t('Enable and customize e-mail messages sent to users upon account activation (when an administrator activates an account of a user who has already registered, on a site where administrative approval is required).', array(), $options) .' '. $email_token_help,
+    'description' => t('Enable and customize e-mail messages sent to users upon account activation (when an administrator activates an account of a user who has already registered, on a site where administrative approval is required).', array(), $options) . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_status_activated_notify'] = array(
@@ -77,7 +77,7 @@ function user_variable_info($options) {
   $variables['user_mail_status_blocked_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Account blocked email', array(), $options),
-    'description' => t('Enable and customize e-mail messages sent to users when their accounts are blocked.') .' '. $email_token_help,
+    'description' => t('Enable and customize e-mail messages sent to users when their accounts are blocked.') . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_status_blocked_notify'] = array(
@@ -89,13 +89,13 @@ function user_variable_info($options) {
   $variables['user_mail_cancel_confirm_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Account cancellation confirmation'),
-    'description' => t('Edit the e-mail messages sent to users when they attempt to cancel their accounts.', array(), $options) .' '. $email_token_help,
+    'description' => t('Edit the e-mail messages sent to users when they attempt to cancel their accounts.', array(), $options) . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_status_canceled_[mail_part]'] = array(
     'type' => 'user_mail',
     'title' => t('Account deleted email'),
-    'description' => t('Enable and customize e-mail messages sent to users when their accounts are deleted.', array(), $options) .' '. $email_token_help,
+    'description' => t('Enable and customize e-mail messages sent to users when their accounts are deleted.', array(), $options) . $email_token_help,
     'group' => 'user_mails',
   );
   $variables['user_mail_status_deleted_notify'] = array(

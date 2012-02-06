@@ -32,7 +32,7 @@ function &variable_realm($realm = NULL, $key = NULL) {
     $drupal_static_fast['realm']['global']['default'] = $GLOBALS['conf'];
   }
   $variable_realm = &$drupal_static_fast['realm'];
-  
+
   if ($realm && $key) {
     if (!isset($variable_realm[$realm][$key])) {
       $variable_realm[$realm][$key] = array();
@@ -259,7 +259,7 @@ function variable_realm_reset($realms = array()) {
  */
 function variable_realm_variable_delete($variable) {
   // Delete each variable for each current realm/key
-  foreach(variable_children($variable['name']) as $name) {
+  foreach (variable_children($variable['name']) as $name) {
     foreach (variable_realm() as $realm => $realm_data) {
       foreach (array_keys($realm_data) as $key) {
         variable_realm_del($realm, $key, $name);
