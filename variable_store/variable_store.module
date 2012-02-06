@@ -40,6 +40,7 @@ function variable_store_del($realm, $key, $name, $rebuild = TRUE) {
     ->condition('name', $name)
     ->execute();
   unset($store[$name]);
+  cache_clear_all('variable:' . $realm . ':' . $key, 'cache_bootstrap');
   variable_realm_del($realm, $key, $name, $rebuild);
 }
 
