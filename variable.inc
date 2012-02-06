@@ -88,7 +88,7 @@ function variable_build_multiple($variable, $options) {
       $variable['multiple'] = variable_option_list($variable['multiple'], $variable, $options);
     }
     $variable += array('children' => array(), 'repeat' => array());
-    // Build chilcren variables with the name => value array
+    // Build children variables with the name => value array
     foreach ($variable['multiple'] as $key => $title) {
       $name = preg_replace('/\[\w+\]/', $key, $variable['name']);
       // Be careful to respect previously set properties, add but do not override.
@@ -98,6 +98,10 @@ function variable_build_multiple($variable, $options) {
         'name' => $name, 'index' => $key, 'title' => $title,
         'type' => 'default', 'parent' => $variable['name'], 'module' => $variable['module'],
       );
+      // Set default value from parent
+      if (isset($variable['default']) && is_array($variable['default']) && isset($variable['default'][$key])) {
+        $child += array('default' => $variable['default'][$key]);
+      }
       $child += variable_get_type($child['type']);
       $variable['children'][$name] = $child;
     }
