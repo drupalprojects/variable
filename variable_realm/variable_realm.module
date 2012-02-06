@@ -6,7 +6,7 @@
 
 /**
  * Implementation of hook_boot()
- * 
+ *
  * We set variable realm and language code as early as possible in the page request.
  */
 function variable_realm_boot() {
@@ -17,9 +17,9 @@ function variable_realm_boot() {
 
 /**
  * Get variable realm data by reference.
- * 
+ *
  * The first time this function is invoked we initialize the realm system and store global variables
- * 
+ *
  * @param $realm
  *   Optional realm to get
  * @param $key
@@ -44,7 +44,7 @@ function &variable_realm($realm = NULL, $key = NULL) {
 
 /**
  * Build current realm
- * 
+ *
  * Buids an array of variables for the current realm with higher weights overriding lower weights.
  */
 function variable_realm_build() {
@@ -67,7 +67,7 @@ function variable_realm_get($realm, $key, $name = NULL, $default = NULL) {
 
 /**
  * Set values for variable realm
- * 
+ *
  * @param $realm
  *   Realm name
  * @param $key
@@ -124,7 +124,7 @@ function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
 
 /**
  * Get current realm values ordered by weights
- * 
+ *
  * @return array
  *   Ordered array of name => value pairs, only realms that are set
  */
@@ -144,7 +144,7 @@ function variable_realm_global_get($name, $default = NULL) {
 
 /**
  * Switch global variable
- * 
+ *
  * @param $name
  *   Optional global variable name. If not set, it will reset all global variables to its original value.
  * @param $value
@@ -159,7 +159,7 @@ function variable_realm_global_set($name, $value = NULL, $rebuild = TRUE) {
 
 /**
  * Set / get current realm values
- * 
+ *
  * @param $realm
  *   Optional realm name
  * @param $key
@@ -182,9 +182,9 @@ function variable_realm_status($realm = NULL, $key = NULL) {
 
 /**
  * Switch current variable realms
- * 
+ *
  * @see variable_realm_weight()
- * 
+ *
  * @param $realm
  *   Realm name. Example 'language'.
  * @param $key
@@ -202,9 +202,9 @@ function variable_realm_switch($realm, $key, $variables = NULL, $weight = NULL) 
 
 /**
  * Get / set realm weights
- * 
+ *
  * The default realm will have a weight of 0. Realms with higher weights will override global variables.
- * 
+ *
  * @param $realm
  *   Realm name
  * @param $weight
@@ -226,9 +226,9 @@ function variable_realm_weight($realm = NULL, $weight = NULL, $default = 10) {
 
 /**
  * Rebuild current variable realm
- * 
+ *
  * If there are $realm and $key parameters, the rebuild will happen only if this is the current realm key
- * 
+ *
  * @param $realm
  *   Optional realm name that has been set
  * @param $key
@@ -242,7 +242,7 @@ function variable_realm_rebuild($realm = NULL, $key = NULL) {
 
 /**
  * Reset realms, deleting currently set ones
- * 
+ *
  * If no parameters passed, it will reset global variables to original values
  */
 function variable_realm_reset($realms = array()) {
@@ -250,4 +250,18 @@ function variable_realm_reset($realms = array()) {
   // We need at least some value for the global realm
   $status = $realms + array('global', 'default');
   variable_realm_rebuild();
+}
+
+/**
+ * Implements hook_variable_delete().
+ */
+function variable_realm_variable_delete($variable) {
+  // Delete each variable for each current realm/key
+  foreach(variable_children($variable['name']) as $name) {
+    foreach (variable_realm() as $realm => $realm_data) {
+      foreach (array_keys($realm_data) as $key) {
+        variable_realm_del($realm, $key, $name);
+      }
+    }
+  }
 }

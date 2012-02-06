@@ -2,15 +2,19 @@
 /**
  * @file
  * Variable API module - Database storage
- * 
+ *
  * This module provides database storage for variable realms
  */
 
 /**
  * Get variable store
  */
-function &variable_store($realm, $key) {
+function &variable_store($realm, $key, $reset = FALSE) {
   static $variable_store;
+  if ($reset) {
+    $variable_store = array();
+    return $variable_store;
+  }
   if (!isset($variable_store)) {
     $variable_store = &drupal_static('variable_store');
   }
@@ -58,7 +62,7 @@ function variable_store_get($realm, $key, $name, $default = NULL) {
  */
 function variable_store_initialize($realm, $key) {
   $variables = variable_store($realm, $key);
-  variable_realm_add($realm, $key, $variables); 
+  variable_realm_add($realm, $key, $variables);
 }
 
 /**
@@ -85,6 +89,14 @@ function variable_store_load($realm, $key) {
 }
 
 /**
+ * Reset caches and static variables.
+ */
+function variable_store_reset() {
+  variable_store(NULL, NULL, TRUE);
+  cache_clear_all('variable:', 'cache_bootstrap', TRUE);
+}
+
+/**
  * Set variable value
  */
 function variable_store_set($realm, $key, $name, $value, $rebuild = TRUE) {
@@ -97,4 +109,14 @@ function variable_store_set($realm, $key, $name, $value, $rebuild = TRUE) {
   cache_clear_all('variable:' . $realm . ':' . $key, 'cache_bootstrap');
   $store[$name] = $value;
   variable_realm_set($realm, $key, $name, $value, $rebuild);
+}
+
+/**
+ * Implements hook_variable_delete().
+ */
+function variable_store_variable_delete($variable) {
+  db_delete('variable_store')
+    ->condition('name', variable_children($variable['name']))
+    ->execute();
+  variable_store_reset();
 }

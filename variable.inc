@@ -268,7 +268,7 @@ function variable_module_uninstall($module) {
   $list = variable_get('variable_module_list', array());
   if (isset($list[$module])) {
     // This is a plain list of variables so we can use raw delete.
-    array_map('variable_del', $list[$module]);
+    array_map('variable_delete', $list[$module]);
     unset($list[$module]);
     variable_set('variable_module_list', $list);
   }
