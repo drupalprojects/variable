@@ -81,6 +81,7 @@ function variable_variable_type_info() {
   $type['number'] = array(
     'title' => t('Number'),
     'element' => array('#type' => 'textfield', '#size' => 15, '#maxlength' => 10),
+    'token' => TRUE,
   );
   // Select multiple options from multiple choices
   $type['options'] = array(
@@ -129,6 +130,7 @@ function variable_variable_type_info() {
   $type['url'] = array(
     'title' => t('URL'),
     'element' => array('#type' => 'textfield', '#size' => 30, '#maxlength' => 255),
+    'token' => TRUE,
   );
   $type['mail_part'] = array(
     'title' => t('Mail parts'),
