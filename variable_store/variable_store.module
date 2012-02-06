@@ -9,15 +9,13 @@
 /**
  * Get variable store
  */
-function &variable_store($realm, $key, $reset = FALSE) {
-  static $variable_store;
-  if ($reset) {
-    $variable_store = array();
-    return $variable_store;
+function &variable_store($realm, $key) {
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['store'] = &drupal_static('variable_store');
   }
-  if (!isset($variable_store)) {
-    $variable_store = &drupal_static('variable_store');
-  }
+  $variable_store = &$drupal_static_fast['store'];
+
   if (!isset($variable_store[$realm][$key])) {
     $variable_store[$realm][$key] = variable_store_load($realm, $key);
   }
@@ -92,7 +90,7 @@ function variable_store_load($realm, $key) {
  * Reset caches and static variables.
  */
 function variable_store_reset() {
-  variable_store(NULL, NULL, TRUE);
+  drupal_static_reset('variable_store');
   cache_clear_all('variable:', 'cache_bootstrap', TRUE);
 }
 
