@@ -17,7 +17,7 @@ function &variable_store($realm, $key) {
   $variable_store = &$drupal_static_fast['store'];
 
   if (!isset($variable_store[$realm][$key])) {
-    $variable_store[$realm][$key] = variable_store_load($realm, $key);
+    $variable_store[$realm][$key] = _variable_store_load($realm, $key);
   }
   return $variable_store[$realm][$key];
 }
@@ -67,7 +67,7 @@ function variable_store_initialize($realm, $key) {
 /**
  * Load realm from db store
  */
-function variable_store_load($realm, $key) {
+function _variable_store_load($realm, $key) {
   $cacheid = 'variable:' . $realm . ':' . $key;
   if ($cached = cache_get($cacheid, 'cache_bootstrap')) {
     $variables = $cached->data;
@@ -90,7 +90,7 @@ function variable_store_load($realm, $key) {
 /**
  * Reset caches and static variables.
  */
-function variable_store_reset() {
+function _variable_store_reset() {
   drupal_static_reset('variable_store');
   cache_clear_all('variable:', 'cache_bootstrap', TRUE);
 }
@@ -117,5 +117,5 @@ function variable_store_variable_delete($variable) {
   db_delete('variable_store')
     ->condition('name', variable_children($variable['name']))
     ->execute();
-  variable_store_reset();
+  _variable_store_reset();
 }
