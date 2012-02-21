@@ -104,7 +104,7 @@ function variable_realm_add($realm, $key, $values = array(), $weight = NULL, $re
 function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
   $variables = &variable_realm();
 
-  $variable[$realm][$key][$name] = $value;
+  $variables[$realm][$key][$name] = $value;
   $serialize = !is_int($value) && !is_string($value);
   if ($rebuild) {
     variable_realm_rebuild($realm, $key);

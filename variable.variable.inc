@@ -129,7 +129,7 @@ function variable_variable_type_info() {
   );
   $type['url'] = array(
     'title' => t('URL'),
-    'element' => array('#type' => 'textfield', '#size' => 30, '#maxlength' => 255),
+    'element' => array('#type' => 'textfield', '#size' => 80, '#maxlength' => 255),
     'token' => TRUE,
   );
   $type['mail_part'] = array(
