@@ -220,7 +220,7 @@ function variable_realm_weight($realm = NULL, $weight = NULL, $default = 10) {
   $current = &drupal_static(__FUNCTION__, array());
   if ($realm && !isset($current[$realm]) || isset($weight)) {
     $current[$realm] = isset($weight) ? $weight : $default;
-    ksort($current);
+    asort($current);
   }
   // This will always return ordered keys
   return array_keys($current);
