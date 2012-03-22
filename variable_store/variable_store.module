@@ -41,7 +41,6 @@ function variable_store_del($realm, $key, $name, $rebuild = TRUE) {
     ->execute();
   unset($store[$name]);
   cache_clear_all('variable:' . $realm . ':' . $key, 'cache_bootstrap');
-  variable_realm_del($realm, $key, $name, $rebuild);
 }
 
 /**
@@ -57,11 +56,21 @@ function variable_store_get($realm, $key, $name, $default = NULL) {
 }
 
 /**
- * Initialize realm from variable store
+ * Delete realm key or full realm from store.
+ *
+ * @param $realm
+ *   Realm name to delete.
+ * @param $key
+ *   Realm key to delete. NULL to delete full realm.
  */
-function variable_store_initialize($realm, $key) {
-  $variables = variable_store($realm, $key);
-  variable_realm_add($realm, $key, $variables);
+function variable_store_delete_all($realm, $key) {
+  _variable_store_reset();
+  $query = db_delete('variable_store')
+    ->condition('realm', $realm);
+  if (isset($key)) {
+    $query->condition('realm_key', $key);
+  }
+  return $query->execute();
 }
 
 /**
@@ -107,7 +116,6 @@ function variable_store_set($realm, $key, $name, $value, $rebuild = TRUE) {
     ->execute();
   cache_clear_all('variable:' . $realm . ':' . $key, 'cache_bootstrap');
   $store[$name] = $value;
-  variable_realm_set($realm, $key, $name, $value, $rebuild);
 }
 
 /**

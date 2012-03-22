@@ -47,7 +47,7 @@ function variable_build_list_info($options) {
       }
     }
   }
-  // Last chance for modules to alter variable infoa
+  // Last chance for modules to alter variable info.
   drupal_alter('variable_info', $variables, $options);
   return $variables;
 }

@@ -45,6 +45,13 @@ function &variable_realm($realm = NULL, $key = NULL) {
 }
 
 /**
+ * Get list of variables and values for realm
+ */
+function variable_realm_values($realm, $key) {
+  return variable_realm($realm, $key);
+}
+
+/**
  * Build current realm
  *
  * Buids an array of variables for the current realm with higher weights overriding lower weights.
@@ -52,7 +59,7 @@ function &variable_realm($realm = NULL, $key = NULL) {
 function variable_realm_build() {
   $variables = array();
   foreach (variable_realm_current() as $realm => $key) {
-    if ($values = variable_realm($realm, $key)) {
+    if ($key !== FALSE && ($values = variable_realm_values($realm, $key))) {
       $variables = array_merge($variables, $values);
     }
   }
@@ -165,7 +172,8 @@ function variable_realm_global_set($name, $value = NULL, $rebuild = TRUE) {
  * @param $realm
  *   Optional realm name
  * @param $key
- *   Optional realm value to set a status for this realm. FALSE to disable this realm.
+ *   Optional realm value to set a status for this realm.
+ *   FALSE to disable this realm.
  */
 function variable_realm_status($realm = NULL, $key = NULL) {
   $status = &drupal_static(__FUNCTION__, array());
@@ -190,14 +198,10 @@ function variable_realm_status($realm = NULL, $key = NULL) {
  * @param $realm
  *   Realm name. Example 'language'.
  * @param $key
- *   Realm key. Example, for language will be a language code, 'en'
- * @param $variables
- *   Array of key value pairs of variables to set for this realm
- * @param $weight
- *   Optional numeric value for realm weight
+ *   Realm key. Example, for language will be a language code, 'en
+ *   FALSE to unset the realm.
  */
-function variable_realm_switch($realm, $key, $variables = NULL, $weight = NULL) {
-  variable_realm_add($realm, $key, $variables, $weight, FALSE);
+function variable_realm_switch($realm, $key) {
   variable_realm_status($realm, $key);
   variable_realm_rebuild();
 }
