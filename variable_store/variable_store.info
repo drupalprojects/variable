@@ -4,4 +4,5 @@ dependencies[] = variable
 package = Variable
 core = 7.x
 
+files[] = variable_store.class.inc
 files[] = variable_store.test
