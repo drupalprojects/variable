@@ -142,6 +142,7 @@ function variable_variable_type_info() {
     'element callback' => 'variable_form_element_text_format',
     'format callback' => 'variable_format_text_format',
     'default callback' => 'variable_text_format_default',
+    'localize' => TRUE,
   );
   return $type;
 }
