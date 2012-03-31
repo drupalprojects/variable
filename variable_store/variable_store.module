@@ -56,21 +56,52 @@ function variable_store_get($realm, $key, $name, $default = NULL) {
 }
 
 /**
- * Delete realm key or full realm from store.
+ * Delete realm variable or full realm from store.
  *
  * @param $realm
- *   Realm name to delete.
+ *   Realm name to delete. NULL to delete all realms.
  * @param $key
- *   Realm key to delete. NULL to delete full realm.
+ *   Realm key to delete. NULL to delete all realm keys.
+ * @param $name
+ *   Variable name to delete. NULL to delete all variables for that realm, key
  */
-function variable_store_delete_all($realm, $key) {
+function variable_store_delete_all($realm, $key, $name = NULL) {
   _variable_store_reset();
-  $query = db_delete('variable_store')
-    ->condition('realm', $realm);
+  $query = db_delete('variable_store');
+  if (isset($realm)) {
+    $query->condition('realm', $realm);
+  }
   if (isset($key)) {
     $query->condition('realm_key', $key);
   }
+  if (isset($name)) {
+    $query->condition('name', $name);
+  }
   return $query->execute();
+}
+
+/**
+ * List all variable names from a realm.
+ *
+ * @param $realm
+ *   Realm name to list. NULL to list all realms.
+ * @param $key
+ *   Realm key to list. NULL to list all realm keys.
+ *
+ * @return array
+ *   List of variable names.
+ */
+function variable_store_list_all($realm, $key) {
+  $query = db_select('variable_store', 'vs')
+    ->fields('vs', array('name'))
+    ->distinct();
+  if ($realm) {
+    $query->condition('realm', $realm);
+  }
+  if ($key) {
+    $query->condition('realm_key', $key);
+  }
+  return $query->execute()->fetchCol();
 }
 
 /**
