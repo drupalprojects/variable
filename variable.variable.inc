@@ -237,13 +237,6 @@ function variable_format_text($variable, $options = array()) {
 }
 
 /**
- * Format mail variable
- */
-function variable_format_mail_text($variable, $options = array()) {
-  return 'Mail text'; //check_plain($variable['value']['subject']);
-}
-
-/**
  * Format unknown variable
  */
 function variable_format_unknown($variable, $options = array()) {
@@ -280,11 +273,23 @@ function variable_text_format_default($variable, $options = array()) {
   return $out;
 }
 
-
-
 /**
  * Format text_format.
  */
 function variable_format_text_format($variable, $options = array()) {
   return check_markup($variable['value']['value'], $variable['value']['format']);
+}
+
+/**
+ * Format multiple variable.
+ */
+function variable_format_multiple($variable, $options = array()) {
+  $rows = array();
+  foreach ($variable['children'] as $name => $child) {
+    $rows[$name] = array(
+      array('data' => check_plain($child['title']), 'header' => TRUE),
+      variable_format_value($child)
+    );
+  }
+  return theme('table', array('rows' => $rows));
 }

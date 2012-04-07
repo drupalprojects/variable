@@ -279,14 +279,6 @@ function variable_module_uninstall($module) {
   }
 }
 
-
-/**
- * Format multiple variable
- */
-function variable_format_multiple($value, $variable, $options = array()) {
-  return t('<Multiple>', array(), $options);
-}
-
 /**
  * Get value for multiple variable
  */
