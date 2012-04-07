@@ -21,6 +21,8 @@ function variable_example_variable_info($options) {
   $variables['variable_example_text_format'] = array(
     'type' => 'text_format',
     'title' => t('Text format', array(), $options),
+    // The default value may be a string (default format will be added) or
+    // an array with 'format' (format name) and 'value' (string) elements
     'default' => 'Example text with default format',
     'description' => t('Example of text variable with text format.', array(), $options),
     'required' => TRUE,

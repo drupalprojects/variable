@@ -37,11 +37,12 @@ function variable_example_menu() {
  */
 function variable_example_page_list() {
   variable_include();
-  foreach (variable_list_group('site_information') as $name => $variable) {
+  $list = variable_list_group('site_information') + variable_list_group('variable_example');
+  foreach ($list as $name => $variable) {
     $build[$name] = array(
       '#type' => 'item',
       '#title' => $variable['title'],
-      '#markup' => filter_xss_admin(variable_get_value($name)),
+      '#markup' => variable_format_value($variable),
     );
   }
   return $build;
