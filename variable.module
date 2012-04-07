@@ -116,6 +116,13 @@ function variable_format_value($variable, $options = array()) {
 }
 
 /**
+ * Format unknown variable
+ */
+function variable_format_unknown($variable, $options = array()) {
+  return '<pre>' . check_plain(print_r($variable['value'], TRUE)) . '</pre>';
+}
+
+/**
  * Get variable child element from multiple variable
  *
  * @param $parent

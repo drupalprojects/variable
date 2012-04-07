@@ -237,12 +237,6 @@ function variable_format_text($variable, $options = array()) {
 }
 
 /**
- * Format unknown variable
- */
-function variable_format_unknown($variable, $options = array()) {
-  return '<pre>' . check_plain(print_r($variable['value'], TRUE)) . '</pre>';
-}
-/**
  * Options callback for numeric select
  */
 function variable_options_select_number($variable, $options = array()) {
