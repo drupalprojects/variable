@@ -80,7 +80,6 @@ function variable_realm_admin_system_forms_submit($form, &$form_state) {
       // the global default value from being overwritten in
       // system_settings_form_submit().
       if (!variable_realm_admin_default_key($realm, $realm_key)) {
-        dpm('unset value for ' . $name);
         unset($form_state['values'][$name]);
       }
     }
@@ -165,4 +164,3 @@ function _variable_realm_admin_realm_names_human($realms) {
     return implode(', ', $realms) . ', ' . t('and') . ' ' . $last;
   }
 }
-
