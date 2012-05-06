@@ -1,0 +1,281 @@
+<?php
+/**
+ * @file
+ * Variable Realms Admin module
+ */
+
+/**
+ * Query parameter prefix for realm switcher.
+ */
+define('VARIABLE_REALM_SELECTOR_QUERY_PARAM_PREFIX', 'realm-');
+
+/**
+ * Implements hook_menu().
+ */
+function variable_realm_admin_menu() {
+  variable_realm_admin_info();
+
+  $items = array();
+  $items['admin/config/system/variable/realm'] = array(
+    'title' => 'Realms',
+    'description' => 'Configure realms.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('variable_realm_admin_realm_overview'),
+    'file' => 'realm.overview.inc',
+    'file path' => drupal_get_path('module', 'variable_realm_admin') . '/include',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/config/system/variable/realm/overview'] = array(
+    'title' => 'Overview',
+    'description' => 'Configure realms.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10
+  );
+
+  foreach (variable_realm_info() as $realm => $info) {
+    if (!variable_realm_admin_has_settings_ui($realm)) continue;
+    $items['admin/config/system/variable/realm/' . $realm] = array(
+      'title' => $info['title'],
+      'description' => 'Configure realm variables.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('variable_realm_admin_realm_settings', $realm),
+      'access arguments' => array('administer site configuration'),
+      'file' => 'realm.settings.inc',
+      'file path' => drupal_get_path('module', 'variable_realm_admin') . '/include',
+      'type' => MENU_LOCAL_TASK,
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implements hook_hook_info().
+ *
+ * @todo move hook_variable_realm_switch to variable_realm module?
+ */
+function variable_realm_admin_hook_info() {
+  // Alter the variables list when it is loaded
+  $hooks['variable_realm_variables_alter'] = array(
+    'group' => 'variable',
+  );
+  // Allow other modules to act on update of variables list
+  $hooks['variable_realm_variables_update'] = array(
+    'group' => 'variable',
+  );
+  // Allow other modules to act on realm switching
+  $hooks['variable_realm_switch'] = array(
+    'group' => 'variable',
+  );
+  // Allow other modules to adjust the realms info block printed above system
+  // forms (includes realm switchers).
+  $hooks['variable_realm_forms_infoblock_alter'] = array(
+    'group' => 'variable',
+  );
+  return $hooks;
+}
+
+/**
+ * Load helper functions for accessing variable realm information.
+ */
+function variable_realm_admin_info() {
+  module_load_include('inc', 'variable_realm_admin', 'include/realm.info');
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function variable_realm_admin_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['#theme']) && $form['#theme'] == 'system_settings_form') {
+    variable_realm_admin_info();
+    module_load_include('inc', 'variable_realm_admin', 'include/system.forms');
+    variable_realm_admin_system_forms_alter($form, $form_state, $form_id);
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Move variable_realm_admin_form_alter() to the end of the list to be able to
+ * act on variables added during hook_form_alter().
+ *
+ * @param $implementations
+ *   All implementations of the given hook.
+ * @param $hook
+ *   Name of the hook.
+ */
+function variable_realm_admin_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter') {
+    // move own hook to end
+    $group = $implementations['variable_realm_admin'];
+    unset($implementations['variable_realm_admin']);
+    $implementations['variable_realm_admin'] = $group;
+
+    // remove i18n_variable_form_alter, because we take care of things now :)
+    unset($implementations['i18n_variable']);
+  }
+}
+
+/**
+ * Implements hook_boot().
+ *
+ * The only reason for this implementation is, so that this module is loaded at
+ * bootstrap level, which puts us at the same level as the i18n_variable
+ * module. Without bootstrap level, it is not possible to properly modify
+ * i18n_variable hook implementations in hook_module_implements_alter().
+ */
+function variable_realm_admin_boot() {
+}
+
+/**
+ * Implements hook_init().
+ *
+ * Switch active realm if respective URL parameter is set. This is required for
+ * the realm switching functionality on system forms.
+ *
+ * @see variable_realm_admin_forms_realm_selector()
+ */
+function variable_realm_admin_init() {
+  foreach (variable_realm_info() as $realm => $info) {
+    if (!empty($_GET[VARIABLE_REALM_SELECTOR_QUERY_PARAM_PREFIX . $realm])) {
+      $key = $_GET[VARIABLE_REALM_SELECTOR_QUERY_PARAM_PREFIX . $realm];
+      $switched = variable_realm_admin_switch($realm, $key);
+      if (!$switched) {
+        unset($_GET[VARIABLE_REALM_SELECTOR_QUERY_PARAM_PREFIX . $realm]);
+      }
+    }
+  }
+}
+
+/**
+ * Switch given realm to given key, unless already active.
+ *
+ * Invokes hook_variable_realm_switch() after a successful switch.
+ */
+function variable_realm_admin_switch($realm, $key) {
+  $current_realms = variable_realm_current();
+
+  // check whether switch is necessary
+  if ($key && $current_realms[$realm] != $key) {
+    $variables = variable_store($realm, $key);
+    variable_realm_add($realm, $key, $variables);
+    variable_realm_switch($realm, $key);
+    module_invoke_all('variable_realm_switch', $realm, $key);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Determines the name (prefix) of variable(s) which store the lists of realm-
+ * specific variable names.
+ *
+ * @param $realm
+ *   The name of the realm.
+ */
+function variable_realm_admin_variables_list_name($realm, $suffix = 'list') {
+  $info = variable_realm_info($realm);
+  $prefix = isset($info['settings']['config prefix']) ? $info['settings']['config prefix'] : 'variable_realm_' . $realm . '_variables';
+  return $prefix . '_' . $suffix;
+}
+
+/**
+ * Get list of variables for given realm or check whether a variable belongs to
+ * the given realm. Returns low-level variable names.
+ *
+ * @param $realm
+ *   The name of the realm.
+ * @param $name
+ *   The name of a variable.
+ */
+function variable_realm_admin_variables_list($realm, $name = NULL) {
+  static $variables;
+  if (!isset($variables)) {
+    // Note that variables being a global static, any other module can initialize or alter it.
+    $variables = &drupal_static(__FUNCTION__, array());
+  }
+  if (!isset($variables[$realm])) {
+    $variable_name = variable_realm_admin_variables_list_name($realm);
+    $variables[$realm] = variable_get($variable_name, array());
+  }
+  return $name ? in_array($name, $variables[$realm]) : $variables[$realm];
+}
+
+/**
+ * Finds a realm for the given variable. If a variable is assigned to
+ * multiple realms, the realm with the highest weight is returned. Returns NULL
+ * if there is no realm assigned.
+ *
+ * @param $name
+ *   The variable name.
+ * @return string
+ *   The realm of the variable, or NULL if there is none.
+ */
+function variable_realm_admin_find_realm($name) {
+  // get list of realms (ordered descending by weight)
+  $realms = array_reverse(variable_realm_weight());
+
+  foreach ($realms as $realm) {
+    if (variable_realm_admin_variables_list($realm, $name)) {
+      return $realm;
+    }
+  }
+  return NULL;
+}
+
+/**
+ * Get or set the list of high-level variables for a given realm.
+ *
+ * If a new set of variable names is given, this function will automatically
+ * update the respective low-level list of variables provided by
+ * variable_realm_admin_variables_list().
+ *
+ * @see variable_realm_admin_realm_settings_submit().
+ *
+ * @param $realm
+ *   The name of the realm.
+ * @param $data
+ *   A new list of high-level variable names.
+ */
+function variable_realm_admin_variables_conf($realm, $data = NULL) {
+  $confname = variable_realm_admin_variables_list_name($realm, 'conf');
+
+  if (isset($data)) {
+    // Save high-level variable names
+    variable_set($confname, $data);
+
+    // Rebuild low-level variables list
+    variable_realm_admin_variables_list_update($realm, $data);
+
+    // Notify other modules
+    module_invoke_all('variable_realm_variables_update', $realm, $data);
+  }
+
+  return variable_get($confname, array());
+}
+
+/**
+ * Updates the low-level list of selected variables for the given realm from a
+ * list of high level variables. Also automatically removes any old variable
+ * values.
+ *
+ * @param $realm
+ *   The variable realm.
+ * @param $conf
+ *   The selected high-level list of variables.
+ */
+function variable_realm_admin_variables_list_update($realm, $conf) {
+  // Spawn multiple variables and translate into actual variables
+  $new_list = variable_children($conf);
+
+  // Save new list
+  variable_set(variable_realm_admin_variables_list_name($realm), $new_list);
+
+  // Delete variables from store that are not in the new list.
+  $old_list = variable_store_list_all($realm, NULL);
+  foreach (array_diff($old_list, $new_list) as $name) {
+    variable_store_delete_all($realm, NULL, $name);
+    drupal_set_message(t('Deleted existing values of %name from %realm variables.', array('%name' => $name, '%realm' => $realm)));
+  }
+}
