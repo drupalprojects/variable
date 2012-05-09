@@ -20,9 +20,8 @@ function variable_realm_admin_realm_overview($form, $form_state) {
 
   $realms = array();
   foreach (variable_realm_info() as $realm => $info) {
-    $title = $keys = $conf = $list = $links = '';
-    // Get realm name
-    $title = variable_realm_admin_realm_title($realm);
+    $title = $info['title'];
+    $keys = $conf = $list = $links = '';
 
     // Build key info
     $keys_all = variable_realm_keys($realm);
@@ -44,14 +43,14 @@ function variable_realm_admin_realm_overview($form, $form_state) {
     }
 
     // Add list of configured variables + configuration link
-    if (variable_realm_admin_has_settings_ui($realm)) {
+    if (!empty($info['select'])) {
       $conf = implode(', ', variable_realm_admin_variables_conf($realm));
       $links = l(t('Configure'), 'admin/config/system/variable/realm/' . $realm);
       $title = l($title, 'admin/config/system/variable/realm/' . $realm);
     }
 
     // Add list of actual variables
-    if (variable_realm_admin_has_settings($realm)) {
+    if (!empty($realm['select'])) {
       $list = implode(', ', variable_realm_admin_variables_list($realm));
     }
     $realms[] = array($title, $keys, $conf, $list, $links);

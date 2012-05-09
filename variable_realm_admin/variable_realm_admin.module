@@ -34,17 +34,18 @@ function variable_realm_admin_menu() {
   );
 
   foreach (variable_realm_info() as $realm => $info) {
-    if (!variable_realm_admin_has_settings_ui($realm)) continue;
-    $items['admin/config/system/variable/realm/' . $realm] = array(
-      'title' => $info['title'],
-      'description' => 'Configure realm variables.',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('variable_realm_admin_realm_settings', $realm),
-      'access arguments' => array('administer site configuration'),
-      'file' => 'realm.settings.inc',
-      'file path' => drupal_get_path('module', 'variable_realm_admin') . '/include',
-      'type' => MENU_LOCAL_TASK,
-    );
+    if (!empty($info['select'])) {
+      $items['admin/config/system/variable/realm/' . $realm] = array(
+        'title' => $info['title'],
+        'description' => 'Configure realm variables.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('variable_realm_select_variables_form', $realm),
+        'access arguments' => array('administer site configuration'),
+        'file' => 'variable_realm.form.inc',
+        'file path' => drupal_get_path('module', 'variable_realm'),
+        'type' => MENU_LOCAL_TASK,
+      );
+    }
   }
 
   return $items;

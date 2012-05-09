@@ -49,6 +49,18 @@ interface VariableRealmControllerInterface {
    */
   public function variable_del($name);
   /**
+   * Add single variable to the realm for current request.
+   *
+   * While variable set actually sets the variable on whatever realm storage
+   * we are using, this function just sets a runtime value.
+   *
+   * @param $name
+   *   Variable name
+   * @param $value
+   *   Variable value
+   */
+  public function variable_add($name, $value);
+  /**
    * List all current variable values.
    */
   public function variable_list();
@@ -69,7 +81,6 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
     $this->key = $key;
     $this->variables = $variables;
   }
-
   /**
    * Initialize variables.
    */
@@ -113,13 +124,19 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
     unset($this->variables[$name]);
   }
   /**
+   * Implementation of VariableRealmControllerInterface::variable_add().
+   */
+  public function variable_add($name, $value) {
+    $this->variable_init();
+    $this->variables[$name] = $value;
+  }
+  /**
    * List all current variable values.
    */
   public function variable_list() {
     $this->variable_init();
     return $this->variables;
   }
-
 }
 
 /**
