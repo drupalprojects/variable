@@ -13,16 +13,14 @@ define('VARIABLE_REALM_SELECTOR_QUERY_PARAM_PREFIX', 'realm-');
  * Implements hook_menu().
  */
 function variable_realm_admin_menu() {
-  variable_realm_admin_info();
-
+  module_load_include('inc', 'variable_realm_admin');
   $items = array();
   $items['admin/config/system/variable/realm'] = array(
     'title' => 'Realms',
     'description' => 'Configure realms.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('variable_realm_admin_realm_overview'),
-    'file' => 'realm.overview.inc',
-    'file path' => drupal_get_path('module', 'variable_realm_admin') . '/include',
+    'file' => 'variable_realm_admin.pages.inc',
     'access arguments' => array('administer site configuration'),
     'type' => MENU_LOCAL_TASK,
   );
@@ -78,20 +76,13 @@ function variable_realm_admin_hook_info() {
 }
 
 /**
- * Load helper functions for accessing variable realm information.
- */
-function variable_realm_admin_info() {
-  module_load_include('inc', 'variable_realm_admin', 'include/realm.info');
-}
-
-/**
  * Implements hook_form_alter().
  */
 /*
 function variable_realm_admin_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['#theme']) && $form['#theme'] == 'system_settings_form') {
-    variable_realm_admin_info();
-    module_load_include('inc', 'variable_realm_admin', 'include/system.forms');
+    module_load_include('inc', 'variable_realm_admin');
+    module_load_include('pages.inc', 'variable_realm_admin');
     variable_realm_admin_system_forms_alter($form, $form_state, $form_id);
   }
 }
