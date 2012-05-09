@@ -91,7 +91,7 @@ function variable_store_delete_all($realm, $key, $name = NULL) {
  * @return array
  *   List of variable names.
  */
-function variable_store_list_all($realm, $key) {
+function variable_store_list_all($realm, $key = NULL) {
   $query = db_select('variable_store', 'vs')
     ->fields('vs', array('name'))
     ->distinct();
