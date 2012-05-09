@@ -13,48 +13,25 @@ require_once drupal_get_path('module', 'variable_realm_admin') . '/variable_real
 function variable_realm_admin_realm_overview($form, $form_state) {
   $header = array(
     t('Realm name'),
-    t('Keys'),
-    t('Configured variables'),
-    t('Actual variable names'),
-    t('Actions'),
+    t('Weight'),
+    t('Options'),
   );
 
   $realms = array();
   foreach (variable_realm_info() as $realm => $info) {
-    $title = $info['title'];
-    $keys = $conf = $list = $links = '';
-
-    // Build key info
-    $keys_all = variable_realm_keys($realm);
-    $key_default = variable_realm_admin_default_key($realm);
-    if (count($keys_all) < 5) {
-      if ($key_default && isset($keys_all[$key_default])) {
-        $keys_all[$key_default] = '<strong>' . $keys_all[$key_default] . '</strong>';
-      }
-      $keys = implode(', ', $keys_all);
-    }
-    else {
-      $keys = format_plural(count($keys_all), '1 key', '@count keys');
-      if ($key_default && isset($keys_all[$key_default])) {
-        $keys .= ' (' . t('default key = %key', array('%key' => $keys_all[$key_default])) . ')';
-      }
-      else {
-        $keys .= ' (' . t('no default key') . ')';
-      }
-    }
-
+    $options = array();
     // Add list of configured variables + configuration link
     if (!empty($info['select'])) {
-      $conf = implode(', ', variable_realm_admin_variables_conf($realm));
-      $links = l(t('Configure'), 'admin/config/system/variable/realm/' . $realm);
-      $title = l($title, 'admin/config/system/variable/realm/' . $realm);
+      $options[] = l(t('Configure'), 'admin/config/system/variable/realm/' . $realm . '/configure');
+      $options[] = l(t('Edit'), 'admin/config/system/variable/realm/' . $realm . '/edit');
     }
-
-    // Add list of actual variables
-    if (!empty($realm['select'])) {
-      $list = implode(', ', variable_realm_admin_variables_list($realm));
-    }
-    $realms[] = array($title, $keys, $conf, $list, $links);
+    // Get weight from realm controller.
+    $controller = variable_realm_controller($realm);
+    $realms[] = array(
+      l($info['title'], 'admin/config/system/variable/realm/' . $realm),
+      $controller['weight'],
+      implode(' | ' , $options)
+    );
   }
 
   $form['realms'] = array(
@@ -65,4 +42,38 @@ function variable_realm_admin_realm_overview($form, $form_state) {
   );
 
   return $form;
+}
+
+/**
+ * Lists available realms.
+ */
+function variable_realm_admin_realm_info($realm_name) {
+  $info = variable_realm_info($realm_name);
+  $build['title'] = array(
+    '#type' => 'item',
+    '#title' => t('Name'),
+    '#markup' => $info['title'],
+  );
+  $build['keys'] = array(
+    '#theme' => 'item_list',
+    '#title' => t('Keys'),
+    '#items' => variable_realm_keys($realm_name),
+  );
+  $build['variables'] = array(
+    '#theme' => 'item_list',
+    '#title' => t('Variables'),
+    '#items' => variable_realm_admin_variables_conf($realm_name),
+  );
+  return $build;
+}
+
+/**
+ * Edit variables for realm.
+ */
+function variable_realm_admin_realm_edit($realm_name) {
+  module_load_include('form.inc', 'variable_realm');
+  // @todo Build key selector (for now include first key)
+  $realm_key = key(variable_realm_keys($realm_name));
+  $build['form'] = drupal_get_form('variable_realm_edit_variables_form', $realm_name, $realm_key);
+  return $build;
 }

@@ -57,3 +57,28 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
     drupal_set_message(t('Deleted existing values of %name from realm variables.', array('%name' => $name)));
   }
 }
+
+/**
+ * Edit variables for realm.
+ */
+function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $realm_key) {
+  $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
+  $form['realm_key'] = array('#type' => 'value', '#value' => $realm_key);
+  $variable_list = variable_children(variable_realm_list($realm_name));
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+  return $form;
+}
+
+/**
+ * Edit variables for realm.
+ */
+function variable_realm_edit_variables_form_submit($form, &$form_state) {
+  $realm_name = $form_state['values']['realm_name'];
+  $realm_name = $form_state['values']['realm_key'];
+  foreach ($form_state['values']['variables'] as $name => $value) {
+    $current = variable_realm_get($realm_name, $realm_key);
+    if ($current !== $value) {
+      variable_realm_set($realm_name, $realm_key, $value);
+    }
+  }
+}

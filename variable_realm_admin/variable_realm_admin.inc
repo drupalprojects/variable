@@ -5,14 +5,6 @@
  */
 
 /**
- * Retrieve title of given realm.
- */
-function variable_realm_admin_realm_title($realm) {
-  $info = variable_realm_info($realm);
-  return isset($info['title']) ? $info['title'] : $realm;
-}
-
-/**
  * Check whether the given realm has settings. Requires the 'settings'
  * parameter in the realms information to exist and not be set to FALSE.
  */
