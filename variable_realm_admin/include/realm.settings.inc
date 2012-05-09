@@ -50,4 +50,3 @@ function variable_realm_admin_realm_settings_submit($form, $form_state) {
   }
   variable_realm_admin_variables_conf($realm, $variables);
 }
-

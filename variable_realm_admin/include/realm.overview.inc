@@ -65,4 +65,3 @@ function variable_realm_admin_realm_overview($form, $form_state) {
 
   return $form;
 }
-

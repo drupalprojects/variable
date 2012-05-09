@@ -101,7 +101,3 @@ function i18n_variable_variable_realm_variables_alter(&$variables, $realm) {
     $variables += $conf;
   }
 }
-
-
-
-
