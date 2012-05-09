@@ -53,7 +53,7 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
   // Delete variables from realm that are not in the new list.
   $old_list = variable_children($old_variables);
   foreach (array_diff($old_list, $new_list) as $name) {
-    variable_realm_delete_all($realm_name, NULL, $name);
+    variable_realm_delete_variable($realm_name, $name);
     drupal_set_message(t('Deleted existing values of %name from realm variables.', array('%name' => $name)));
   }
 }

@@ -87,6 +87,7 @@ function variable_realm_admin_info() {
 /**
  * Implements hook_form_alter().
  */
+/*
 function variable_realm_admin_form_alter(&$form, &$form_state, $form_id) {
   if (isset($form['#theme']) && $form['#theme'] == 'system_settings_form') {
     variable_realm_admin_info();
@@ -94,6 +95,7 @@ function variable_realm_admin_form_alter(&$form, &$form_state, $form_id) {
     variable_realm_admin_system_forms_alter($form, $form_state, $form_id);
   }
 }
+*/
 
 /**
  * Implements hook_module_implements_alter().
@@ -106,6 +108,7 @@ function variable_realm_admin_form_alter(&$form, &$form_state, $form_id) {
  * @param $hook
  *   Name of the hook.
  */
+/*
 function variable_realm_admin_module_implements_alter(&$implementations, $hook) {
   if ($hook == 'form_alter') {
     // move own hook to end
@@ -117,7 +120,7 @@ function variable_realm_admin_module_implements_alter(&$implementations, $hook) 
     unset($implementations['i18n_variable']);
   }
 }
-
+*/
 /**
  * Implements hook_boot().
  *

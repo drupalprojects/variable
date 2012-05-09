@@ -197,7 +197,7 @@ function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
  * Delete variable from realm
  */
 function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
-  variable_realm($realm, $key)->variable_del($name, $value);
+  variable_realm($realm, $key)->variable_del($name);
   if ($rebuild) {
     variable_realm_rebuild($realm, $key);
   }
