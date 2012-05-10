@@ -62,3 +62,4 @@ function variable_example_page_realm($realm, $key) {
   variable_realm_switch($realm, $key);
   return variable_example_page_list();
 }
+

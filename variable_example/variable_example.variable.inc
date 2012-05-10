@@ -55,3 +55,17 @@ function variable_example_variable_group_info() {
   );
   return $groups;
 }
+
+/**
+ * Implements hook_variable_realm_info()
+ */
+function variable_example_variable_realm_info() {
+  $realm['example'] = array(
+    'title' => t('Example'),
+    'keys' => array(
+      'first' => t('First example'),
+      'second' => t('Second example'),
+    ),
+  );
+  return $realm;
+}

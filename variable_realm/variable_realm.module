@@ -197,6 +197,7 @@ function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
  * Delete variable from realm
  */
 function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
+  debug("delete $realm $key name");
   variable_realm($realm, $key)->variable_del($name);
   if ($rebuild) {
     variable_realm_rebuild($realm, $key);
@@ -204,16 +205,19 @@ function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
 }
 
 /**
- * Delete realm variable or full realm from store.
+ * Delete variable for all keys on realm.
  *
  * @param $realm_name
  *   Realm name to delete.
  * @param $variable_name
  *   Variable name to delete.
  */
-function variable_realm_delete_variable($realm_name, $variable_name) {
-  foreach (variable_realm_keys($realm_name) as $key) {
+function variable_realm_delete_variable($realm_name, $variable_name, $rebuild = TRUE) {
+  foreach (array_keys(variable_realm_keys($realm_name)) as $key) {
     variable_realm_del($realm_name, $key, $variable_name, FALSE);
+  }
+  if ($rebuild) {
+    variable_realm_rebuild();
   }
 }
 
@@ -352,14 +356,16 @@ function variable_realm_reset($realms = array()) {
 /**
  * Implements hook_variable_delete().
  */
-function variable_realm_variable_delete($variable) {
-  // Delete each variable for each current realm/key
-  foreach (variable_children($variable['name']) as $name) {
-    foreach (variable_realm() as $realm => $realm_data) {
-      foreach (array_keys($realm_data) as $key) {
-        variable_realm_del($realm, $key, $name);
+function variable_realm_variable_delete($variable, $options) {
+  // If there's a realm option, we are already deleting variable for a realm only.
+  if (empty($options['realm'])) {
+    // Delete each variable for each current and existing realm/key
+    foreach (variable_children($variable['name']) as $variable_name) {
+      foreach (variable_realm_list() as $realm_name => $realm_title) {
+        variable_realm_delete_variable($realm_name, $variable_name, FALSE);
       }
     }
+    variable_realm_rebuild();
   }
 }
 
