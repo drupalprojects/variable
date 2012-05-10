@@ -218,6 +218,7 @@ function variable_get_option($type = NULL) {
  *   Options array, it may have the following elements
  *   - language => Language object
  *   - default => Default value if not set
+ *   - realm => Realm object if working inside a variable realm
  */
 function variable_get_value($variable, $options = array()) {
   $variable = _variable_variable($variable, $options);
@@ -228,7 +229,12 @@ function variable_get_value($variable, $options = array()) {
     return variable_callback($variable['value callback'], $variable, _variable_options($options));
   }
   else {
-    $value = variable_get($variable['name'], NULL);
+    if (!empty($options['realm'])) {
+      $value = $options['realm']->variable_get($variable['name'], NULL);
+    }
+    else {
+      $value = variable_get($variable['name'], NULL);
+    }
     if (isset($value)) {
       return $value;
     }
@@ -244,9 +250,14 @@ function variable_get_value($variable, $options = array()) {
  * This basically sets the variable but also invokes hook_variable_update
  */
 function variable_set_value($name, $value, $options = array()) {
-  $old_value = variable_get($name, NULL);
-  variable_set($name, $value);
-  module_invoke_all('variable_update', $name, $value, $old_value);
+  $old_value = variable_get($name, NULL, $options);
+  if (!empty($options['realm'])) {
+    $options['realm']->variable_set($name, $value);
+  }
+  else {
+    variable_set($name, $value);
+  }
+  module_invoke_all('variable_update', $name, $value, $old_value, $options);
 }
 
 /**
@@ -264,26 +275,32 @@ function variable_get_default($variable, $options = array()) {
   elseif (isset($variable['default'])) {
     return $variable['default'];
   }
-  return NULL;
+  else {
+    return NULL;
+  }
 }
 
 
 /**
  * Delete variable (included children variables)
  */
-function variable_delete($variable) {
-  $variable = _variable_variable($variable);
+function variable_delete($variable, $options = array()) {
+  $variable = _variable_variable($variable, $options);
   variable_include();
   // We need to build the variable, it may be multiple
-  $variable = variable_build($variable);
+  $variable = variable_build($variable, $options);
   if (!empty($variable['children'])) {
-    array_map('variable_del', array_keys($variable['children']));
+    $callback = !empty($options['realm']) ? array($options['realm'], 'variable_del') : 'variable_del';
+    array_map($callback, array_keys($variable['children']));
+  }
+  elseif (!empty($options['realm'])) {
+    $options['realm']->variable_del($variable['name']);
   }
   else {
     variable_del($variable['name']);
   }
   // Invoke the hook only once even if its multiple
-  module_invoke_all('variable_delete', $variable);
+  module_invoke_all('variable_delete', $variable, $options);
 }
 
 /**
@@ -378,21 +395,26 @@ function variable_hook_info() {
  * @param $list
  *   Variable name or list of variable names
  */
-function variable_edit_form($form, $form_state, $list) {
-  $form += variable_edit_subform($list);
+function variable_edit_form($form, $form_state, $list, $options = array()) {
+  $form += variable_edit_subform($list, $options);
   return system_settings_form($form);
 }
 
 /**
- * Form elements for variable list
+ * Form elements for variable list.
+ *
+ * @param $list
+ *   Variable name or array of variable names..
+ * @param $options
+ *   Regular variable options (language, realm, etc) and optional 'form parents' array.
  */
-function variable_edit_subform($list) {
+function variable_edit_subform($list, $options = array()) {
   module_load_include('form.inc', 'variable');
   $list = is_array($list) ? $list : array($list);
   $form = array();
   foreach ($list as $name) {
-    if ($variable = variable_get_info($name)) {
-      $form[$name] = variable_form_element($variable);
+    if ($variable = variable_get_info($name, $options)) {
+      $form[$name] = variable_form_element($variable, $options);
     }
   }
   return $form;

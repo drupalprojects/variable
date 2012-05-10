@@ -64,10 +64,11 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
 function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $realm_key) {
   $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
   $form['realm_key'] = array('#type' => 'value', '#value' => $realm_key);
+  $options['realm'] = variable_realm($realm_name, $realm_key);
   // Group variables by variable group for vertical tabls
   $group_list = array();
   foreach (variable_realm_get_variable_list($realm_name) as $variable_name) {
-    $variable_info = variable_get_info($variable_name);
+    $variable_info = variable_get_info($variable_name, $options);
     $group = $variable_info['group'];
     $group_list[$group][] = $variable_name;
   }
@@ -82,7 +83,9 @@ function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $r
       '#title' => $group_info['title'],
       '#collapsible' => TRUE, '#collapsed' => TRUE,
     );
-    $form['variables'][$group] += variable_realm_edit_subform($group_variables, $realm_name, $realm_key);
+    // Set form parents for this variable / group.
+    $options['form parents'] = array('variables', $group);
+    $form['variables'][$group] += variable_edit_subform($group_variables, $options);
   }
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
   return $form;
@@ -94,7 +97,6 @@ function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $r
 function variable_realm_edit_variables_form_submit($form, &$form_state) {
   $realm_name = $form_state['values']['realm_name'];
   $realm_key = $form_state['values']['realm_key'];
-  dpm($form_state['values']);
   foreach ($form_state['values']['variables'] as $group => $group_variables) {
     if (is_array($group_variables)) {
       foreach ($group_variables as $name => $value) {
@@ -146,20 +148,4 @@ function variable_realm_form_key_current($realm_name, $default_key = NULL) {
   else {
     return $default_key ? $default_key : key($valid_keys);
   }
-}
-
-/**
- * Form elements for variable list with realm values.
- */
-function variable_realm_edit_subform($list, $realm_name, $realm_key) {
-  module_load_include('form.inc', 'variable');
-  $list = is_array($list) ? $list : array($list);
-  $form = array();
-  foreach ($list as $name) {
-    if ($variable = variable_get_info($name)) {
-      $variable['value'] = variable_realm_get($realm_name, $realm_key, $name);
-      $form[$name] = variable_form_element($variable);
-    }
-  }
-  return $form;
 }

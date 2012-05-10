@@ -22,6 +22,10 @@ function variable_form_element($variable, $options = array()) {
   if (!empty($variable['validate callback'])) {
     $element['#validate'][] = $variable['validate callback'];
   }
+  if (!empty($options['form parents'])) {
+    $element['#parents'] = $options['form parents'];
+    $element['#parents'][] = $variable['name'];
+  }
   $element += array('#access' => variable_access($variable));
   if (!empty($variable['required'])) {
     $element += array('#required' => TRUE);
