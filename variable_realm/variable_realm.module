@@ -152,7 +152,7 @@ function variable_realm_build() {
  * Get value from realm
  */
 function variable_realm_get($realm, $key, $name = NULL, $default = NULL) {
-  variable_realm($realm, $key)->variable_get($name, $default);
+  return variable_realm($realm, $key)->variable_get($name, $default);
 }
 
 /**

@@ -73,7 +73,8 @@ function variable_realm_admin_realm_info($realm_name) {
 function variable_realm_admin_realm_edit($realm_name) {
   module_load_include('form.inc', 'variable_realm');
   // @todo Build key selector (for now include first key)
-  $realm_key = key(variable_realm_keys($realm_name));
+  $realm_key = variable_realm_form_key_current($realm_name);
+  $build['select'] = variable_realm_form_key_selector($realm_name, $realm_key);
   $build['form'] = drupal_get_form('variable_realm_edit_variables_form', $realm_name, $realm_key);
   return $build;
 }
