@@ -296,6 +296,7 @@ function variable_realm_switch($realm, $key) {
   $current = variable_realm_status($realm);
   if (!isset($current) || $current !== $key) {
     variable_realm_status($realm, $key);
+    module_invoke_all('variable_realm_switch', $realm, $key);
     variable_realm_rebuild();
   }
 }

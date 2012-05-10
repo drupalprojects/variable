@@ -279,3 +279,55 @@ function _variable_realm_admin_realm_names_human($realms) {
   }
 }
 
+/**
+ * Get list of variables for given realm or check whether a variable belongs to
+ * the given realm. Returns low-level variable names.
+ *
+ * @param $realm
+ *   The name of the realm.
+ * @param $name
+ *   The name of a variable.
+ */
+function variable_realm_admin_variables_list($realm, $name = NULL) {
+  static $variables;
+  if (!isset($variables)) {
+    // Note that variables being a global static, any other module can initialize or alter it.
+    $variables = &drupal_static(__FUNCTION__, array());
+  }
+  if (!isset($variables[$realm])) {
+    $variable_name = variable_realm_admin_variables_list_name($realm);
+    $variables[$realm] = variable_get($variable_name, array());
+  }
+  return $name ? in_array($name, $variables[$realm]) : $variables[$realm];
+}
+
+/**
+ * Get or set the list of high-level variables for a given realm.
+ *
+ * If a new set of variable names is given, this function will automatically
+ * update the respective low-level list of variables provided by
+ * variable_realm_admin_variables_list().
+ *
+ * @see variable_realm_admin_realm_settings_submit().
+ *
+ * @param $realm
+ *   The name of the realm.
+ * @param $data
+ *   A new list of high-level variable names.
+ */
+function variable_realm_admin_variables_conf($realm, $data = NULL) {
+  $confname = variable_realm_admin_variables_list_name($realm, 'conf');
+
+  if (isset($data)) {
+    // Save high-level variable names
+    variable_set($confname, $data);
+
+    // Rebuild low-level variables list
+    variable_realm_admin_variables_list_update($realm, $data);
+
+    // Notify other modules
+    module_invoke_all('variable_realm_variables_update', $realm, $data);
+  }
+
+  return variable_get($confname, array());
+}

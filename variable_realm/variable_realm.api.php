@@ -54,5 +54,19 @@ function hook_variable_realm_info() {
 }
 
 /**
+ * Allow other modules to act on realm switching.
+ *
+ * This hook is invoked right after the realm key is switched but before
+ * the global variables are rebuilt.
+ *
+ * @param $realm_name
+ *   Realm that is switched.
+ * @param $realm_key
+ *   New realm key.
+ */
+function hook_variable_realm_switch($realm_name, $realm_key) {
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
