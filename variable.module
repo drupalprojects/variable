@@ -386,6 +386,9 @@ function variable_hook_info() {
   $hooks['variable_type_info'] = array(
     'group' => 'variable',
   );
+  $hooks['variable_settings_form_alter'] = array(
+    'group' => 'variable',
+  );
   return $hooks;
 }
 
@@ -626,4 +629,38 @@ function _variable_unknown($name) {
     // Space for public service advertisement :-)
     'description' => t('We have no meta information for this variable. Please, ask module developers to declare their variables. See <a href="http://drupal.org/project/variable">Variable module</a>.'),
   );
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Triggers hook_variable_realm_settings_form_alter() giving other modules a chance
+ * to act on settings forms after other contrib modules have added their variables.
+ */
+function variable_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['#theme']) && $form['#theme'] == 'system_settings_form') {
+    foreach (module_implements('variable_settings_form_alter') as $module) {
+      $function = $module . '_variable_settings_form_alter';
+      $function($form, $form_state, $form_id);
+    }
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ *
+ * Move variable_form_alter() to the end of the list to give modules manipulating
+ * variables/realms a chance to act on settings forms.
+ *
+ * @param $implementations
+ *   All implementations of the given hook.
+ * @param $hook
+ *   Name of the hook.
+ */
+function variable_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter') {
+    $group = $implementations['variable'];
+    unset($implementations['variable']);
+    $implementations['variable'] = $group;
+  }
 }
