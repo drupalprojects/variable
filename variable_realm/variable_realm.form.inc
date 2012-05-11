@@ -62,32 +62,44 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
  * Edit variables for realm.
  */
 function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $realm_key) {
+  $realm_info = variable_realm_info($realm_name);
   $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
   $form['realm_key'] = array('#type' => 'value', '#value' => $realm_key);
   $options['realm'] = variable_realm($realm_name, $realm_key);
-  // Group variables by variable group for vertical tabls
-  $group_list = array();
-  foreach (variable_realm_get_variable_list($realm_name) as $variable_name) {
-    $variable_info = variable_get_info($variable_name, $options);
-    $group = $variable_info['group'];
-    $group_list[$group][] = $variable_name;
-  }
-  $form['variables'] = array(
-    '#type' => 'vertical_tabs',
-    '#tree' => TRUE,
-  );
-  foreach ($group_list as $group => $group_variables) {
-    $group_info = variable_get_group($group);
-    $form['variables'][$group] = array(
-      '#type' => 'fieldset',
-      '#title' => $group_info['title'],
-      '#collapsible' => TRUE, '#collapsed' => TRUE,
+  if ($variable_list = variable_realm_get_variable_list($realm_name)) {
+    // Group variables by variable group for vertical tabls
+    $group_list = array();
+    foreach ($variable_list as $variable_name) {
+      $variable_info = variable_get_info($variable_name, $options);
+      $group = $variable_info['group'];
+      $group_list[$group][] = $variable_name;
+    }
+    $form['variables'] = array(
+      '#type' => 'vertical_tabs',
+      '#tree' => TRUE,
     );
-    // Set form parents for this variable / group.
-    $options['form parents'] = array('variables', $group);
-    $form['variables'][$group] += variable_edit_subform($group_variables, $options);
+    foreach ($group_list as $group => $group_variables) {
+      $group_info = variable_get_group($group);
+      $form['variables'][$group] = array(
+        '#type' => 'fieldset',
+        '#title' => $group_info['title'],
+        '#collapsible' => TRUE, '#collapsed' => TRUE,
+      );
+      // Set form parents for this variable / group.
+      $options['form parents'] = array('variables', $group);
+      $form['variables'][$group] += variable_edit_subform($group_variables, $options);
+    }
+    $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
   }
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+  else {
+    $form['message']['#markup'] = '<h3>' . t('No variables have been selected as %realm_name specific.', array('%realm_name' => $realm_info['title'])) . '</h3>';
+  }
+  if (!empty($realm_info['select path'])) {
+    $form['select']['#markup'] = t('To select variables to be configured, see <a href="!select-url">%realm_name variable settings</a>.', array(
+      '%realm_name' => $realm_info['title'],
+      '!select-url' => url($realm_info['select path'])
+    ));
+  }
   return $form;
 }
 
