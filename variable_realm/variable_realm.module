@@ -4,13 +4,52 @@
  * Variable API module - Realms
  */
 
+// Prefix for realm keys on query string
+define('VARIABLE_REALM_QUERY_STRING', 'variable_realm_key_');
+
 /**
- * Implementation of hook_boot()
+ * Implements hook_boot()
  *
  * We set variable realm and language code as early as possible in the page request.
  */
 function variable_realm_boot() {
   variable_realm_status('global', 'default');
+}
+
+/**
+ * Implements hook_init()
+ *
+ * Let realms be overriden by query string parameters, but only for:
+ * - Admin paths (not variable admin pages)
+ */
+function variable_realm_init() {
+  if (arg(0) == 'admin' && arg(3) != 'variable' && user_access('administer site configuration')) {
+    foreach (variable_realm_params() as $realm_name => $realm_key) {
+      variable_realm_switch($realm_name, $realm_key);
+    }
+  }
+}
+
+/**
+ * Get realm parameters from query string.
+ */
+function variable_realm_params($realm_name = NULL) {
+  $realm_params = &drupal_static(__FUNCTION__);
+  if (!isset($realm_params)) {
+    $realm_params = array();
+    foreach (variable_realm_info() as $realm => $realm_info) {
+      $param = VARIABLE_REALM_QUERY_STRING . $realm;
+      if (!empty($_GET[$param]) && array_key_exists($_GET[$param], variable_realm_keys($realm))) {
+        $realm_params[$realm] = $_GET[$param];
+      }
+    }
+  }
+  if ($realm_name) {
+    return isset($realm_params[$realm_name]) ? $realm_params[$realm_name] : FALSE;
+  }
+  else {
+    return $realm_params;
+  }
 }
 
 /**

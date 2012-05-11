@@ -322,6 +322,14 @@ function variable_list($names) {
 }
 
 /**
+ * Get human readable name for variable.
+ */
+function variable_name($variable) {
+  $variable = _variable_variable($variable);
+  return $variable['title'];
+}
+
+/**
 * @} End of "defgroup variable_api".
 */
 

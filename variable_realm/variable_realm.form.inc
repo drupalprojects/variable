@@ -130,15 +130,16 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
   $realm_info = variable_realm_info($realm_name);
   $form[$element_name] = array(
     '#type' => 'fieldset',
-    '#title' => t('Select value for %name realm', array('%name' => $realm_info['title'])),
+    '#title' => t('There are %name variables in this form', array('%name' => $realm_info['variable name'])),
     '#weight' => -100,
-    '#description' => t('Check you are editing the variables for the right realm value or select the desired one.'),
+    '#description' => t('Check you are editing the variables for the right %realm value or select the desired %realm.', array('%realm' => drupal_strtolower($realm_info['title']))),
   );
   // Replace only this element on current query string, there may be others.
   $current_query = $_GET;
   unset($current_query['q']);
   foreach (variable_realm_keys($realm_name) as $realm_key => $key_name) {
-    $link =  l($key_name, $_GET['q'], array('query' => array($query_name => $realm_key) + $current_query));
+    $query[VARIABLE_REALM_QUERY_STRING . $realm_name] = $realm_key;
+    $link =  l($key_name, $_GET['q'], array('query' => $query + $current_query));
     $items[] = $current_key == $realm_key ? '<strong>' . $link . '</strong>' : $link;
   }
   $form[$element_name]['select_key'] = array(
@@ -152,12 +153,118 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
  * Get current realm key from query string.
  */
 function variable_realm_form_key_current($realm_name, $default_key = NULL) {
-  $valid_keys = variable_realm_keys($realm_name);
-  $query_name = 'variable_realm_' . $realm_name . '_key';
-  if (isset($_GET[$query_name]) && isset($valid_keys[$_GET[$query_name]])) {
-    return $_GET[$query_name];
+  if ($current_key = variable_realm_status($realm_name)) {
+    return $current_key;
+  }
+  elseif ($key = variable_realm_params($realm_name)) {
+    return $key;
+  }
+  elseif ($default_key) {
+    return $default_key;
   }
   else {
-    return $default_key ? $default_key : key($valid_keys);
+    $realm_info = variable_realm_info($realm_name);
+    return $realm_info['default key'];
+  }
+}
+
+/**
+ * Alter settings form and return list of found variables.
+ */
+function _variable_realm_variable_settings_form_alter(&$form, $realm_name, $variables) {
+  $result = array();
+  foreach (element_children($form) as $field) {
+    if (count(element_children($form[$field])) && empty($form[$field]['#tree'])) {
+      // Rewrite fieldsets recursively.
+      $result += _variable_realm_variable_settings_form_alter($form[$field], $realm_name, $variables);
+    }
+    elseif (in_array($field, $variables)) {
+      if (isset($form[$field]['#variable_realm'])) {
+        // Oh-oh, variable already taken by another realm.
+        _variable_realm_variable_settings_form_conflict($field);
+        $form[$field]['#disabled'] = TRUE;
+      }
+      else {
+        // Mark variable as already taken by a realm
+        $form[$field]['#variable_realm'] = $realm_name;
+      }
+      _variable_realm_variable_settings_form_mark($realm_name, $form[$field]);
+      // Addd field => name to result
+      $result[$field] = !empty($form[$field]['#title']) ? $form[$field]['#title'] : $field;
+    }
+  }
+  return $result;
+}
+
+/**
+ * Mark variable as belonging to a realm.
+ */
+function _variable_realm_variable_settings_form_mark($realm_name, &$element) {
+  $realm_info = variable_realm_info($realm_name);
+  // Add form field class (i18n-variable) and description text.
+  $element['#attributes']['class'][] = $realm_info['variable class'];
+  $element['#description'] = !empty($element['#description']) ? $element['#description'] : '';
+  $element['#description'] .= ' <strong>' . t('This is a @name variable.', array('@name' => $realm_info['variable name'])) . '</strong> ';
+}
+
+/**
+ * Warning about variable conflict.
+ */
+function _variable_realm_variable_settings_form_conflict($variable) {
+  static $warnings;
+  if (!isset($warnings[$variable])) {
+    $warnings[$variable] = TRUE;
+    drupal_set_message(t('There are conflicting realm variables in the form. The variable %name is enabled for more than one realm. Review your realm settings', array('%name' => variable_name($variable))), 'warning');
+  }
+}
+
+/**
+ * Save multilingual variables and remove them from form.
+ */
+function variable_realm_variable_settings_form_submit($form, &$form_state) {
+  $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+  foreach ($form['#realm_keys'] as $realm_name => $realm_key) {
+    $realm_info = variable_realm_info($realm_name);
+    //$language = i18n_language($form_state['values']['i18n_variable_language']);
+    //unset($form_state['values']['i18n_variable_language']);
+    $variables = array_keys($form['#realm_variables'][$realm_name]);
+    foreach ($variables as $variable_name) {
+      if (isset($form_state['values'][$variable_name])) {
+        if ($op == t('Reset to defaults')) {
+          variable_realm_del($realm_name, $realm_key, $variable_name);
+        }
+        else {
+          $value = $form_state['values'][$variable_name];
+          if (is_array($value) && isset($form_state['values']['array_filter'])) {
+            $value = array_keys(array_filter($value));
+          }
+          variable_realm_set($realm_name, $realm_key, $variable_name, $value);
+        }
+        // If current is not default realm key, we don't set any global variable (without realm)
+        if ($realm_key != $realm_info['default key']) {
+          unset($form_state['values'][$variable_name]);
+        }
+      }
+    }
+  }
+  // The form will go now through system_settings_form_submit()
+}
+
+/**
+ * Save multilingual variables and remove them from form.
+ *
+ * Note the theme variable has already been set into 'variable_realm_theme_settings'
+ */
+function variable_realm_variable_theme_form_submit($form, &$form_state) {
+  foreach ($form['#realm_keys'] as $realm_name => $realm_key) {
+    $realm_info = variable_realm_info($realm_name);
+    $settings = variable_get('variable_realm_theme_settings');
+    $variable_name = $form['#realm_theme'][$realm_name];
+    variable_realm_set($realm_name, $realm_key, $variable_name, $settings);
+    // If current is default language, we allow global (without language) variables to be set too
+    if ($realm_key == $realm_info['default key']) {
+      variable_set($variable_name, $settings);
+    }
+    variable_del('variable_realm_theme_settings');
   }
 }
