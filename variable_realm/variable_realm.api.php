@@ -12,11 +12,11 @@
 /**
  * Provides information about controller classes and weights for variable realms.
  *
- * This information is mainly used to build exportable realms as Features though
- * it may be used in the future to dinamically load realms upon request. For this
- * reason this may be defined in the main module and available at bootstrap time
- * when the realm is going to be used from some module hook_boot(). For this, the
- * module may need to implement any of the bootstrap hooks like hook_boot().
+ * Modules implementing this hook must implement too any bootstrap hook.
+ *
+ * This information is used to dinamically load realms upon request and to build
+ * exportable realms as Features. For this reason this must be defined in the main
+ * module and available at bootstrap time when the realm is going to be used.
  *
  * @see i18n_variable_variable_realm_controller()
  *

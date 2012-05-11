@@ -27,7 +27,16 @@ function variable_realm_hook_info() {
  * Get information about variable realms.
  */
 function variable_realm_info($realm = NULL) {
-  return _variable_info('realm', $realm);
+  $realm_info = &drupal_static(__FUNCTION__);
+  if (!isset($realm_info)) {
+    $realm_info = module_invoke_all('variable_realm_info');
+  }
+  if ($realm) {
+    return isset($realm_info[$realm]) ? $realm_info[$realm] : NULL;
+  }
+  else {
+    return $realm_info;
+  }
 }
 
 /**
@@ -197,7 +206,6 @@ function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
  * Delete variable from realm
  */
 function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
-  debug("delete $realm $key name");
   variable_realm($realm, $key)->variable_del($name);
   if ($rebuild) {
     variable_realm_rebuild($realm, $key);
