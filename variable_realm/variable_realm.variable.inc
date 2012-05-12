@@ -42,7 +42,7 @@ function variable_realm_variable_type_info() {
 }
 
 /**
- * Implements hook_variable_settings_form_alter()
+ * Implements hook_variable_settings_form_alter().
  */
 function variable_realm_variable_settings_form_alter(&$form, &$form_state, $form_id) {
   module_load_include('form.inc', 'variable_realm');

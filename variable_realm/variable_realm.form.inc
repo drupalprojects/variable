@@ -219,7 +219,7 @@ function _variable_realm_variable_settings_form_conflict($variable) {
 }
 
 /**
- * Save multilingual variables and remove them from form.
+ * Save realm variables and remove them from form.
  */
 function variable_realm_variable_settings_form_submit($form, &$form_state) {
   $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';

@@ -12,11 +12,13 @@
 /**
  * Provides information about controller classes and weights for variable realms.
  *
- * Modules implementing this hook must implement too any bootstrap hook.
+ * Modules implementing this hook must also implement any bootstrap hook (for
+ * example hook_boot).
  *
- * This information is used to dinamically load realms upon request and to build
- * exportable realms as Features. For this reason this must be defined in the main
- * module and available at bootstrap time when the realm is going to be used.
+ * This information is used to dynamically load realms upon request and to build
+ * exportable realms as Features. For this reason this must be defined in the
+ * main module and available at bootstrap time when the realm is going to be
+ * used.
  *
  * @see i18n_variable_variable_realm_controller()
  *
@@ -44,11 +46,25 @@ function hook_variable_realm_controller() {
  *   Array keyed by realm name which contains the following elements:
  *   - 'title', Humam readable name for the realm.
  *   - 'keys', Associative array with human readable names for keys.
+ *   - 'default key', The default key.
+ *   - 'options', Array of variable names that may be set for this realm.
+ *   - 'select', Boolean flag whether variables for this realm can be selected from a list.
+ *   - 'select path', Path to variable selection form (optional).
+ *   - 'variable name', Name for variables that belong to this realm: e.g. 'multilingual' variable/s
+ *   - 'variable class', CSS class name for annotated variables in system settings forms.
+ *   - 'form settings', Boolean flag whether realm variables should automatically be handled in system settings forms.
  */
 function hook_variable_realm_info() {
   $realm['language'] = array(
     'title' => t('Language'),
     'keys' => locale_language_list('name', TRUE),
+    'default key' => language_default('language'),
+    'options' => _i18n_variable_variable_realm_list(),
+    'select' => TRUE,
+    'select path' => 'admin/config/regional/i18n/variable',
+    'variable name' => t('multilingual'),
+    'variable class' => 'i18n-variable',
+    'form settings' => TRUE,
   );
   return $realm;
 }
