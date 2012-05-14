@@ -47,6 +47,9 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
   foreach ($variables as $index => $name) {
     $variables[$index] = str_replace(array('<', '>'), array('[', ']'), $name);
   }
+  // Hook for modules to alter this variable list.
+  drupal_alter('variable_realm_variable_list', $variables, $realm_name);
+  // And save the list to a variable.
   variable_set('variable_realm_list_' . $realm_name, $variables);
   // Spawn multiple variables and translate into actual variables
   $new_list = variable_children($variables);

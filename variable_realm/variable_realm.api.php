@@ -84,5 +84,17 @@ function hook_variable_realm_switch($realm_name, $realm_key) {
 }
 
 /**
+ * Alter the list of variables configurable for a realm before the list is saved
+ * to the database (in a variable).
+ *
+ * @param $variables
+ *   Array of variable names.
+ * @param $realm_name
+ *   The name of the realm we are changing the list for.
+ */
+function hook_variable_realm_variable_list_alter(&$variables, $realm_name) {
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
