@@ -135,7 +135,7 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
     '#type' => 'fieldset',
     '#title' => t('There are %name variables in this form', array('%name' => $realm_info['variable name'])),
     '#weight' => -100,
-    '#description' => t('Check you are editing the variables for the right %realm value or select the desired %realm.', array('%realm' => drupal_strtolower($realm_info['title']))),
+    '#description' => t('Check you are editing the variables for the right %realm value or select the desired %realm.', array('%realm' => $realm_info['title'])),
   );
   // Replace only this element on current query string, there may be others.
   $current_query = $_GET;
