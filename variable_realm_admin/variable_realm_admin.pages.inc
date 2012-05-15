@@ -62,8 +62,19 @@ function variable_realm_admin_realm_info($realm_name) {
   $build['variables'] = array(
     '#theme' => 'item_list',
     '#title' => t('Variables'),
-    '#items' => variable_realm_admin_variables_conf($realm_name),
+    '#items' => variable_realm_get_variable_list($realm_name),
   );
+  // Add list of configured variables + configuration link
+  if (!empty($info['select'])) {
+    $options = array();
+    $options[] = l(t('Configure'), 'admin/config/system/variable/realm/' . $realm_name . '/configure');
+    $options[] = l(t('Edit'), 'admin/config/system/variable/realm/' . $realm_name . '/edit');
+    $build['options'] = array(
+      '#theme' => 'item_list',
+      '#title' => t('Options'),
+      '#items' => $options,
+    );
+  }
   return $build;
 }
 
