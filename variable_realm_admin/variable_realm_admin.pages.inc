@@ -4,9 +4,6 @@
  * Realm Admin - Pages and forms.
  */
 
-// Include API
-require_once drupal_get_path('module', 'variable_realm_admin') . '/variable_realm_admin.inc';
-
 /**
  * Lists available realms.
  */
@@ -64,15 +61,14 @@ function variable_realm_admin_realm_info($realm_name) {
     '#title' => t('Variables'),
     '#items' => variable_realm_get_variable_list($realm_name),
   );
-  // Add list of configured variables + configuration link
   if (!empty($info['select'])) {
-    $options = array();
-    $options[] = l(t('Configure'), 'admin/config/system/variable/realm/' . $realm_name . '/configure');
-    $options[] = l(t('Edit'), 'admin/config/system/variable/realm/' . $realm_name . '/edit');
     $build['options'] = array(
       '#theme' => 'item_list',
       '#title' => t('Options'),
-      '#items' => $options,
+      '#items' => array(
+        l(t('Configure'), 'admin/config/system/variable/realm/' . $realm_name . '/configure'),
+        l(t('Edit'), 'admin/config/system/variable/realm/' . $realm_name . '/edit'),
+      ),
     );
   }
   return $build;

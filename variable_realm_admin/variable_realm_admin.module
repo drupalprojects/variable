@@ -5,11 +5,6 @@
  */
 
 /**
- * Query parameter prefix for realm switcher.
- */
-define('VARIABLE_REALM_SELECTOR_QUERY_PARAM_PREFIX', 'realm-');
-
-/**
  * Implements hook_menu().
  */
 function variable_realm_admin_menu() {
@@ -49,8 +44,6 @@ function variable_realm_admin_menu() {
     'access callback' => 'variable_realm_admin_access',
     'access arguments' => array(5, 'select'),
     'file' => 'variable_realm_admin.pages.inc',
-    //'file path' => drupal_get_path('module', 'variable_realm'),
-    //'type' => MENU_CALLBACK,
   );
   $items['admin/config/system/variable/realm/%/configure'] = array(
     'title' => 'Configure',
@@ -61,7 +54,6 @@ function variable_realm_admin_menu() {
     'access arguments' => array(5, 'select'),
     'file' => 'variable_realm.form.inc',
     'file path' => drupal_get_path('module', 'variable_realm'),
-    //'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -82,29 +74,3 @@ function variable_realm_admin_realm_title($realm) {
   $info = variable_realm_info($realm);
   return isset($info['title']) ? $info['title'] : $realm;
 }
-
-/**
- * Implements hook_module_implements_alter().
- *
- * Move variable_realm_admin_form_alter() to the end of the list to be able to
- * act on variables added during hook_form_alter().
- *
- * @param $implementations
- *   All implementations of the given hook.
- * @param $hook
- *   Name of the hook.
- */
-/*
-function variable_realm_admin_module_implements_alter(&$implementations, $hook) {
-  if ($hook == 'form_alter') {
-    // move own hook to end
-    $group = $implementations['variable_realm_admin'];
-    unset($implementations['variable_realm_admin']);
-    $implementations['variable_realm_admin'] = $group;
-
-    // remove i18n_variable_form_alter, because we take care of things now :)
-    unset($implementations['i18n_variable']);
-  }
-}
-*/
-
