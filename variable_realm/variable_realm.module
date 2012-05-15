@@ -54,9 +54,15 @@ function variable_realm_params($realm_name = NULL) {
 
 /**
  * Implements hook_hook_info().
+ *
+ * This function only specifies hooks which are NOT invoked during bootstrap.
+ * See variable_realm.api.php for a complete list of hooks.
  */
 function variable_realm_hook_info() {
   $hooks['variable_realm_info'] = array(
+    'group' => 'variable',
+  );
+  $hooks['variable_realm_variable_list_alter'] = array(
     'group' => 'variable',
   );
   return $hooks;
