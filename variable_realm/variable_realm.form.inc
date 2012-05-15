@@ -156,11 +156,11 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
  * Get current realm key from query string.
  */
 function variable_realm_form_key_current($realm_name, $default_key = NULL) {
-  if ($current_key = variable_realm_status($realm_name)) {
-    return $current_key;
-  }
-  elseif ($key = variable_realm_params($realm_name)) {
+  if ($key = variable_realm_params($realm_name)) {
     return $key;
+  }
+  elseif ($current_key = variable_realm_status($realm_name)) {
+    return $current_key;
   }
   elseif ($default_key) {
     return $default_key;
