@@ -75,9 +75,10 @@ function variable_realm_info($realm = NULL) {
   $realm_info = &drupal_static(__FUNCTION__);
   if (!isset($realm_info)) {
     $realm_info = module_invoke_all('variable_realm_info');
+    drupal_alter('variable_realm_info', $realm_info);
   }
   if ($realm) {
-    return isset($realm_info[$realm]) ? $realm_info[$realm] : NULL;
+    return isset($realm_info[$realm]) ? $realm_info[$realm] : array();
   }
   else {
     return $realm_info;

@@ -46,8 +46,10 @@ function hook_variable_realm_controller() {
  *   Array keyed by realm name which contains the following elements:
  *   - 'title', Humam readable name for the realm.
  *   - 'keys', Associative array with human readable names for keys.
+ *   - 'keys callback', Callback function to provide the keys.
  *   - 'default key', The default key.
  *   - 'options', Array of variable names that may be set for this realm.
+ *   - 'list callback', Callback function to provide variable list for this realm.
  *   - 'select', Boolean flag whether variables for this realm can be selected from a list.
  *   - 'select path', Path to variable selection form (optional).
  *   - 'variable name', Name for variables that belong to this realm: e.g. 'multilingual' variable/s
@@ -67,6 +69,14 @@ function hook_variable_realm_info() {
     'form settings' => TRUE,
   );
   return $realm;
+}
+
+/**
+ * Alter variable realm information provided by modules.
+ *
+ * @see hook_variable_realm_info().
+ */
+function hook_variable_realm_info_alter(&$realms) {
 }
 
 /**
