@@ -59,3 +59,22 @@ function _variable_realm_union_variable_list($realm_name, $realm_info) {
   return call_user_func_array('array_intersect', $variables);
 }
 
+/**
+ * Implements hook_variable_settings_form_alter().
+ *
+ * Make sure realm switchers are added for all realms in the union.
+ */
+function variable_realm_union_variable_settings_form_alter(&$form, &$form_state, $form_id) {
+  foreach (variable_realm_union() as $realm_name => $union_realms) {
+    if (!empty($form['#realm_variables'][$realm_name]) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm_name])) {
+      // Check we have selectors for the other realms.
+      foreach ($union_realms as $realm) {
+        $info = variable_realm_info($realm);
+        if (!empty($info['form switcher']) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm])) {
+          $current_key = variable_realm_form_key_current($realm);
+          $form += variable_realm_form_key_selector($realm, $current_key);
+        }
+      }
+    }
+  }
+}

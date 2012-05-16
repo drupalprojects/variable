@@ -128,7 +128,7 @@ function variable_realm_edit_variables_form_submit($form, &$form_state) {
  * Key selector for realm forms.
  */
 function variable_realm_form_key_selector($realm_name, $current_key) {
-  $element_name = 'variable_realm_' . $realm_name . '_selector';
+  $element_name = VARIABLE_REALM_FORM_SWITCHER . $realm_name;
   $query_name = 'variable_realm_' . $realm_name . '_key';
   $realm_info = variable_realm_info($realm_name);
   $form[$element_name] = array(

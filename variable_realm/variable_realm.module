@@ -4,8 +4,10 @@
  * Variable API module - Realms
  */
 
-// Prefix for realm keys on query string
+// Prefix for realm keys on query string.
 define('VARIABLE_REALM_QUERY_STRING', 'variable_realm_key_');
+// Prefix for realm switcher element in forms.
+define('VARIABLE_REALM_FORM_SWITCHER', 'variable_realm_selector_');
 
 /**
  * Implements hook_boot()
