@@ -94,6 +94,16 @@ function hook_variable_realm_switch($realm_name, $realm_key) {
 }
 
 /**
+ * Alter the list of realm page parameters.
+ *
+ * These parameters are used in settings forms, overriding realm keys by using
+ * special $_GET variables. The purpose of this hook is to allow other modules
+ * to set predefined realm keys for settings forms, like variable_realm_union.
+ */
+function hook_variable_realm_params_alter(&$realm_params) {
+}
+
+/**
  * Alter the list of variables configurable for a realm before the list is saved
  * to the database (in a variable).
  *

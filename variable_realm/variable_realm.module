@@ -65,7 +65,7 @@ function variable_realm_hook_info() {
   $hooks['variable_realm_info'] = array(
     'group' => 'variable',
   );
-  $hooks['variable_realm_variable_list_alter'] = array(
+  $hooks['variable_realm_info_alter'] = array(
     'group' => 'variable',
   );
   return $hooks;
