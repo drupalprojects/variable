@@ -23,6 +23,7 @@ function variable_realm_admin_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10
   );
+  $weight = 0;
   foreach (variable_realm_list() as $realm => $title) {
     $items['admin/config/system/variable/realm/' . $realm] = array(
       'title callback' => 'variable_realm_admin_realm_title',
@@ -34,6 +35,7 @@ function variable_realm_admin_menu() {
       'access arguments' => array($realm),
       'file' => 'variable_realm_admin.pages.inc',
       'type' => MENU_LOCAL_TASK,
+      'weight' => $weight++,
     );
   }
   $items['admin/config/system/variable/realm/%/edit'] = array(

@@ -85,12 +85,13 @@ function variable_realm_info($realm = NULL) {
 }
 
 /**
- * Get list of all available realms.
+ * Get list of all available realms ordered by default weight.
  */
 function variable_realm_list() {
   $list = array();
   foreach (variable_realm_info() as $name => $info) {
     $list[$name] = $info['title'];
+    uksort($list, '_variable_realm_sort');
   }
   return $list;
 }
@@ -153,10 +154,28 @@ function variable_realm_controller($realm) {
 function _variable_realm_controller($realm, $key, $variables = NULL) {
   $info = variable_realm_controller($realm);
   $class = isset($info['class']) ? $info['class'] : 'VariableRealmDefaultController';
-  $weight = isset($info['weight']) ? $info['weight'] : 0;
   // Set realm weight if not set before.
-  variable_realm_weight($realm, NULL, $weight);
+  variable_realm_weight($realm, NULL, _variable_realm_weight($realm));
   return new $class($realm, $key, $variables);
+}
+
+/**
+ * Get default weight for realm.
+ *
+ * Realm weight is defined in hook_variable_realm_controller() and can be overridden
+ * by a variable named 'variable_realm_weight_[realm_name]'.
+ */
+function _variable_realm_weight($realm_name) {
+  $info = variable_realm_controller($realm_name);
+  $weight = $info && isset($info['weight']) ? $info['weight'] : 0;
+  return variable_get('variable_realm_weight_' . $realm_name, $weight);
+}
+
+/**
+ * Order realm names by weight.
+ */
+function _variable_realm_sort($a, $b) {
+  return _variable_realm_weight($a) - _variable_realm_weight($b);
 }
 
 /**
