@@ -17,6 +17,10 @@ function variable_variable_group_info() {
     'title' => t('Debug'),
     'description' => t('Debug and development options.'),
   );
+  $groups['variable'] = array(
+    'title' => t('Variable'),
+    'description' => t('Variables that contain metadata about the variable system.'),
+  );
   return $groups;
 }
 

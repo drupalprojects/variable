@@ -23,11 +23,22 @@ function variable_realm_variable_realm_info() {
 function variable_realm_variable_info($options) {
   $variables['variable_realm_list_[variable_realm]'] = array(
     'type' => 'multiple',
+    'group' => 'variable',
     'multiple' => 'variable_realm',
     'title' => t('Realm list', array(), $options),
     'description' => t('List of variables that can be set for a realm.', array(), $options),
     'repeat' => array(
       'type' => 'array',
+    ),
+  );
+  $variables['variable_realm_weight_[variable_realm]'] = array(
+    'type' => 'multiple',
+    'group' => 'variable',
+    'multiple' => 'variable_realm',
+    'title' => t('Realm weight', array(), $options),
+    'description' => t('Override default weight for realm variables.', array(), $options),
+    'repeat' => array(
+      'type' => 'number',
     ),
   );
   return $variables;

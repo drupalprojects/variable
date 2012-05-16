@@ -13,7 +13,7 @@ function variable_admin_page_group($group = NULL) {
     $group_info += array('description' => '');
     drupal_set_title($group_info['title']);
     $list = variable_list_group($group);
-    $build['description']['#markup'] = $group_info['description']; 
+    $build['description']['#markup'] = $group_info['description'];
     $build['form'] = drupal_get_form('variable_edit_form', array_keys($list));
     return $build;
   }
@@ -23,13 +23,15 @@ function variable_admin_page_group($group = NULL) {
       '#type' => 'vertical_tabs',
     );
     foreach (variable_get_group() as $group => $info) {
-      $build['groups'][$group] = array(
-        '#type' => 'fieldset',
-        '#title' => $info['title'],
-        '#collapsible' => TRUE, '#collapsed' => TRUE,
-        '#description' => (!empty($info['description']) ? $info['description'] . ' ' : '') . l(t('Edit group variables'), 'admin/config/system/variable/group/' . $group),
-      );
-      $build['groups'][$group]['list'] = variable_admin_group_list(variable_list_group($group));
+      if ($group_variables = variable_list_group($group)) {
+        $build['groups'][$group] = array(
+          '#type' => 'fieldset',
+          '#title' => $info['title'],
+          '#collapsible' => TRUE, '#collapsed' => TRUE,
+          '#description' => (!empty($info['description']) ? $info['description'] . ' ' : '') . l(t('Edit group variables'), 'admin/config/system/variable/group/' . $group),
+        );
+        $build['groups'][$group]['list'] = variable_admin_group_list($group_variables);
+      }
     }
     return $build;
   }
@@ -37,7 +39,7 @@ function variable_admin_page_group($group = NULL) {
 
 /**
  * Build list of variables for group
- * 
+ *
  * @return Renderable array
  */
 function variable_admin_group_list($variables) {
@@ -66,7 +68,7 @@ function variable_admin_page_module($name = NULL) {
     $module = $modules[$name];
     drupal_set_title($module->info['name']);
     $list = variable_list_module($name);
-    $build['description']['#markup'] = $module->info['description']; 
+    $build['description']['#markup'] = $module->info['description'];
     $build['form'] = drupal_get_form('variable_edit_form', array_keys($list));
     return $build;
   }
