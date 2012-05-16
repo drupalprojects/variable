@@ -21,10 +21,14 @@ function variable_realm_variable_realm_info() {
  * Implements hook_variable_info().
  */
 function variable_realm_variable_info($options) {
-  $variables['variable_realm_list[variable_realm]'] = array(
-    'type' => 'array',
+  $variables['variable_realm_list_[variable_realm]'] = array(
+    'type' => 'multiple',
+    'multiple' => 'variable_realm',
     'title' => t('Realm list', array(), $options),
     'description' => t('List of variables that can be set for a realm.', array(), $options),
+    'repeat' => array(
+      'type' => 'array',
+    ),
   );
   return $variables;
 }

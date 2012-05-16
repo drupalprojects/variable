@@ -59,7 +59,6 @@ function hook_variable_realm_controller() {
  *     in system settings forms.
  *   - 'form switcher', Boolean flag, whether a realm switcher should be auto-generated
  *     for settings forms which contain variables that belong to this realm.
- *
  */
 function hook_variable_realm_info() {
   $realm['language'] = array(
