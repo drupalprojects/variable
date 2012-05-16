@@ -101,7 +101,12 @@ function variable_realm_list() {
  */
 function variable_realm_keys($realm) {
   $info = variable_realm_info($realm);
-  return isset($info['keys']) ? $info['keys'] : array();
+  if (!empty($info['keys callback'])) {
+    call_user_func($info['keys callback'], $realm);
+  }
+  else {
+    return isset($info['keys']) ? $info['keys'] : array();
+  }
 }
 
 /**
@@ -117,6 +122,9 @@ function variable_realm_get_variable_options($realm_name) {
  */
 function variable_realm_get_variable_list($realm_name) {
   $info = variable_realm_info($realm_name);
+  if (!empty($info['list callback'])) {
+    return call_user_func($info['list callback'], $realm_name);
+  }
   if (!empty($info['select'])) {
     return variable_get('variable_realm_list_' . $realm_name, array());
   }

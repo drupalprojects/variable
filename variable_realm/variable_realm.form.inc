@@ -271,3 +271,24 @@ function variable_realm_variable_theme_form_submit($form, &$form_state) {
     variable_del('variable_realm_theme_settings');
   }
 }
+
+/**
+ * Get variable list for settings forms handling multiple realms.
+ *
+ * Variables available for more than one realm, will be kept only in the list
+ * for the realm with the higher weight.
+ */
+function _variable_realm_variable_settings_form_list() {
+  $list = array();
+  foreach (array_keys(variable_realm_list()) as $realm_name) {
+    $realm_info = variable_realm_info($realm_name);
+    if (!empty($realm_info['form settings']) && ($realm_list = variable_realm_get_variable_list($realm_name))) {
+      // Remove from previous realms with lower weight.
+      foreach ($list as $name => $variables) {
+        $list[$name] = array_diff($variables, $realm_list);
+      }
+      $list[$realm_name] = $realm_list;
+    }
+  }
+  return $list;
+}

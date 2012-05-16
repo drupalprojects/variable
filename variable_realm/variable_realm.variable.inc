@@ -46,29 +46,28 @@ function variable_realm_variable_type_info() {
  */
 function variable_realm_variable_settings_form_alter(&$form, &$form_state, $form_id) {
   module_load_include('form.inc', 'variable_realm');
-  foreach (variable_realm_info() as $realm_name => $realm_info) {
-    if (!empty($realm_info['form settings']) && ($variables = variable_realm_get_variable_list($realm_name))) {
-      if ($form_id == 'system_theme_settings') {
-        // Special treatment for theme settings
-        if (!empty($form['var']) && !empty($form['var']['#value']) && in_array($form['var']['#value'], $variables)) {
-          $realm_variables = element_children($form['theme_settings']);
-          $realm_variables = array_merge($realm_variables, array('default_logo', 'logo_path', 'default_favicon', 'favicon_path'));
-          _variable_realm_variable_settings_form_alter($form, $realm_name, $realm_variables);
-          // Replace variable (theme) name so we use a temporary storage variable
-          $form['#realm_variables'][$realm_name] = $realm_variables;
-          $form['#realm_theme'][$realm_name] = $form['var']['#value'];
-        }
-      }
-      elseif ($realm_variables = _variable_realm_variable_settings_form_alter($form, $realm_name, $variables)) {
+  foreach (_variable_realm_variable_settings_form_list() as $realm_name => $variables) {
+    $realm_info = variable_realm_info($realm_name);
+    if ($form_id == 'system_theme_settings') {
+      // Special treatment for theme settings
+      if (!empty($form['var']) && !empty($form['var']['#value']) && in_array($form['var']['#value'], $variables)) {
+        $realm_variables = element_children($form['theme_settings']);
+        $realm_variables = array_merge($realm_variables, array('default_logo', 'logo_path', 'default_favicon', 'favicon_path'));
+        _variable_realm_variable_settings_form_alter($form, $realm_name, $realm_variables);
+        // Replace variable (theme) name so we use a temporary storage variable
         $form['#realm_variables'][$realm_name] = $realm_variables;
-        //$form += i18n_variable_form_selector();
+        $form['#realm_theme'][$realm_name] = $form['var']['#value'];
       }
-      // Add realm values and subform realm / key selector.
-      if (!empty($realm_variables)) {
-        $current_key = variable_realm_form_key_current($realm_name);
-        $form += variable_realm_form_key_selector($realm_name, $current_key);
-        $form['#realm_keys'][$realm_name] = $current_key;
-      }
+    }
+    elseif ($realm_variables = _variable_realm_variable_settings_form_alter($form, $realm_name, $variables)) {
+      $form['#realm_variables'][$realm_name] = $realm_variables;
+      //$form += i18n_variable_form_selector();
+    }
+    // Add realm values and subform realm / key selector.
+    if (!empty($realm_variables)) {
+      $current_key = variable_realm_form_key_current($realm_name);
+      $form += variable_realm_form_key_selector($realm_name, $current_key);
+      $form['#realm_keys'][$realm_name] = $current_key;
     }
   }
   if (!empty($form['#realm_theme'])) {
