@@ -1,0 +1,103 @@
+<?php
+/**
+ * @file
+ * Drupal Module - Variable Realm Union.
+ */
+
+/**
+ * Get list of union realms.
+ *
+ * This functions gets the data from hook_variable_realm_controller(), not from
+ * variable_realm_info() as it may be needed very early in the bootstrap.
+ *
+ * @return
+ *   Multiple arrays of realm names in a union indexed by realm name.
+ *   Example: array('domain_language' => array('domain', 'language'))
+ */
+function variable_realm_union() {
+  $list = array();
+  foreach (variable_realm_controller() as $realm => $data) {
+    if (!empty($data['union'])) {
+      $list[$realm] = $data['union'];
+    }
+  }
+  return $list;
+}
+
+/**
+ * Implements hook_boot().
+ *
+ * Load module at bootstrap level. Required because other modules which may
+ * have to act early might want to use functionatliy provided by this module.
+ */
+function variable_realm_union_boot() {
+}
+
+/**
+ * Constructs a combined key by concatenating given values separated by a
+ * colon. Before the key is generated, the $values array is sorted
+ * alphabetically by the array keys.
+ *
+ * @param $realm
+ *   The variable realm (union).
+ * @param $values
+ *   The individual realm values in form of [name => value].
+ */
+function variable_realm_union_build_key($realm, $values) {
+  // Make sure values are in correct order
+  ksort($values);
+
+  // implode values
+  return implode(':', $values);
+}
+
+/**
+ * Build name for combined keys.
+ */
+function variable_realm_union_build_name($realm, $names) {
+  return implode(', ', $names);
+}
+
+/**
+ * Implements hook_variable_realm_switch().
+ */
+function variable_realm_union_variable_realm_switch($realm, $key) {
+  // Current realm values
+  $current_realms = variable_realm_current();
+  foreach (variable_realm_union() as $realm_name => $union_realms) {
+    if ($realm_key = _variable_realm_union_find_key($realm_name, $union_realms, $current_realms)) {
+      variable_realm_switch($realm_name, $realm_key);
+    }
+    else {
+      variable_realm_switch($realm_name, FALSE);
+    }
+  }
+}
+
+/**
+ * Implements hook variable_realm_params_alter().
+ */
+function variable_realm_union_variable_realm_params_alter(&$realm_params) {
+  foreach (variable_realm_union() as $realm_name => $union_realms) {
+    if ($realm_key = _variable_realm_union_find_key($realm_name, $union_realms, $realm_params)) {
+      $realm_params[$realm_name] = $realm_keys;
+    }
+  }
+}
+
+/**
+ * Find key for union realm based on other realm keys.
+ */
+function _variable_realm_union_find_key($realm_name, $union_realms, $current_keys) {
+  $keys = array();
+  foreach ($union_realms as $realm) {
+    if (!isset($current_keys[$realm]) || $current_keys[$realm] === FALSE) {
+      return NULL;
+    }
+    else {
+      $keys[$realm] = $current_keys[$realm];
+    }
+  }
+  return variable_realm_union_build_key($realm_name, $keys);
+}
+

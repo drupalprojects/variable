@@ -48,13 +48,18 @@ function hook_variable_realm_controller() {
  *   - 'keys', Associative array with human readable names for keys.
  *   - 'keys callback', Callback function to provide the keys.
  *   - 'default key', The default key.
- *   - 'options', Array of variable names that may be set for this realm.
+ *   - 'options', Array of variable names that may be set for this realm. If not set
+ *     any variable will be allowed for this realm.
  *   - 'list callback', Callback function to provide variable list for this realm.
  *   - 'select', Boolean flag whether variables for this realm can be selected from a list.
  *   - 'select path', Path to variable selection form (optional).
  *   - 'variable name', Name for variables that belong to this realm: e.g. 'multilingual' variable/s
  *   - 'variable class', CSS class name for annotated variables in system settings forms.
- *   - 'form settings', Boolean flag whether realm variables should automatically be handled in system settings forms.
+ *   - 'form settings', Boolean flag, whether realm variables should be handled automatically
+ *     in system settings forms.
+ *   - 'form switcher', Boolean flag, whether a realm switcher should be auto-generated
+ *     for settings forms which contain variables that belong to this realm.
+ *
  */
 function hook_variable_realm_info() {
   $realm['language'] = array(

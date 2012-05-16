@@ -1,0 +1,7 @@
+name = Variable Realm Union
+description = API for combining existing realms to new ones.
+package = Variable
+dependencies[] = variable
+dependencies[] = variable_realm
+core = 7.x
+
