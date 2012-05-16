@@ -38,11 +38,14 @@ function variable_realm_params($realm_name = NULL) {
   if (!isset($realm_params)) {
     $realm_params = array();
     foreach (variable_realm_info() as $realm => $realm_info) {
-      $param = VARIABLE_REALM_QUERY_STRING . $realm;
-      if (!empty($_GET[$param]) && array_key_exists($_GET[$param], variable_realm_keys($realm))) {
-        $realm_params[$realm] = $_GET[$param];
+      if (!empty($realm_info['form switcher'])) {
+        $param = VARIABLE_REALM_QUERY_STRING . $realm;
+        if (!empty($_GET[$param]) && array_key_exists($_GET[$param], variable_realm_keys($realm))) {
+          $realm_params[$realm] = $_GET[$param];
+        }
       }
     }
+    drupal_alter('variable_realm_params', $realm_params);
   }
   if ($realm_name) {
     return isset($realm_params[$realm_name]) ? $realm_params[$realm_name] : FALSE;
@@ -103,7 +106,8 @@ function variable_realm_list() {
 function variable_realm_keys($realm) {
   $info = variable_realm_info($realm);
   if (!empty($info['keys callback'])) {
-    call_user_func($info['keys callback'], $realm);
+    $function = $info['keys callback'];
+    return $function($realm, $info);
   }
   else {
     return isset($info['keys']) ? $info['keys'] : array();
@@ -124,9 +128,10 @@ function variable_realm_get_variable_options($realm_name) {
 function variable_realm_get_variable_list($realm_name) {
   $info = variable_realm_info($realm_name);
   if (!empty($info['list callback'])) {
-    return call_user_func($info['list callback'], $realm_name);
+    $function = $info['list callback'];
+    return $function($realm_name, $info);
   }
-  if (!empty($info['select'])) {
+  elseif (!empty($info['select'])) {
     return variable_get('variable_realm_list_' . $realm_name, array());
   }
   else {

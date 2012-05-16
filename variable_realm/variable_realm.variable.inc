@@ -66,7 +66,9 @@ function variable_realm_variable_settings_form_alter(&$form, &$form_state, $form
     // Add realm values and subform realm / key selector.
     if (!empty($realm_variables)) {
       $current_key = variable_realm_form_key_current($realm_name);
-      $form += variable_realm_form_key_selector($realm_name, $current_key);
+      if (!empty($realm_info['form switcher'])) {
+        $form += variable_realm_form_key_selector($realm_name, $current_key);
+      }
       $form['#realm_keys'][$realm_name] = $current_key;
     }
   }

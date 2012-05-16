@@ -205,7 +205,9 @@ function _variable_realm_variable_settings_form_alter(&$form, $realm_name, $vari
 function _variable_realm_variable_settings_form_mark($realm_name, &$element) {
   $realm_info = variable_realm_info($realm_name);
   // Add form field class (i18n-variable) and description text.
-  $element['#attributes']['class'][] = $realm_info['variable class'];
+  if (!empty($realm_info['variable class'])) {
+    $element['#attributes']['class'][] = $realm_info['variable class'];
+  }
   $element['#description'] = !empty($element['#description']) ? $element['#description'] : '';
   $element['#description'] .= ' <strong>' . t('This is a @name variable.', array('@name' => $realm_info['variable name'])) . '</strong> ';
 }
