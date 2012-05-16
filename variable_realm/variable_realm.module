@@ -154,12 +154,17 @@ function variable_realm_variable_realm_controller() {
 /**
  * Get class and weight information for variable realm.
  */
-function variable_realm_controller($realm) {
+function variable_realm_controller($realm = NULL) {
   $data = &drupal_static(__FUNCTION__);
   if (!isset($keys)) {
     $data = module_invoke_all('variable_realm_controller');
   }
-  return isset($data[$realm]) ? $data[$realm] : NULL;
+  if ($realm) {
+    return isset($data[$realm]) ? $data[$realm] : NULL;
+  }
+  else {
+    return $data;
+  }
 }
 
 /**
