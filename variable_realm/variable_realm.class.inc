@@ -41,6 +41,9 @@ interface VariableRealmControllerInterface {
   public function getVariableName();
   /**
    * Add store for realm key.
+   *
+   * @param $variables
+   *   Optional array with variable values to initialize the realm key store.
    */
   public function addStore($realm_key, $variables = NULL);
   /**
@@ -89,6 +92,8 @@ interface VariableRealmControllerInterface {
   public function getCurrentVariables();
   /**
    * Get information for this realm.
+   *
+   * Return information provided by hook_variable_realm_info()
    */
   public function getInfo($property = NULL, $default = NULL);
   /**
@@ -301,12 +306,7 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
    * Implementation of VariableRealmControllerInterface::getAllKeys().
    */
   public function getAllKeys() {
-    if ($function = $this->getInfo('keys callback')) {
-      return $function($this->realm_name, $this->getInfo());
-    }
-    else {
-      return $this->getInfo('keys');
-    }
+    return $this->getInfo('keys', array());
   }
   /**
    * Implementation of VariableRealmControllerInterface::getDefaultKey().
@@ -370,10 +370,7 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
    * Implementation of VariableRealmControllerInterface::getEnabledVariables().
    */
   public function getEnabledVariables() {
-    if ($function = $this->getInfo('list callback')) {
-      return $function($this->realm_name, $this->getInfo());
-    }
-    elseif ($this->getInfo('select')) {
+    if ($this->getInfo('select')) {
       return $this->getRealmVariable('list', array());
     }
     else {

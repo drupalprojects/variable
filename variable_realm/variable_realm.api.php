@@ -84,6 +84,20 @@ function hook_variable_realm_info_alter(&$realms) {
 }
 
 /**
+ * Allow other modules to act when enabling a realm.
+ *
+ * This hook is invoked right after the realm controller is enabled
+ * and it may have a valid key already set or it may be FALSE.
+ *
+ * @param $realm_name
+ *   Realm that is switched.
+ * @param $realm_key
+ *   New realm key.
+ */
+function hook_variable_realm_enable($realm_name, $realm_key) {
+}
+
+/**
  * Allow other modules to act on realm switching.
  *
  * This hook is invoked right after the realm key is switched but before
@@ -98,27 +112,13 @@ function hook_variable_realm_switch($realm_name, $realm_key) {
 }
 
 /**
- * Alter the list of realm page parameters.
+ * Allow other modules to act when rebuilding the configuration.
  *
- * These parameters are used in settings forms, overriding realm keys by using
- * special $_GET variables. The purpose of this hook is to allow other modules
- * to set predefined realm keys for settings forms, like variable_realm_union.
+ * This hook is invoked before the global variables are rebuilt
+ * using the active realms.
  */
-function hook_variable_realm_params_alter(&$realm_params) {
+function hook_variable_realm_rebuild() {
 }
-
-/**
- * Alter the list of variables configurable for a realm before the list is saved
- * to the database (in a variable).
- *
- * @param $variables
- *   Array of variable names.
- * @param $realm_name
- *   The name of the realm we are changing the list for.
- */
-function hook_variable_realm_variable_list_alter(&$variables, $realm_name) {
-}
-
 /**
  * @} End of "addtogroup hooks".
  */
