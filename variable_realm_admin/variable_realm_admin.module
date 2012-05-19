@@ -24,7 +24,7 @@ function variable_realm_admin_menu() {
     'weight' => -10
   );
   $weight = 0;
-  foreach (variable_realm_list() as $realm => $title) {
+  foreach (variable_realm_list_all() as $realm => $controller) {
     $items['admin/config/system/variable/realm/' . $realm] = array(
       'title callback' => 'variable_realm_admin_realm_title',
       'title arguments' => array($realm),

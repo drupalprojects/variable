@@ -5,3 +5,4 @@ package = Variable
 core = 7.x
 
 files[] = variable_realm.class.inc
+files[] = variable_realm_union.class.inc

@@ -2,6 +2,12 @@
 /**
  * @file
  * Variable API module - Realms
+ *
+ * Each variable realm can be in one of four states.
+ * - Undefined, The realm controller has not been created yet.
+ * - Defined, The realm controller has been created.
+ * - Enabled, A value has been set for the realm key, though it may be disabled (FALSE)
+ * - Active, The realm key has been set and is not FALSE.
  */
 
 // Prefix for realm keys on query string.
@@ -12,10 +18,11 @@ define('VARIABLE_REALM_FORM_SWITCHER', 'variable_realm_selector_');
 /**
  * Implements hook_boot()
  *
- * We set variable realm and language code as early as possible in the page request.
+ * We set current variable realms as early as possible in the page request.
  */
 function variable_realm_boot() {
   variable_realm_status('global', 'default');
+  variable_realm_rebuild();
 }
 
 /**
@@ -25,11 +32,45 @@ function variable_realm_boot() {
  * - Admin paths (not variable admin pages)
  */
 function variable_realm_init() {
-  if (arg(0) == 'admin' && arg(3) != 'variable' && user_access('administer site configuration')) {
-    foreach (variable_realm_params() as $realm_name => $realm_key) {
-      variable_realm_switch($realm_name, $realm_key);
+  if (arg(0) == 'admin' && arg(3) != 'variable' && ($params = variable_realm_params()) && user_access('administer site configuration')) {
+    foreach ($params as $realm_name => $realm_key) {
+      variable_realm_switch($realm_name, $realm_key, FALSE);
+    }
+    variable_realm_rebuild();
+  }
+}
+
+/**
+ * Initialize realm and set key depending on request.
+ *
+ * @param $realm_name
+ *   Variable realm name.
+ * @param $realm_key
+ *   Optional key to be set when we don't have other key.
+ */
+function variable_realm_initialize($realm_name, $realm_key = NULL) {
+  $realm_controller = variable_realm_controller($realm_name);
+  if (!$realm_controller->isEnabled()) {
+    $new_key = $realm_controller->enable($realm_key);
+    module_invoke_all('variable_realm_enable', $realm_name, $new_key);
+    _variable_realm_hook('variableRealmEnable', $realm_name, $new_key);
+    // If we have already built the configuration, rebuild it.
+    if ($new_key && drupal_static('variable_realm_rebuild')) {
+      variable_realm_rebuild();
     }
   }
+}
+
+/**
+ * Get all available realm controllers ordered by default weight.
+ */
+function variable_realm_list_all() {
+  $list = array();
+  foreach (array_keys(variable_realm_controller_info()) as $name) {
+    $list[$name] = variable_realm_controller($name);
+    uasort($list, '_variable_realm_sort_default');
+  }
+  return $list;
 }
 
 /**
@@ -47,7 +88,6 @@ function variable_realm_params($realm_name = NULL) {
         }
       }
     }
-    drupal_alter('variable_realm_params', $realm_params);
   }
   if ($realm_name) {
     return isset($realm_params[$realm_name]) ? $realm_params[$realm_name] : FALSE;
@@ -90,57 +130,15 @@ function variable_realm_info($realm = NULL) {
   }
 }
 
-/**
- * Get list of all available realms ordered by default weight.
- */
-function variable_realm_list() {
-  $list = array();
-  foreach (variable_realm_info() as $name => $info) {
-    $list[$name] = $info['title'];
-    uksort($list, '_variable_realm_sort');
-  }
-  return $list;
-}
+
 
 /**
  * Get keys for realm.
  */
-function variable_realm_keys($realm) {
-  $info = variable_realm_info($realm);
-  if (!empty($info['keys callback'])) {
-    $function = $info['keys callback'];
-    return $function($realm, $info);
-  }
-  else {
-    return isset($info['keys']) ? $info['keys'] : array();
-  }
+function variable_realm_keys($realm_name) {
+  return variable_realm_controller($realm_name)->getAllKeys();
 }
 
-/**
- * Get options (allowed variables) for realm.
- */
-function variable_realm_get_variable_options($realm_name) {
-  $info = variable_realm_info($realm_name);
-  return !empty($info['options']) ? $info['options'] : array_keys(variable_get_info());
-}
-
-/**
- * Get list of variable names that may be set for this realm.
- */
-function variable_realm_get_variable_list($realm_name) {
-  $info = variable_realm_info($realm_name);
-  if (!empty($info['list callback'])) {
-    $function = $info['list callback'];
-    return $function($realm_name, $info);
-  }
-  elseif (!empty($info['select'])) {
-    return variable_get('variable_realm_list_' . $realm_name, array());
-  }
-  else {
-    // If the variable is not set it will default to all variables
-    return variable_realm_get_variable_options($realm_name);
-  }
-}
 
 /**
  * Implements hook_variable_realm_controller().
@@ -148,7 +146,8 @@ function variable_realm_get_variable_list($realm_name) {
 function variable_realm_variable_realm_controller() {
   $realm['global'] = array(
     'weight' => 0,
-    'class' => 'VariableRealmGlobal',
+    'controller class' => 'VariableRealmDefaultController',
+    'store class' => 'VariableRealmGlobalStore',
   );
   return $realm;
 }
@@ -156,13 +155,13 @@ function variable_realm_variable_realm_controller() {
 /**
  * Get class and weight information for variable realm.
  */
-function variable_realm_controller($realm = NULL) {
+function variable_realm_controller_info($realm = NULL) {
   $data = &drupal_static(__FUNCTION__);
   if (!isset($keys)) {
     $data = module_invoke_all('variable_realm_controller');
   }
   if ($realm) {
-    return isset($data[$realm]) ? $data[$realm] : NULL;
+    return isset($data[$realm]) ? $data[$realm] : array();
   }
   else {
     return $data;
@@ -170,37 +169,7 @@ function variable_realm_controller($realm = NULL) {
 }
 
 /**
- * Create realm controller object.
- */
-function _variable_realm_controller($realm, $key, $variables = NULL) {
-  $info = variable_realm_controller($realm);
-  $class = isset($info['class']) ? $info['class'] : 'VariableRealmDefaultController';
-  // Set realm weight if not set before.
-  variable_realm_weight($realm, NULL, _variable_realm_weight($realm));
-  return new $class($realm, $key, $variables);
-}
-
-/**
- * Get default weight for realm.
- *
- * Realm weight is defined in hook_variable_realm_controller() and can be overridden
- * by a variable named 'variable_realm_weight_[realm_name]'.
- */
-function _variable_realm_weight($realm_name) {
-  $info = variable_realm_controller($realm_name);
-  $weight = $info && isset($info['weight']) ? $info['weight'] : 0;
-  return variable_get('variable_realm_weight_' . $realm_name, $weight);
-}
-
-/**
- * Order realm names by weight.
- */
-function _variable_realm_sort($a, $b) {
-  return _variable_realm_weight($a) - _variable_realm_weight($b);
-}
-
-/**
- * Get variable realm controller.
+ * Get variable realm store.
  *
  * The first time this function is invoked we initialize the realm system
  * and store global variables in the global/default realm.
@@ -213,33 +182,31 @@ function _variable_realm_sort($a, $b) {
  * @return VariableRealmControllerInterface
  */
 function variable_realm($realm, $key) {
-  static $drupal_static_fast;
-  if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['realm'] = &drupal_static(__FUNCTION__);
-    $drupal_static_fast['realm']['global']['default'] = _variable_realm_controller('global', 'default', $GLOBALS['conf']);
-  }
-  $variable_realm = &$drupal_static_fast['realm'];
-
-  if (!isset($variable_realm[$realm][$key])) {
-    $variable_realm[$realm][$key] = _variable_realm_controller($realm, $key);
-  }
-  return $variable_realm[$realm][$key];
+  return variable_realm_controller($realm)->getStore($key);
 }
 
 /**
- * Build current realm.
- *
- * Buids an array of variables for the current realm with higher weights overriding
- * lower weights.
+ * Get variable realm controller or create it if not defined.
  */
-function variable_realm_build() {
-  $variables = array();
-  foreach (variable_realm_current() as $realm => $key) {
-    if ($key !== FALSE && ($values = variable_realm($realm, $key)->variable_list())) {
-      $variables = array_merge($variables, $values);
-    }
+function variable_realm_controller($realm_name = NULL) {
+  static $drupal_static_fast;
+  if (!isset($drupal_static_fast)) {
+    $drupal_static_fast['realm'] = &drupal_static(__FUNCTION__);
+    $drupal_static_fast['realm']['global'] = _variable_realm_controller('global');
+    $drupal_static_fast['realm']['global']->addStore('default', $GLOBALS['conf']);
+    $drupal_static_fast['realm']['global']->enable('default');
   }
-  return $variables;
+  $variable_realm = &$drupal_static_fast['realm'];
+
+  if ($realm_name) {
+    if (!isset($variable_realm[$realm_name])) {
+      $variable_realm[$realm_name] = _variable_realm_controller($realm_name);
+    }
+    return $variable_realm[$realm_name];
+  }
+  else {
+    return $variable_realm;
+  }
 }
 
 /**
@@ -272,18 +239,18 @@ function variable_realm_add($realm, $key, $values = array(), $weight = NULL, $re
     variable_realm_weight($realm, $weight);
   }
   // Rebuild only if this is the current realm
-  if ($rebuild) {
-    variable_realm_rebuild($realm, $key);
+  if ($rebuild && variable_realm_status($realm) === $key) {
+    variable_realm_rebuild();
   }
 }
 
 /**
- * Set variable value for realm, for page request only
+ * Set value for realm variable.
  */
 function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
   variable_realm($realm, $key)->variable_set($name, $value);
   if ($rebuild) {
-    variable_realm_rebuild($realm, $key);
+    variable_realm_refresh($realm, $key, $name);
   }
 }
 
@@ -293,25 +260,56 @@ function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
 function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
   variable_realm($realm, $key)->variable_del($name);
   if ($rebuild) {
-    variable_realm_rebuild($realm, $key);
+    variable_realm_refresh($realm, $key, $name);
   }
 }
 
+
 /**
- * Delete variable for all keys on realm.
- *
- * @param $realm_name
- *   Realm name to delete.
- * @param $variable_name
- *   Variable name to delete.
+ * Refresh variable value.
  */
-function variable_realm_delete_variable($realm_name, $variable_name, $rebuild = TRUE) {
-  foreach (array_keys(variable_realm_keys($realm_name)) as $key) {
-    variable_realm_del($realm_name, $key, $variable_name, FALSE);
+function variable_realm_refresh($realm_name, $realm_key, $variable_name) {
+  $value = NULL;
+  // Only update value if this is the current realm.
+  if (variable_realm_status($realm_name) === $realm_key) {
+    foreach (variable_realm_current() as $realm_controller) {
+      $value = $realm_controller->getCurrentStore()->variable_get($variable_name, $value);
+    }
   }
-  if ($rebuild) {
-    variable_realm_rebuild();
+  if (isset($value)) {
+    $GLOBALS['conf'][$variable_name] = $value;
   }
+  else {
+    unset($GLOBALS['conf'][$variable_name]);
+  }
+}
+
+
+/**
+ * Get active realm controllers ordered by weight.
+ */
+function variable_realm_current() {
+  $active = array_filter(variable_realm_controller(), '_variable_realm_active');
+  uasort($active, '_variable_realm_sort_current');
+  return $active;
+}
+
+/**
+ * Check whether a realm is defined.
+ */
+function variable_realm_defined($realm_name) {
+  $controllers = variable_realm_controller();
+  return !empty($controllers[$realm_name]);
+}
+
+/**
+ * Get current realm values ordered by weights, only realms that are set.
+ *
+ * @return array
+ *   Ordered array of name => key pairs.
+ */
+function variable_realm_current_keys() {
+  return array_map('_variable_realm_status', variable_realm_current());
 }
 
 /**
@@ -320,12 +318,6 @@ function variable_realm_delete_variable($realm_name, $variable_name, $rebuild = 
  * @return array
  *   Ordered array of name => value pairs, only realms that are set.
  */
-function variable_realm_current() {
-  $realms = variable_realm_weight();
-  $current = array_combine($realms, $realms);
-  // Filter the result so we don't return unset realms
-  return array_filter(array_map('variable_realm_status', $current));
-}
 
 /**
  * Get original global variable
@@ -357,20 +349,12 @@ function variable_realm_global_set($name, $value = NULL, $rebuild = TRUE) {
  *   Optional realm value to set a status for this realm.
  *   FALSE to disable this realm.
  */
-function variable_realm_status($realm = NULL, $key = NULL) {
-  $status = &drupal_static(__FUNCTION__, array());
-  if ($realm && isset($key)) {
-    // Make sure the realm is created.
-    variable_realm($realm, $key);
-    // Set current realm key.
-    $status[$realm] = $key;
+function variable_realm_status($realm, $key = NULL) {
+  $realm_controller = variable_realm_controller($realm);
+  if (isset($key)) {
+    $realm_controller->setKey($key);
   }
-  if ($realm) {
-    return isset($status[$realm]) ? $status[$realm] : NULL;
-  }
-  else {
-    return $status;
-  }
+  return $realm_controller->getKey();
 }
 
 /**
@@ -383,14 +367,19 @@ function variable_realm_status($realm = NULL, $key = NULL) {
  * @param $key
  *   Realm key. Example, for language will be a language code, 'en
  *   FALSE to unset the realm.
+ * @param $rebuild
+ *   Whether we need to rebuild the configuration.
  */
-function variable_realm_switch($realm, $key) {
+function variable_realm_switch($realm, $key, $rebuild = TRUE) {
   // Check previous status, if not changed no need to rebuild.
   $current = variable_realm_status($realm);
   if (!isset($current) || $current !== $key) {
     variable_realm_status($realm, $key);
     module_invoke_all('variable_realm_switch', $realm, $key);
-    variable_realm_rebuild();
+    _variable_realm_hook('variableRealmSwitch', $realm, $key);
+    if ($rebuild) {
+      variable_realm_rebuild();
+    }
   }
 }
 
@@ -401,51 +390,55 @@ function variable_realm_switch($realm, $key) {
  * global variables.
  *
  * @param $realm
- *   Optional realm name
+ *   Realm name
  * @param $weight
  *   Optional numeric value for realm weight.
- * @param $default
- *   Default weight to set if no $weight is set.
- * @return array()
- *   Ordered realm names.
+ * @return integer
+ *   Current realm weight
  */
-function variable_realm_weight($realm = NULL, $weight = NULL, $default = 10) {
-  $current = &drupal_static(__FUNCTION__, array());
-  if ($realm && !isset($current[$realm]) || isset($weight)) {
-    $current[$realm] = isset($weight) ? $weight : $default;
-    asort($current);
+function variable_realm_weight($realm, $weight = NULL) {
+  $realm_controller = variable_realm_controller($realm);
+  if (isset($weight)) {
+    $realm_controller->setWeight($weight);
   }
-  // This will always return ordered keys
-  return array_keys($current);
+  return $realm_controller->getWeight();
 }
 
+
 /**
- * Rebuild current variable realm
- *
- * If there are $realm and $key parameters, the rebuild will happen only if this is the current realm key
- *
- * @param $realm
- *   Optional realm name that has been set
- * @param $key
- *   Optional realm value that has been set
+ * Rebuild current variable realm.
  */
-function variable_realm_rebuild($realm = NULL, $key = NULL) {
-  if (!$realm || !$key || variable_realm_status($realm) == $key) {
-    $GLOBALS['conf'] = variable_realm_build();
-  }
+function variable_realm_rebuild() {
+  $rebuild_keys = &drupal_static(__FUNCTION__);
+  module_invoke_all('variable_realm_rebuild');
+  $rebuild_keys = variable_realm_current_keys();
+  $GLOBALS['conf'] = _variable_realm_build();
 }
+
 
 /**
  * Reset realms, deleting currently set ones
  *
- * If no parameters passed, it will reset global variables to original values
+ * If no parameters passed, it will reset global variables to original values.
+ *
+ * @param $realm_keys
+ *   Array of realm name => realm key to be set.
  */
-function variable_realm_reset($realms = array()) {
-  $status = &drupal_static('variable_realm_status');
+function variable_realm_reset($realm_keys = array()) {
   // We need at least some value for the global realm
-  $status = $realms + array('global', 'default');
+  $status = $realm_keys + array('global', 'default');
+  // Disable current active realms not in the list
+  foreach (variable_realm_current() as $realm_name => $realm_controller) {
+    if (!isset($status[$realm_name])) {
+      variable_realm_switch($realm_name, FALSE, FALSE);
+    }
+  }
+  foreach ($status as $realm_name => $realm_key) {
+    variable_realm_switch($realm_name, $realm_key, FALSE);
+  }
   variable_realm_rebuild();
 }
+
 
 /**
  * Implements hook_variable_delete().
@@ -455,13 +448,34 @@ function variable_realm_variable_delete($variable, $options) {
   if (empty($options['realm'])) {
     // Delete each variable for each current and existing realm/key
     foreach (variable_children($variable['name']) as $variable_name) {
-      foreach (variable_realm_list() as $realm_name => $realm_title) {
-        variable_realm_delete_variable($realm_name, $variable_name, FALSE);
+      foreach (variable_realm_list_all() as $realm_controller) {
+        $realm_controller->deleteVariable($variable_name);
       }
     }
     variable_realm_rebuild();
   }
 }
+
+/**
+ * Get list of union realms.
+ *
+ * This functions gets the data from hook_variable_realm_controller(), not from
+ * variable_realm_info() as it may be needed very early in the bootstrap.
+ *
+ * @return
+ *   Multiple arrays of realm names in a union indexed by realm name.
+ *   Example: array('domain_language' => array('domain', 'language'))
+ */
+function variable_realm_union_list() {
+  $list = array();
+  foreach (variable_realm_controller_info() as $realm => $data) {
+    if (!empty($data['union'])) {
+      $list[$realm] = $data['union'];
+    }
+  }
+  return $list;
+}
+
 
 /**
  * Implements hook_features_api().
@@ -480,3 +494,94 @@ function variable_realm_features_api() {
   return $components;
 }
 
+
+/**
+ * Check whether realm is active.
+ */
+function _variable_realm_active($realm_controller) {
+  return $realm_controller->isActive();
+}
+
+/**
+ * Build current realm.
+ *
+ * Buids an array of variables for the current realm with higher weights overriding
+ * lower weights.
+ */
+function _variable_realm_build() {
+  $variables = array();
+  foreach (variable_realm_current() as $realm_controller) {
+    if ($values = $realm_controller->getCurrentVariables()) {
+      $variables = array_merge($variables, $values);
+    }
+  }
+  return $variables;
+}
+
+/**
+ * Invoke method on a list of objects.
+ */
+function _variable_realm_invoke($list, $method) {
+  $result = array();
+  foreach ($list as $index => $object) {
+    $result[$index] = $object->$method();
+  }
+  return $result;
+}
+
+/**
+ * Invokes all realm controllers that implement a method.
+ *
+ * @param $method
+ *   Method name
+ * @param $arg1, $arg2...
+ *   Variable number of arguments to pass to the method.
+ */
+function _variable_realm_hook() {
+  $args = func_get_args();
+  $method = array_shift($args);
+  $result = array();
+  foreach (variable_realm_controller() as $realm_name => $realm_controller) {
+    if (method_exists($realm_controller, $method)) {
+      $result[$realm_name] = call_user_func_array(array($realm_controller, $method), $args);
+    }
+  }
+  return $result;
+}
+
+/**
+ * Create realm controller object.
+ */
+function _variable_realm_controller($realm_name) {
+  $info = variable_realm_controller_info($realm_name);
+  $class = isset($info['controller class']) && class_exists($info['controller class']) ? $info['controller class'] : 'VariableRealmDefaultController';
+  return new $class($realm_name, $info);
+}
+
+/**
+ * Get current weight for realm controller.
+ */
+function _variable_realm_weight($realm_controller) {
+  return $realm_controller->getWeight();
+}
+
+/**
+ * Order realms by default weight.
+ */
+function _variable_realm_sort_default($a, $b) {
+  return $a->getDefaultWeight() - $b->getDefaultWeight();
+}
+
+/**
+ * Order realms by current weight.
+ */
+function _variable_realm_sort_current($a, $b) {
+  return $a->getWeight() - $b->getWeight();
+}
+
+/**
+ * Get status (current key) for realm controller.
+ */
+function _variable_realm_status($realm_controller) {
+  return $realm_controller->getKey();
+}

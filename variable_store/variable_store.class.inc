@@ -4,7 +4,7 @@
  * Variable realm controller
  */
 
-class VariableStoreRealmController extends VariableRealmDefaultController {
+class VariableStoreRealmStore extends VariableRealmDefaultStore {
   /**
    * Initialize realm.
    */

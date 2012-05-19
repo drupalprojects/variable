@@ -26,7 +26,7 @@ function variable_realm_admin_realm_overview($form, $form_state) {
     $controller = variable_realm_controller($realm);
     $realms[] = array(
       l($info['title'], 'admin/config/system/variable/realm/' . $realm),
-      $controller['weight'],
+      $controller->getDefaultWeight(),
       implode(' | ' , $options)
     );
   }
@@ -45,23 +45,23 @@ function variable_realm_admin_realm_overview($form, $form_state) {
  * Lists available realms.
  */
 function variable_realm_admin_realm_info($realm_name) {
-  $info = variable_realm_info($realm_name);
+  $controller = variable_realm_controller($realm_name);
   $build['title'] = array(
     '#type' => 'item',
     '#title' => t('Name'),
-    '#markup' => $info['title'],
+    '#markup' => $controller->getTitle(),
   );
   $build['keys'] = array(
     '#theme' => 'item_list',
     '#title' => t('Keys'),
-    '#items' => variable_realm_keys($realm_name),
+    '#items' => $controller->getAllKeys(),
   );
   $build['variables'] = array(
     '#theme' => 'item_list',
     '#title' => t('Variables'),
-    '#items' => variable_realm_get_variable_list($realm_name),
+    '#items' => $controller->getEnabledVariables(),
   );
-  if (!empty($info['select'])) {
+  if ($controller->getInfo('select')) {
     $build['options'] = array(
       '#theme' => 'item_list',
       '#title' => t('Options'),

@@ -4,6 +4,17 @@
  */
 
 /**
+ * Implements hook_variable_realm_controller()
+ */
+function variable_example_variable_realm_controller() {
+  $realm['example'] = array(
+    'controller class' => 'VariableRealmDefaultController',
+    'store class' => 'VariableRealmDefaultStore',
+  );
+  return $realm;
+}
+
+/**
  * Implements hook_menu().
  */
 function variable_example_menu() {

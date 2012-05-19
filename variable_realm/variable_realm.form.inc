@@ -8,8 +8,9 @@
  * Select variables for realm.
  */
 function variable_realm_select_variables_form($form, &$form_state, $realm_name) {
-  $current = variable_realm_get_variable_list($realm_name);
-  $optional = variable_realm_get_variable_options($realm_name);
+  $controller = variable_realm_controller($realm_name);
+  $current = $controller->getEnabledVariables();
+  $optional = $controller->getAvailableVariables();
   // The final list will be the sum of both lists. We may have unknown variables
   // we want to preserve.
   $list = array_unique(array_merge($optional, $current));
@@ -39,7 +40,8 @@ function variable_realm_select_variables_form($form, &$form_state, $realm_name) 
 function variable_realm_select_variables_form_submit($form, &$form_state) {
   // Get realm name and current list of variables.
   $realm_name = $form_state['values']['realm_name'];
-  $old_variables = variable_realm_get_variable_list($realm_name);
+  $controller = variable_realm_controller($realm_name);
+  $old_variables = $controller->getEnabledVariables();
   // Get main variable names
   $variables = $form_state['values']['variables'];
   $variables = array_keys(array_filter($variables));
@@ -50,13 +52,13 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
   // Hook for modules to alter this variable list.
   drupal_alter('variable_realm_variable_list', $variables, $realm_name);
   // And save the list to a variable.
-  variable_set('variable_realm_list_' . $realm_name, $variables);
+  $controller->setRealmVariable('list', $variables);
   // Spawn multiple variables and translate into actual variables
   $new_list = variable_children($variables);
   // Delete variables from realm that are not in the new list.
   $old_list = variable_children($old_variables);
   foreach (array_diff($old_list, $new_list) as $name) {
-    variable_realm_delete_variable($realm_name, $name);
+    $controller->deleteVariable($name);
     drupal_set_message(t('Deleted existing values of %name from realm variables.', array('%name' => $name)));
   }
 }
@@ -65,11 +67,11 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
  * Edit variables for realm.
  */
 function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $realm_key) {
-  $realm_info = variable_realm_info($realm_name);
+  $controller = variable_realm_controller($realm_name);
   $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
   $form['realm_key'] = array('#type' => 'value', '#value' => $realm_key);
   $options['realm'] = variable_realm($realm_name, $realm_key);
-  if ($variable_list = variable_realm_get_variable_list($realm_name)) {
+  if ($variable_list = $controller->getEnabledVariables()) {
     // Group variables by variable group for vertical tabls
     $group_list = array();
     foreach ($variable_list as $variable_name) {
@@ -95,7 +97,7 @@ function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $r
     $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
   }
   else {
-    $form['message']['#markup'] = '<h3>' . t('No variables have been selected as %realm_name specific.', array('%realm_name' => $realm_info['title'])) . '</h3>';
+    $form['message']['#markup'] = '<h3>' . t('No variables have been selected as %realm_name specific.', array('%realm_name' => $controller->getTitle())) . '</h3>';
   }
   if (!empty($realm_info['select path'])) {
     $form['select']['#markup'] = t('To select variables to be configured, see <a href="!select-url">%realm_name variable settings</a>.', array(
@@ -130,17 +132,17 @@ function variable_realm_edit_variables_form_submit($form, &$form_state) {
 function variable_realm_form_key_selector($realm_name, $current_key) {
   $element_name = VARIABLE_REALM_FORM_SWITCHER . $realm_name;
   $query_name = 'variable_realm_' . $realm_name . '_key';
-  $realm_info = variable_realm_info($realm_name);
+  $controller = variable_realm_controller($realm_name);
   $form[$element_name] = array(
     '#type' => 'fieldset',
-    '#title' => t('There are %name variables in this form', array('%name' => $realm_info['variable name'])),
+    '#title' => t('There are %name variables in this form', array('%name' => $controller->getVariableName())),
     '#weight' => -100,
-    '#description' => t('Check you are editing the variables for the right %realm value or select the desired %realm.', array('%realm' => $realm_info['title'])),
+    '#description' => t('Check you are editing the variables for the right %realm value or select the desired %realm.', array('%realm' => $controller->getTitle())),
   );
   // Replace only this element on current query string, there may be others.
   $current_query = $_GET;
   unset($current_query['q']);
-  foreach (variable_realm_keys($realm_name) as $realm_key => $key_name) {
+  foreach ($controller->getAllKeys() as $realm_key => $key_name) {
     $query[VARIABLE_REALM_QUERY_STRING . $realm_name] = $realm_key;
     $link =  l($key_name, $_GET['q'], array('query' => $query + $current_query));
     $items[] = $current_key == $realm_key ? '<strong>' . $link . '</strong>' : $link;
@@ -153,21 +155,21 @@ function variable_realm_form_key_selector($realm_name, $current_key) {
 }
 
 /**
- * Get current realm key from query string.
+ * Get current realm key from query string or from current realm value.
  */
-function variable_realm_form_key_current($realm_name, $default_key = NULL) {
+function variable_realm_form_key_current($realm_name) {
+  $realm_controller = variable_realm_controller($realm_name);
   if ($key = variable_realm_params($realm_name)) {
     return $key;
   }
-  elseif ($current_key = variable_realm_status($realm_name)) {
-    return $current_key;
+  elseif ($key = $realm_controller->getKey()) {
+    return $key;
   }
-  elseif ($default_key) {
-    return $default_key;
+  elseif ($key = $realm_controller->getRequestKey()) {
+    return $key;
   }
   else {
-    $realm_info = variable_realm_info($realm_name);
-    return $realm_info['default key'];
+    return $realm_controller->getDefaultKey();
   }
 }
 
@@ -229,7 +231,7 @@ function _variable_realm_variable_settings_form_conflict($variable) {
 function variable_realm_variable_settings_form_submit($form, &$form_state) {
   $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
   foreach ($form['#realm_keys'] as $realm_name => $realm_key) {
-    $realm_info = variable_realm_info($realm_name);
+    $realm_controller = variable_realm_controller($realm_name);
     //$language = i18n_language($form_state['values']['i18n_variable_language']);
     //unset($form_state['values']['i18n_variable_language']);
     $variables = array_keys($form['#realm_variables'][$realm_name]);
@@ -246,7 +248,7 @@ function variable_realm_variable_settings_form_submit($form, &$form_state) {
           variable_realm_set($realm_name, $realm_key, $variable_name, $value);
         }
         // If current is not default realm key, we don't set any global variable (without realm)
-        if ($realm_key != $realm_info['default key']) {
+        if ($realm_key != $realm_controller->getDefaultKey()) {
           unset($form_state['values'][$variable_name]);
         }
       }
@@ -282,9 +284,8 @@ function variable_realm_variable_theme_form_submit($form, &$form_state) {
  */
 function _variable_realm_variable_settings_form_list() {
   $list = array();
-  foreach (array_keys(variable_realm_list()) as $realm_name) {
-    $realm_info = variable_realm_info($realm_name);
-    if (!empty($realm_info['form settings']) && ($realm_list = variable_realm_get_variable_list($realm_name))) {
+  foreach (variable_realm_list_all() as $realm_name => $controller) {
+    if ($controller->getInfo('form settings') && ($realm_list = $controller->getEnabledVariables())) {
       // Remove from previous realms with lower weight.
       foreach ($list as $name => $variables) {
         $list[$name] = array_diff($variables, $realm_list);
