@@ -16,7 +16,7 @@ interface VariableRealmControllerInterface {
    * @param $store_class
    *   Realm key.
    */
-  public function __construct($realm_name, $controller_data);
+  public function __construct($realm_name);
   /**
    * Check whether the realm is enabled (has a key set).
    */
@@ -74,6 +74,10 @@ interface VariableRealmControllerInterface {
    * Get all keys for this realm.
    */
   public function getAllKeys();
+  /**
+   * Get other realms this one may depend upon.
+   */
+  public function getParentRealms();
   /**
    * Get current realm weight.
    */
@@ -211,19 +215,13 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
   public $current_key;
   // Current realm weight.
   public $current_weight;
-  // Controller parameters.
-  protected $controller_data;
   // Array of variable stores indexed by realm key.
   protected $store;
   /**
    * Implementation of VariableRealmControllerInterface::__construct().
    */
-  public function __construct($realm_name, $controller_data) {
+  public function __construct($realm_name) {
     $this->realm_name = $realm_name;
-    $this->controller_data = $controller_data + array(
-      'store class' => 'VariableRealmDefaultStore',
-      'weight' => 0,
-    );
     $this->current_weight = $this->getDefaultWeight();
   }
   /**
@@ -281,7 +279,8 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
    * Create Store for key.
    */
   protected function createStore($realm_key, $variables = NULL) {
-    $class = class_exists($this->controller_data['store class']) ? $this->controller_data['store class'] : 'VariableRealmDefaultStore';
+    $class = $this->getInfo('store class');
+    $class = $class && class_exists($class) ? $class : 'VariableRealmDefaultStore';
     return new $class($this->realm_name, $realm_key, $variables);
   }
   /**
@@ -330,7 +329,13 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
    * Implementation of VariableRealmControllerInterface::getWeight().
    */
   public function getDefaultWeight() {
-    return $this->getRealmVariable('weight', $this->controller_data['weight']);
+    return $this->getRealmVariable('weight', $this->getInfo('weight', 0));
+  }
+  /**
+   * Implementation of VariableRealmControllerInterface::getParentRealms().
+   */
+  public function getParentRealms() {
+    return array();
   }
   /**
    * Implementation of VariableRealmControllerInterface::getCurrentVariables().

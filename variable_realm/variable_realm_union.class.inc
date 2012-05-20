@@ -12,10 +12,10 @@ class VariableRealmUnionController extends VariableRealmDefaultController implem
   /**
    * Implementation of VariableRealmControllerInterface::__construct().
    */
-  public function __construct($realm_name, $controller_data) {
-    parent::__construct($realm_name, $controller_data);
+  public function __construct($realm_name) {
+    parent::__construct($realm_name);
     // Get / create realm controllers for each of the union realms.
-    foreach ($controller_data['union'] as $realm_name) {
+    foreach ($this->getParentRealms() as $realm_name) {
       $this->union_realms[$realm_name] = variable_realm_controller($realm_name);
     }
   }
@@ -90,7 +90,12 @@ class VariableRealmUnionController extends VariableRealmDefaultController implem
     $variables = $this->invokeUnionRealms('getEnabledVariables');
     return call_user_func_array('array_intersect', $variables);
   }
-
+  /**
+   * Implementation of VariableRealmControllerInterface::getParentRealms().
+   */
+  public function getParentRealms() {
+    return $this->getInfo('union', array());
+  }
   /**
    * Get union realms controllers.
    */

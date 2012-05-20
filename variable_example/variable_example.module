@@ -4,12 +4,16 @@
  */
 
 /**
- * Implements hook_variable_realm_controller()
+ * Implements hook_variable_realm_info()
  */
-function variable_example_variable_realm_controller() {
+function variable_example_variable_realm_info() {
   $realm['example'] = array(
-    'controller class' => 'VariableRealmDefaultController',
-    'store class' => 'VariableRealmDefaultStore',
+    'title' => t('Example'),
+    'weight' => 10,
+    'keys' => array(
+      'first' => t('First example'),
+      'second' => t('Second example'),
+    ),
   );
   return $realm;
 }

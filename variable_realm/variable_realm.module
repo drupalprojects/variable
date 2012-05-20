@@ -38,6 +38,9 @@ function variable_realm_init() {
     }
     variable_realm_rebuild();
   }
+  // Refresh realm information, so if any module needs realm information after this,
+  // we'll get properly localized info.
+  drupal_static_reset('variable_realm_info');
 }
 
 /**
@@ -62,11 +65,18 @@ function variable_realm_initialize($realm_name, $realm_key = NULL) {
 }
 
 /**
+ * Get list of all available realm names ordered by default weight.
+ */
+function variable_realm_list() {
+  return _variable_realm_invoke(variable_realm_list_all(), 'getTitle');
+}
+
+/**
  * Get all available realm controllers ordered by default weight.
  */
 function variable_realm_list_all() {
   $list = array();
-  foreach (array_keys(variable_realm_controller_info()) as $name) {
+  foreach (array_keys(variable_realm_info()) as $name) {
     $list[$name] = variable_realm_controller($name);
     uasort($list, '_variable_realm_sort_default');
   }
@@ -97,39 +107,39 @@ function variable_realm_params($realm_name = NULL) {
   }
 }
 
-/**
- * Implements hook_hook_info().
- *
- * This function only specifies hooks which are NOT invoked during bootstrap.
- * See variable_realm.api.php for a complete list of hooks.
- */
-function variable_realm_hook_info() {
-  $hooks['variable_realm_info'] = array(
-    'group' => 'variable',
-  );
-  $hooks['variable_realm_info_alter'] = array(
-    'group' => 'variable',
-  );
-  return $hooks;
-}
 
 /**
  * Get information about variable realms.
  */
-function variable_realm_info($realm = NULL) {
+function variable_realm_info($realm_name = NULL) {
   $realm_info = &drupal_static(__FUNCTION__);
   if (!isset($realm_info)) {
     $realm_info = module_invoke_all('variable_realm_info');
     drupal_alter('variable_realm_info', $realm_info);
   }
-  if ($realm) {
-    return isset($realm_info[$realm]) ? $realm_info[$realm] : array();
+  if ($realm_name) {
+    return isset($realm_info[$realm_name]) ? $realm_info[$realm_name] : array();
   }
   else {
     return $realm_info;
   }
 }
 
+/**
+ * Implements hook_variable_realm_info().
+ */
+function variable_realm_variable_realm_info() {
+  $realm['global'] = array(
+    'title' => t('Global'),
+    'weight' => 0,
+    'controller class' => 'VariableRealmDefaultController',
+    'store class' => 'VariableRealmGlobalStore',
+    'keys' => array(
+      'default' => t('All variables')
+    ),
+  );
+  return $realm;
+}
 
 
 /**
@@ -137,35 +147,6 @@ function variable_realm_info($realm = NULL) {
  */
 function variable_realm_keys($realm_name) {
   return variable_realm_controller($realm_name)->getAllKeys();
-}
-
-
-/**
- * Implements hook_variable_realm_controller().
- */
-function variable_realm_variable_realm_controller() {
-  $realm['global'] = array(
-    'weight' => 0,
-    'controller class' => 'VariableRealmDefaultController',
-    'store class' => 'VariableRealmGlobalStore',
-  );
-  return $realm;
-}
-
-/**
- * Get class and weight information for variable realm.
- */
-function variable_realm_controller_info($realm = NULL) {
-  $data = &drupal_static(__FUNCTION__);
-  if (!isset($keys)) {
-    $data = module_invoke_all('variable_realm_controller');
-  }
-  if ($realm) {
-    return isset($data[$realm]) ? $data[$realm] : array();
-  }
-  else {
-    return $data;
-  }
 }
 
 /**
@@ -457,27 +438,6 @@ function variable_realm_variable_delete($variable, $options) {
 }
 
 /**
- * Get list of union realms.
- *
- * This functions gets the data from hook_variable_realm_controller(), not from
- * variable_realm_info() as it may be needed very early in the bootstrap.
- *
- * @return
- *   Multiple arrays of realm names in a union indexed by realm name.
- *   Example: array('domain_language' => array('domain', 'language'))
- */
-function variable_realm_union_list() {
-  $list = array();
-  foreach (variable_realm_controller_info() as $realm => $data) {
-    if (!empty($data['union'])) {
-      $list[$realm] = $data['union'];
-    }
-  }
-  return $list;
-}
-
-
-/**
  * Implements hook_features_api().
  */
 function variable_realm_features_api() {
@@ -493,7 +453,6 @@ function variable_realm_features_api() {
   );
   return $components;
 }
-
 
 /**
  * Check whether realm is active.
@@ -553,9 +512,9 @@ function _variable_realm_hook() {
  * Create realm controller object.
  */
 function _variable_realm_controller($realm_name) {
-  $info = variable_realm_controller_info($realm_name);
+  $info = variable_realm_info($realm_name);
   $class = isset($info['controller class']) && class_exists($info['controller class']) ? $info['controller class'] : 'VariableRealmDefaultController';
-  return new $class($realm_name, $info);
+  return new $class($realm_name);
 }
 
 /**

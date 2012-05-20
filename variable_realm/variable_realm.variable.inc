@@ -5,19 +5,6 @@
  */
 
 /**
- * Implements hook_variable_realm_info().
- */
-function variable_realm_variable_realm_info() {
-  $realm['global'] = array(
-    'title' => t('Global'),
-    'keys' => array(
-      'default' => t('All variables')
-    ),
-  );
-  return $realm;
-}
-
-/**
  * Implements hook_variable_info().
  */
 function variable_realm_variable_info($options) {
@@ -96,11 +83,11 @@ function variable_realm_variable_settings_form_alter(&$form, &$form_state, $form
   elseif (!empty($form['#realm_variables'])) {
     array_unshift($form['#submit'], 'variable_realm_variable_settings_form_submit');
   }
-  // Make sure realm switchers are added for all realms in the union.
-  foreach (variable_realm_union_list() as $realm_name => $union_realms) {
-    if (!empty($form['#realm_variables'][$realm_name]) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm_name])) {
+  // Make sure realm switchers are added for all parent realms of current ones.
+  foreach (variable_realm_list_all() as $realm_name => $realm_controller) {
+    if (($parent_realms = $realm_controller->getParentRealms()) && !empty($form['#realm_variables'][$realm_name]) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm_name])) {
       // Check we have selectors for the other realms.
-      foreach ($union_realms as $realm) {
+      foreach ($parent_realms as $realm) {
         $info = variable_realm_info($realm);
         if (!empty($info['form switcher']) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm])) {
           $current_key = variable_realm_form_key_current($realm);

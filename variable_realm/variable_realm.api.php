@@ -10,33 +10,8 @@
  */
 
 /**
- * Provides information about controller classes and weights for variable realms.
- *
- * Modules implementing this hook must also implement any bootstrap hook (for
- * example hook_boot).
- *
- * This information is used to dynamically load realms upon request and to build
- * exportable realms as Features. For this reason this must be defined in the
- * main module and available at bootstrap time when the realm is going to be
- * used.
- *
- * @see i18n_variable_variable_realm_controller()
- *
- * @return array
- *   Associative array keyed by realm name. Each element is an array containing:
- *   - 'class', Class name implementing RealmControllerInterface.
- *   - 'weight', Default weight for this realm.
- */
-function hook_variable_realm_controller() {
-  $realm['language'] = array(
-    'weight' => 100,
-    'class' => 'VariableStoreRealmController',
-  );
-  return $realm;
-}
-
-/**
- * Provides human readable information about existing realms.
+ * Provides information about controller classes and weights needed by the realm system
+ * and some more meta-information for realm administration.
  *
  * This information is mainly used to build exportable realms as Features.
  *
@@ -45,6 +20,9 @@ function hook_variable_realm_controller() {
  * @return array
  *   Array keyed by realm name which contains the following elements:
  *   - 'title', Humam readable name for the realm.
+ *   - 'controller class', Class name for realm controller, implementing VariableRealmControllerInterface.
+ *   - 'store class', Class name for realm store, implementing VariableRealmStoreInterface.
+ *   - 'weight', Default weight for this realm.
  *   - 'keys', Associative array with human readable names for keys.
  *   - 'keys callback', Callback function to provide the keys.
  *   - 'default key', The default key.
@@ -63,6 +41,8 @@ function hook_variable_realm_controller() {
 function hook_variable_realm_info() {
   $realm['language'] = array(
     'title' => t('Language'),
+    'controller class' => 'I18nVariableLanguageRealm',
+    'store class' => 'VariableStoreRealmStore',
     'keys' => locale_language_list('name', TRUE),
     'default key' => language_default('language'),
     'options' => _i18n_variable_variable_realm_list(),
