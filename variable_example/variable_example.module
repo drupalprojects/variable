@@ -10,6 +10,7 @@ function variable_example_variable_realm_info() {
   $realm['example'] = array(
     'title' => t('Example'),
     'weight' => 10,
+    'store class' => 'VariableStoreRealmStore',
     'keys' => array(
       'first' => t('First example'),
       'second' => t('Second example'),
