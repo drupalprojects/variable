@@ -254,6 +254,8 @@ function variable_realm_variable_settings_form_submit($form, &$form_state) {
       }
     }
   }
+  // Redirect later depending on query string parameters.
+  _variable_realm_form_submit_redirect($form, $form_state);
   // The form will go now through system_settings_form_submit()
 }
 
@@ -274,6 +276,8 @@ function variable_realm_variable_theme_form_submit($form, &$form_state) {
     }
     variable_del('variable_realm_theme_settings');
   }
+  // Redirect later depending on query string parameters.
+  _variable_realm_form_submit_redirect($form, $form_state);
 }
 
 /**
@@ -294,4 +298,17 @@ function _variable_realm_variable_settings_form_list() {
     }
   }
   return $list;
+}
+
+/**
+ * Redirect to current page after form submission, using query string parameters.
+ */
+function _variable_realm_form_submit_redirect($form, &$form_state) {
+  if ($query_params = variable_realm_params()) {
+    foreach ($query_params as $realm => $value) {
+      $query[VARIABLE_REALM_QUERY_STRING . $realm] = $value;
+    }
+    // Parameters to be passed to drupal_goto().
+    $form_state['redirect'] = array(current_path(), array('query' => $query));
+  }
 }
