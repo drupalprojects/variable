@@ -52,7 +52,7 @@ function variable_realm_variable_settings_form_alter(&$form, &$form_state, $form
     $realm_info = variable_realm_info($realm_name);
     if ($form_id == 'system_theme_settings') {
       // Special treatment for theme settings
-      if (!empty($form['var']) && !empty($form['var']['#value']) && in_array($form['var']['#value'], $variables)) {
+      if (!empty($form['var']) && !empty($form['var']['#value']) && in_array($form['var']['#value'], variable_children($variables))) {
         $realm_variables = element_children($form['theme_settings']);
         $realm_variables = array_merge($realm_variables, array('default_logo', 'logo_path', 'default_favicon', 'favicon_path'));
         _variable_realm_variable_settings_form_alter($form, $realm_name, $realm_variables);

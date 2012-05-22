@@ -263,13 +263,13 @@ function variable_realm_variable_settings_form_submit($form, &$form_state) {
  * Note the theme variable has already been set into 'variable_realm_theme_settings'
  */
 function variable_realm_variable_theme_form_submit($form, &$form_state) {
-  foreach ($form['#realm_keys'] as $realm_name => $realm_key) {
-    $realm_info = variable_realm_info($realm_name);
+  foreach ($form['#realm_theme'] as $realm_name => $variable_name) {
+    $realm_controller = variable_realm_controller($realm_name);
     $settings = variable_get('variable_realm_theme_settings');
-    $variable_name = $form['#realm_theme'][$realm_name];
+    $realm_key = $form['#realm_keys'][$realm_name];
     variable_realm_set($realm_name, $realm_key, $variable_name, $settings);
     // If current is default language, we allow global (without language) variables to be set too
-    if ($realm_key == $realm_info['default key']) {
+    if ($realm_key == $realm_controller->getDefaultKey()) {
       variable_set($variable_name, $settings);
     }
     variable_del('variable_realm_theme_settings');
