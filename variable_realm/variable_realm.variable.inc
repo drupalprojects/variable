@@ -61,7 +61,7 @@ function variable_realm_variable_settings_form_alter(&$form, &$form_state, $form
         $form['#realm_theme'][$realm_name] = $form['var']['#value'];
       }
     }
-    elseif ($realm_variables = _variable_realm_variable_settings_form_alter($form, $realm_name, $variables)) {
+    elseif ($realm_variables = _variable_realm_variable_settings_form_alter($form, $realm_name, variable_children($variables))) {
       $form['#realm_variables'][$realm_name] = $realm_variables;
       //$form += i18n_variable_form_selector();
     }
