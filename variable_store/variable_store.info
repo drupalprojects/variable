@@ -3,6 +3,7 @@ description = Database storage for variable realms. This is an API module.
 dependencies[] = variable
 package = Variable
 core = 7.x
+version = 7.x-2.x
 
 files[] = variable_store.class.inc
 files[] = variable_store.test

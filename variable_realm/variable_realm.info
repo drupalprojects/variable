@@ -3,6 +3,7 @@ description = API to use variable realms from different modules
 dependencies[] = variable
 package = Variable
 core = 7.x
+version = 7.x-2.x
 
 files[] = variable_realm.class.inc
 files[] = variable_realm_union.class.inc
