@@ -176,7 +176,7 @@ function system_variable_info($options) {
   );
   // Theme settings, we may want to localize the logo. Group 'theme_settings'
   $variables['theme_settings'] = array(
-    'type' => 'array',
+    'type' => 'properties',
     'title' => t('Global theme settings.', array(), $options),
     'group' => 'theme_settings',
     'default callback' => 'system_variable_theme_defaults',
@@ -189,7 +189,7 @@ function system_variable_info($options) {
     'title' => t('Theme settings', array(), $options),
     'description' => t('Logo, icons and other specific theme settings.', array(), $options),
     'repeat' => array(
-      'type' => 'array',
+      'type' => 'properties',
       'default callback' => 'system_variable_theme_defaults',
     ),
     'group' => 'theme_settings',

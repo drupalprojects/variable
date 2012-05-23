@@ -40,6 +40,12 @@ function variable_variable_type_info() {
     'element callback' => 'variable_form_element_array',
     'default' => array(),
   );
+  // Array whose keys are named properties.
+  $type['properties'] = array(
+    'title' => t('Properties'),
+    'format callback' => 'variable_format_properties',
+    'type' => 'array',
+  );
   // TRUE / FALSE value, checkbox
   $type['boolean'] = array(
     'title' => t('Boolean'),
@@ -206,11 +212,38 @@ function variable_format_array($variable = NULL, $options = array()) {
     return variable_format_empty($variable);
   }
   else {
-    $elements = array();
-    foreach ($variable['value'] as $item) {
-      $elements[] = is_array($item) ? '(' . variable_format_array(array('value' => $item), $options) . ')' : check_plain($item);
+    $list = array();
+    foreach ($variable['value'] as $index => $item) {
+      if (is_array($item) || is_object($item)) {
+        $list[$index] = variable_format_array(array('value' => (array)$item), $options);
+      }
+      else {
+        $list[$index] = check_plain((string)$item);
+      }
     }
-    return implode(', ', $elements);
+    return theme('item_list', array('items' => $list));
+  }
+}
+/**
+ * Format array variable with known keys, handling nested arrays
+ */
+function variable_format_properties($variable = NULL, $options = array()) {
+  if (empty($variable['value'])) {
+    return variable_format_empty($variable);
+  }
+  else {
+    $rows = array();
+    foreach ($variable['value'] as $name => $item) {
+      $title = check_plain((string)$name);
+      if (is_array($item) || is_object($item)) {
+        $value = variable_format_array(array('value' => (array)$item), $options);
+      }
+      else {
+        $value = check_plain((string)$item);
+      }
+      $rows[] = array('<em>' . $title . '</em>', $value);
+    }
+    return theme('table', array('rows' => $rows));
   }
 }
 

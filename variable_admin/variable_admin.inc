@@ -47,11 +47,13 @@ function variable_admin_group_list($variables) {
   foreach ($variables as $name => $variable) {
     $type = variable_get_type($variable['type']);
     $list[$name] = array(
-      l($variable['title'], 'admin/config/system/variable/edit/' . $name),
-      $type['title'],
-      variable_format_value($variable), //isset($variable['description']) ? $variable['description'] : ''
+      '#type' => 'item',
+      '#title' => l($variable['title'], 'admin/config/system/variable/edit/' . $name) . ' (' . $type['title'] . ')',
+      '#markup' => variable_format_value($variable), //
+      '#description' => isset($variable['description']) ? $variable['description'] : '',
     );
   }
+  return $list;
   return array(
     '#theme' => 'table',
     '#rows' => $list,
