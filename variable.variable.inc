@@ -276,7 +276,7 @@ function variable_format_empty($variable) {
 /**
  * Format variable as string. Either check plain for filter_xss.
  */
-function variable_format_string($variable, $options = array()) {dpm($variable);
+function variable_format_string($variable, $options = array()) {
   if (empty($variable['value'])) {
     return '';
   }
