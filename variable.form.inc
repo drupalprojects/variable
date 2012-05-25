@@ -20,7 +20,7 @@ function variable_form_element($variable, $options = array()) {
     $element = variable_form_element_default($variable, $options);
   }
   if (!empty($variable['validate callback'])) {
-    $element['#validate'][] = $variable['validate callback'];
+    $element['#element_validate'][] = 'variable_form_element_validate';
   }
   if (!empty($options['form parents'])) {
     $element['#parents'] = $options['form parents'];
@@ -30,6 +30,8 @@ function variable_form_element($variable, $options = array()) {
   if (!empty($variable['required'])) {
     $element += array('#required' => TRUE);
   }
+  // Add variable data to element so we can use it later fo validation, etc..
+  $element['#variable'] = $variable;
   return $element;
 }
 
@@ -149,6 +151,18 @@ function variable_form_element_options($variable, $options = array()) {
     $element['#type'] = count($variable['options']) > 4 || array_filter(array_map('is_array', $variable['options'])) ? 'select' : 'radios';
   }
   return $element;
+}
+
+/**
+ * Implement validate callback
+ */
+function variable_form_element_validate($element, &$form_state, $form) {
+  $variable = $element['#variable'];
+  variable_include($variable);
+  $variable['value'] = isset($element['#value']) ? $element['#value'] : NULL;
+  if ($error = call_user_func($variable['validate callback'], $variable)) {
+    form_error($element, $error);
+  }
 }
 
 /**

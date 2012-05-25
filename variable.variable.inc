@@ -92,6 +92,7 @@ function variable_variable_type_info() {
     'title' => t('Number'),
     'element' => array('#type' => 'textfield', '#size' => 15, '#maxlength' => 10),
     'token' => TRUE,
+    'validate callback' => 'variable_validate_number',
   );
   // Select multiple options from multiple choices
   $type['options'] = array(
@@ -353,4 +354,13 @@ function variable_format_multiple($variable, $options = array()) {
     );
   }
   return theme('table', array('rows' => $rows));
+}
+
+/**
+ * Validate numeric variable.
+ */
+function variable_validate_number($variable) {
+  if (!is_numeric($variable['value'])) {
+    return t('The value is not a number.');
+  }
 }
