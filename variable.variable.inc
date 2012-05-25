@@ -276,7 +276,7 @@ function variable_format_empty($variable) {
 /**
  * Format variable as string. Either check plain for filter_xss.
  */
-function variable_format_string($variable, $options = array()) {
+function variable_format_string($variable, $options = array()) {dpm($variable);
   if (empty($variable['value'])) {
     return '';
   }
@@ -284,7 +284,7 @@ function variable_format_string($variable, $options = array()) {
     return filter_xss($variable['value'], $variable['allowed tags']);
   }
   else {
-    check_plain($variable['value']);
+    return check_plain($variable['value']);
   }
 }
 
@@ -299,7 +299,7 @@ function variable_format_text($variable, $options = array()) {
     return filter_xss($variable['value'], $variable['allowed tags']);
   }
   else {
-    filter_xss_admin($variable['value']);
+    return filter_xss_admin($variable['value']);
   }
 }
 
