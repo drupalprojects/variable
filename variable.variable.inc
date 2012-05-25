@@ -120,7 +120,11 @@ function variable_variable_type_info() {
     'title' => t('String'),
     'element' => array('#type' => 'textfield'),
     'localize' => TRUE,
+    'format callback' => 'variable_format_string',
     'token' => TRUE,
+    // This type may have an 'allowed tags' attribute.
+    // If empty it will be formatted as plain text
+    'allowed tags' => array(),
   );
   $type['text'] = array(
     'title' => t('Text'),
@@ -128,6 +132,9 @@ function variable_variable_type_info() {
     'localize' => TRUE,
     'format callback' => 'variable_format_text',
     'token' => TRUE,
+    // This type may have an 'allowed tags' attribute.
+    // If empty it will be formatted with filter_xss_admin.
+    'allowed tags' => array(),
   );
   // Default type for variables with no other type
   $type['unknown'] = array(
@@ -267,10 +274,33 @@ function variable_format_empty($variable) {
 }
 
 /**
+ * Format variable as string. Either check plain for filter_xss.
+ */
+function variable_format_string($variable, $options = array()) {
+  if (empty($variable['value'])) {
+    return '';
+  }
+  elseif (!empty($variable['allowed tags'])) {
+    return filter_xss($variable['value'], $variable['allowed tags']);
+  }
+  else {
+    check_plain($variable['value']);
+  }
+}
+
+/**
  * Format text variable
  */
 function variable_format_text($variable, $options = array()) {
-  return isset($variable['value']) ? filter_xss_admin($variable['value']) : variable_format_empty($variable);
+  if (empty($variable['value'])) {
+    return '';
+  }
+  elseif (!empty($variable['allowed tags'])) {
+    return filter_xss($variable['value'], $variable['allowed tags']);
+  }
+  else {
+    filter_xss_admin($variable['value']);
+  }
 }
 
 /**
