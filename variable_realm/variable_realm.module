@@ -53,7 +53,7 @@ function variable_realm_init() {
  */
 function variable_realm_initialize($realm_name, $realm_key = NULL) {
   $realm_controller = variable_realm_controller($realm_name);
-  if (!$realm_controller->isEnabled()) {
+  if ($realm_controller && !$realm_controller->isEnabled()) {
     $new_key = $realm_controller->enable($realm_key);
     module_invoke_all('variable_realm_enable', $realm_name, $new_key);
     _variable_realm_hook('variableRealmEnable', $realm_name, $new_key);
@@ -146,7 +146,9 @@ function variable_realm_variable_realm_info() {
  * Get keys for realm.
  */
 function variable_realm_keys($realm_name) {
-  return variable_realm_controller($realm_name)->getAllKeys();
+  if ($controller = variable_realm_controller($realm_name)) {
+    return $controller->getAllKeys();
+  }
 }
 
 /**
@@ -163,7 +165,8 @@ function variable_realm_keys($realm_name) {
  * @return VariableRealmControllerInterface
  */
 function variable_realm($realm, $key) {
-  return variable_realm_controller($realm)->getStore($key);
+  $controller = variable_realm_controller($realm);
+  return $controller ? $controller->getStore($key) : NULL;
 }
 
 /**
@@ -172,10 +175,11 @@ function variable_realm($realm, $key) {
 function variable_realm_controller($realm_name = NULL) {
   static $drupal_static_fast;
   if (!isset($drupal_static_fast)) {
-    $drupal_static_fast['realm'] = &drupal_static(__FUNCTION__);
-    $drupal_static_fast['realm']['global'] = _variable_realm_controller('global');
-    $drupal_static_fast['realm']['global']->addStore('default', $GLOBALS['conf']);
-    $drupal_static_fast['realm']['global']->enable('default');
+    $drupal_static_fast['realm'] = &drupal_static(__FUNCTION__, array());
+    if ($global = _variable_realm_controller('global')) {
+      $global->addStore('default', $GLOBALS['conf']);
+      $drupal_static_fast['realm']['global'] = $global;
+    }
   }
   $variable_realm = &$drupal_static_fast['realm'];
 
@@ -186,7 +190,8 @@ function variable_realm_controller($realm_name = NULL) {
     return $variable_realm[$realm_name];
   }
   else {
-    return $variable_realm;
+    // Return only existing realms.
+    return array_filter($variable_realm);
   }
 }
 
@@ -194,7 +199,9 @@ function variable_realm_controller($realm_name = NULL) {
  * Get value from realm
  */
 function variable_realm_get($realm, $key, $name = NULL, $default = NULL) {
-  return variable_realm($realm, $key)->variable_get($name, $default);
+  if ($store = variable_realm($realm, $key)) {
+    return $store->variable_get($name, $default);
+  }
 }
 
 /**
@@ -212,16 +219,17 @@ function variable_realm_get($realm, $key, $name = NULL, $default = NULL) {
  *   Whether to rebuild domains immediately
  */
 function variable_realm_add($realm, $key, $values = array(), $weight = NULL, $rebuild = TRUE) {
-  $variable_realm = variable_realm($realm, $key);
-  foreach ($values as $name => $value) {
-    $variable_realm->variable_add($name, $value);
-  }
-  if (isset($weight)) {
-    variable_realm_weight($realm, $weight);
-  }
-  // Rebuild only if this is the current realm
-  if ($rebuild && variable_realm_status($realm) === $key) {
-    variable_realm_rebuild();
+  if ($variable_realm = variable_realm($realm, $key)) {
+    foreach ($values as $name => $value) {
+      $variable_realm->variable_add($name, $value);
+    }
+    if (isset($weight)) {
+      variable_realm_weight($realm, $weight);
+    }
+    // Rebuild only if this is the current realm
+    if ($rebuild && variable_realm_status($realm) === $key) {
+      variable_realm_rebuild();
+    }
   }
 }
 
@@ -229,9 +237,11 @@ function variable_realm_add($realm, $key, $values = array(), $weight = NULL, $re
  * Set value for realm variable.
  */
 function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
-  variable_realm($realm, $key)->variable_set($name, $value);
-  if ($rebuild) {
-    variable_realm_refresh($realm, $key, $name);
+  if ($store = variable_realm($realm, $key)) {
+    $store->variable_set($name, $value);
+    if ($rebuild) {
+      variable_realm_refresh($realm, $key, $name);
+    }
   }
 }
 
@@ -239,9 +249,11 @@ function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
  * Delete variable from realm
  */
 function variable_realm_del($realm, $key, $name, $rebuild = TRUE) {
-  variable_realm($realm, $key)->variable_del($name);
-  if ($rebuild) {
-    variable_realm_refresh($realm, $key, $name);
+  if ($store = variable_realm($realm, $key)) {
+    $store->variable_del($name);
+    if ($rebuild) {
+      variable_realm_refresh($realm, $key, $name);
+    }
   }
 }
 
@@ -331,11 +343,12 @@ function variable_realm_global_set($name, $value = NULL, $rebuild = TRUE) {
  *   FALSE to disable this realm.
  */
 function variable_realm_status($realm, $key = NULL) {
-  $realm_controller = variable_realm_controller($realm);
-  if (isset($key)) {
-    $realm_controller->setKey($key);
+  if ($realm_controller = variable_realm_controller($realm)) {
+    if (isset($key)) {
+      $realm_controller->setKey($key);
+    }
+    return $realm_controller->getKey();
   }
-  return $realm_controller->getKey();
 }
 
 /**
@@ -378,11 +391,12 @@ function variable_realm_switch($realm, $key, $rebuild = TRUE) {
  *   Current realm weight
  */
 function variable_realm_weight($realm, $weight = NULL) {
-  $realm_controller = variable_realm_controller($realm);
-  if (isset($weight)) {
-    $realm_controller->setWeight($weight);
+  if ($realm_controller = variable_realm_controller($realm)) {
+    if (isset($weight)) {
+      $realm_controller->setWeight($weight);
+    }
+    return $realm_controller->getWeight();
   }
-  return $realm_controller->getWeight();
 }
 
 
@@ -510,11 +524,14 @@ function _variable_realm_hook() {
 
 /**
  * Create realm controller object.
+ *
+ * This may be invoked really early in the bootstrap so it needs to be safe enough
+ * for module updates and check whether the class really exists. It returns FALSE if not.
  */
 function _variable_realm_controller($realm_name) {
   $info = variable_realm_info($realm_name);
-  $class = isset($info['controller class']) && class_exists($info['controller class']) ? $info['controller class'] : 'VariableRealmDefaultController';
-  return new $class($realm_name);
+  $class = !empty($info['controller class']) ? $info['controller class'] : 'VariableRealmDefaultController';
+  return class_exists($class) ? new $class($realm_name) : FALSE;
 }
 
 /**
