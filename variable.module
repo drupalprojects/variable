@@ -36,14 +36,16 @@ function variable_access($variable, $account = NULL) {
     return TRUE;
   }
   elseif ($variable = _variable_variable($variable)) {
+    // Check parent variable if this is a child variable and doesn't have explicit access.
+    if (!isset($variable['access']) && !empty($variable['parent'])) {
+      return variable_access($variable['parent']);
+    }
+    // We need either a variable or group explicit access.
     $group = isset($variable['group']) ? variable_get_group($variable['group']) : array();
-    if (!isset($group['access']) && !isset($variable['access'])) {
-      return FALSE;
-    }
-    elseif (isset($group['access']) && !user_access($group['access'], $account)) {
-      return FALSE;
-    }
-    elseif (isset($variable['access']) && !user_access($variable['access'], $account)) {
+    if (!isset($group['access']) && !isset($variable['access']) ||
+      isset($group['access']) && !user_access($group['access'], $account) ||
+      isset($variable['access']) && !user_access($variable['access'], $account) )
+    {
       return FALSE;
     }
     else {
