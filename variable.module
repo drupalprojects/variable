@@ -332,6 +332,14 @@ function variable_name($variable) {
 }
 
 /**
+ * Get human readable names for variable list.
+ */
+function variable_list_name($list) {
+  $names = array_map('variable_name', $list);
+  return implode(', ', $names);
+}
+
+/**
 * @} End of "defgroup variable_api".
 */
 
@@ -635,6 +643,7 @@ function _variable_unknown($name) {
     'name' => $name,
     'title' => t('Unknown variable @name', array('@name' => $name)),
     'type' => 'unknown',
+    'group' => 'default',
     'module' => 'variable',
     // Space for public service advertisement :-)
     'description' => t('We have no meta information for this variable. Please, ask module developers to declare their variables. See <a href="http://drupal.org/project/variable">Variable module</a>.'),
@@ -673,4 +682,25 @@ function variable_module_implements_alter(&$implementations, $hook) {
     unset($implementations['variable']);
     $implementations['variable'] = $group;
   }
+}
+
+/**
+ * Group variable list by variable info property.
+ *
+ * @param $list
+ *   Array of variable names or full built variables.
+ * @param $field
+ *   Field to group by. If empty, they will be added to the '<none>' array.
+ *
+ * @result
+ *   Array of arrays indexed by that field value.
+ */
+function variable_group_variables($list, $field = 'group') {
+  $groups = array();
+  foreach ($list as $variable) {
+    $build = _variable_variable($variable);
+    $value = isset($build[$field]) ? $build[$field] : '<none>';
+    $groups[$value][$build['name']] = $variable;
+  }
+  return $groups;
 }

@@ -15,20 +15,34 @@ function variable_realm_select_variables_form($form, &$form_state, $realm_name) 
   // we want to preserve.
   $list = array_unique(array_merge($optional, $current));
   $form['realm_name'] = array('#type' => 'value', '#value' => $realm_name);
+  $form['message']['select']['#markup'] = '<h3>' . t('Select variables to be set for this realm.') . '</h3>';
+  if ($current) {
+    $form['message']['current']['#markup']  = '<p>' . t('Currently selected variables are: <em>!variables</em>', array('!variables' => variable_list_name($current))) . '</p>';
+  }
   $form['variables'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Select variables to be set for this realm'),
-    '#theme' => 'variable_table_select',
+    '#type' => 'vertical_tabs',
     '#tree' => TRUE,
   );
-  foreach ($list as $name) {
-    // Variable names may clash with form element names, so we need to replace '[' and ']'
-    $safename = str_replace(array('[', ']'), array('<', '>'), $name);
-    $form['variables'][$safename] = array(
-      '#type' => 'checkbox',
-      '#default_value' => in_array($name, $current),
-      '#variable_name' => $name,
+  $variable_groups = variable_group_variables($list);
+  foreach ($variable_groups as $group => $group_list) {
+    $group_info = variable_get_group($group);
+    $group_current = array_intersect($group_list, $current);
+    $form['variables'][$group] = array(
+      '#type' => 'fieldset',
+      '#title' => $group_info['title'],
+      '#theme' => 'variable_table_select',
+      '#collapsible' => TRUE, '#collapsed' => TRUE,
     );
+    foreach ($group_list as $name) {
+      // Variable names may clash with form element names, so we need to replace '[' and ']'
+      $safename = str_replace(array('[', ']'), array('<', '>'), $name);
+      $form['variables'][$group][$safename] = array(
+        '#type' => 'checkbox',
+        '#default_value' => in_array($name, $group_current),
+        '#variable_name' => $name,
+        '#parents' => array('variables', $name),
+      );
+    }
   }
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
   return $form;
@@ -44,6 +58,7 @@ function variable_realm_select_variables_form_submit($form, &$form_state) {
   $old_variables = $controller->getEnabledVariables();
   // Get main variable names
   $variables = $form_state['values']['variables'];
+  unset($variables['variables__active_tab']);
   $variables = array_keys(array_filter($variables));
   // Translate variable names
   foreach ($variables as $index => $name) {
