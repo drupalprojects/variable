@@ -1,7 +1,0 @@
-name = Variable realm admin
-description = Makes existing configuration pages aware of variable realms
-dependencies[] = variable
-dependencies[] = variable_realm
-dependencies[] = variable_admin
-package = Variable
-core = 7.x
