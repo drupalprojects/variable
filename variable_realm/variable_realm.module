@@ -561,3 +561,31 @@ function _variable_realm_sort_current($a, $b) {
 function _variable_realm_status($realm_controller) {
   return $realm_controller->getKey();
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter()
+ */
+function variable_realm_form_system_theme_settings_alter(&$form, &$form_state, $form_id) {
+  module_load_include('form.inc', 'variable_realm');
+  $theme_variable = $form['var']['#value'];
+  foreach (_variable_realm_variable_settings_form_list() as $realm_name => $variables) {
+    if (in_array($theme_variable, variable_children($variables))) {
+      // Mark theme settings and include other variables in the form.
+      _variable_realm_variable_settings_form_mark($realm_name, $form['theme_settings']);
+      $realm_variables = element_children($form);
+      $realm_variables = array_merge($realm_variables, array('default_logo', 'logo_path', 'default_favicon', 'favicon_path'));
+      _variable_realm_variable_settings_form_alter($form, $realm_name, $realm_variables);
+      // Replace variable (theme) name so we use a temporary storage variable
+      $form['#realm_variables'][$realm_name] = $realm_variables;
+      // This is a single variable so there can be one realm only.
+      $form['#realm_theme'] = $realm_name;
+      break;
+    }
+  }
+  if (!empty($form['#realm_theme'])) {
+    // Replace callback and user our own realm function.
+    $form['#submit'] = str_replace('system_theme_settings_submit', 'variable_realm_variable_theme_form_submit', $form['#submit']);
+    // Add realm switcher/s.
+    _variable_realm_variable_settings_form_switcher($form);
+  }
+}

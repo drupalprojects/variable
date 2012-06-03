@@ -277,22 +277,62 @@ function variable_realm_variable_settings_form_submit($form, &$form_state) {
 }
 
 /**
- * Save multilingual variables and remove them from form.
+ * Process system_theme_settings form submissions.
  *
- * Note the theme variable has already been set into 'variable_realm_theme_settings'
+ * @see system_theme_settings_submit()
  */
 function variable_realm_variable_theme_form_submit($form, &$form_state) {
-  foreach ($form['#realm_theme'] as $realm_name => $variable_name) {
-    $realm_controller = variable_realm_controller($realm_name);
-    $settings = variable_get('variable_realm_theme_settings');
-    $realm_key = $form['#realm_keys'][$realm_name];
-    variable_realm_set($realm_name, $realm_key, $variable_name, $settings);
-    // If current is default language, we allow global (without language) variables to be set too
-    if ($realm_key == $realm_controller->getDefaultKey()) {
-      variable_set($variable_name, $settings);
-    }
-    variable_del('variable_realm_theme_settings');
+  // Regular theme submission without variable set.
+  $values = $form_state['values'];
+
+  // If the user uploaded a new logo or favicon, save it to a permanent location
+  // and use it in place of the default theme-provided file.
+  if ($file = $values['logo_upload']) {
+    unset($values['logo_upload']);
+    $filename = file_unmanaged_copy($file->uri);
+    $values['default_logo'] = 0;
+    $values['logo_path'] = $filename;
+    $values['toggle_logo'] = 1;
   }
+  if ($file = $values['favicon_upload']) {
+    unset($values['favicon_upload']);
+    $filename = file_unmanaged_copy($file->uri);
+    $values['default_favicon'] = 0;
+    $values['favicon_path'] = $filename;
+    $values['toggle_favicon'] = 1;
+  }
+
+  // If the user entered a path relative to the system files directory for
+  // a logo or favicon, store a public:// URI so the theme system can handle it.
+  if (!empty($values['logo_path'])) {
+    $values['logo_path'] = _system_theme_settings_validate_path($values['logo_path']);
+  }
+  if (!empty($values['favicon_path'])) {
+    $values['favicon_path'] = _system_theme_settings_validate_path($values['favicon_path']);
+  }
+
+  if (empty($values['default_favicon']) && !empty($values['favicon_path'])) {
+    $values['favicon_mimetype'] = file_get_mimetype($values['favicon_path']);
+  }
+  $key = $values['var'];
+
+  // Exclude unnecessary elements before saving.
+  unset($values['var'], $values['submit'], $values['reset'], $values['form_id'], $values['op'], $values['form_build_id'], $values['form_token']);
+
+  // Set realm variable.
+  $variable_name = $key;
+  $realm_name = $form['#realm_theme'];
+  $realm_key = $form['#realm_keys'][$realm_name];
+  variable_realm_set($realm_name, $realm_key, $variable_name, $values);
+
+  // If current is default realm key, set global variable too.
+  $realm_controller = variable_realm_controller($realm_name);
+  if ($realm_key == $realm_controller->getDefaultKey()) {
+    variable_set($variable_name, $values);
+  }
+  // Confirmation, clear cache, taken from system_theme_settings_submit()
+  drupal_set_message(t('The configuration options have been saved.'));
+  cache_clear_all();
   // Redirect later depending on query string parameters.
   _variable_realm_form_submit_redirect($form, $form_state);
 }
@@ -327,5 +367,34 @@ function _variable_realm_form_submit_redirect($form, &$form_state) {
     }
     // Parameters to be passed to drupal_goto().
     $form_state['redirect'] = array(current_path(), array('query' => $query));
+  }
+}
+
+/**
+ * Add realm switcher to the form.
+ */
+function _variable_realm_variable_settings_form_switcher(&$form) {
+  // Add switchers for current realms and current key.
+  // Add realm values and subform realm / key selector.
+  foreach (array_keys($form['#realm_variables']) as $realm_name) {
+    $current_key = variable_realm_form_key_current($realm_name);
+    $info = variable_realm_info($realm_name);
+    if (!empty($info['form switcher'])) {
+      $form += variable_realm_form_key_selector($realm_name, $current_key);
+    }
+    $form['#realm_keys'][$realm_name] = $current_key;
+  }
+  // Make sure realm switchers are added for all parent realms of current ones.
+  foreach (variable_realm_list_all() as $realm_name => $realm_controller) {
+    if (($parent_realms = $realm_controller->getParentRealms()) && !empty($form['#realm_variables'][$realm_name]) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm_name])) {
+      // Check we have selectors for the other realms.
+      foreach ($parent_realms as $realm) {
+        $info = variable_realm_info($realm);
+        if (!empty($info['form switcher']) && empty($form[VARIABLE_REALM_FORM_SWITCHER . $realm])) {
+          $current_key = variable_realm_form_key_current($realm);
+          $form += variable_realm_form_key_selector($realm, $current_key);
+        }
+      }
+    }
   }
 }

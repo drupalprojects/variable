@@ -658,7 +658,9 @@ function _variable_unknown($name) {
  * to act on settings forms after other contrib modules have added their variables.
  */
 function variable_form_alter(&$form, &$form_state, $form_id) {
-  if (isset($form['#theme']) && $form['#theme'] == 'system_settings_form' && $form_id != 'variable_edit_form') {
+  if (is_array($form['#submit']) && in_array('system_settings_form_submit', $form['#submit'])) {
+    // Replace submit callback and use our own function.
+    $form['#submit'] = str_replace('system_settings_form_submit', 'variable_settings_form_submit', $form['#submit']);
     foreach (module_implements('variable_settings_form_alter') as $module) {
       $function = $module . '_variable_settings_form_alter';
       $function($form, $form_state, $form_id);
@@ -704,4 +706,57 @@ function variable_group_variables($list, $field = 'group') {
     $groups[$value][$build['name']] = $variable;
   }
   return $groups;
+}
+
+/**
+ * Add default buttons to a form and set its prefix.
+ *
+ * @param $form
+ *   An associative array containing the structure of the form.
+ * @param $options
+ *   Aditional options to pass on, like variable realm.
+ *
+ * @return
+ *   The form structure.
+ *
+ * @see system_settings_form_submit()
+ * @ingroup forms
+ */
+function variable_settings_form($form, $options = array()) {
+  $form['#variable_options'] = $options;
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+
+  if (!empty($_POST) && form_get_errors()) {
+    drupal_set_message(t('The settings have not been saved because of the errors.'), 'error');
+  }
+  $form['#submit'][] = 'variable_settings_form_submit';
+  // By default, render the form using theme_system_settings_form().
+  if (!isset($form['#theme'])) {
+    $form['#theme'] = 'system_settings_form';
+  }
+  return $form;
+}
+
+/**
+ * Execute the system_settings_form.
+ *
+ * If you want node type configure style handling of your checkboxes,
+ * add an array_filter value to your form.
+ */
+function variable_settings_form_submit($form, &$form_state) {
+  // Exclude unnecessary elements.
+  form_state_values_clean($form_state);
+  // This may contain some realm options.
+  $options = isset($form['#variable_options']) ? $form['#variable_options'] : array();
+  // Now run regular settings submission but using variable_set_value()
+  foreach ($form_state['values'] as $key => $value) {
+    if (is_array($value) && isset($form_state['values']['array_filter'])) {
+      $value = array_keys(array_filter($value));
+    }
+    // Using this function will invoke variable_update hook.
+    variable_set_value($key, $value, $options);
+  }
+
+  drupal_set_message(t('The configuration options have been saved.'));
 }
