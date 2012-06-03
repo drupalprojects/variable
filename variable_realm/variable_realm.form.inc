@@ -139,6 +139,8 @@ function variable_realm_edit_variables_form_submit($form, &$form_state) {
       }
     }
   }
+  // Redirect later depending on query string parameters.
+  _variable_realm_form_submit_redirect($form, $form_state);
 }
 
 /**

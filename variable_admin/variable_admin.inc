@@ -186,7 +186,7 @@ function variable_admin_realm_edit($realm_name) {
  */
 function _variable_admin_realm_message() {
   if (module_exists('variable_realm')) {
-    return '<p>' . t('These are global default variables. To edit variables for a specific realm go to <a href="@variable-realm">Variable Realms</a>', array('@variable-realm' => url('config/system/variable/realm'))) .'</p>';
+    return '<p>' . t('These are global default variables. To edit variables for a specific realm go to <a href="@variable-realm">Variable Realms</a>', array('@variable-realm' => url('admin/config/system/variable/realm'))) .'</p>';
   }
   else {
     return '';
