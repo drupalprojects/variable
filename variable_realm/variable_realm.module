@@ -114,7 +114,7 @@ function variable_realm_params($realm_name = NULL) {
 function variable_realm_info($realm_name = NULL) {
   $realm_info = &drupal_static(__FUNCTION__);
   if (!isset($realm_info)) {
-    $realm_info = module_invoke_all('variable_realm_info');
+    $realm_info = variable_invoke_all('variable_realm_info');
     drupal_alter('variable_realm_info', $realm_info);
   }
   if ($realm_name) {

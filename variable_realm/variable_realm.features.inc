@@ -30,7 +30,7 @@ function variable_realm_features_export($data, &$export, $module_name) {
   $list = variable_realm_features_selection($data);
   foreach ($list as $machine_name) {
     // Add module that provides the exported realm
-    list($realm, $key) = explode(':', $machine_name);
+    list($realm, $key) = explode(':', $machine_name, 2); // limit 2 because keys can contain colons
     if ($realm_info = variable_realm_info($realm)) {
       $export['dependencies'][$realm_info['module']] = $realm_info['module'];
     }
@@ -71,7 +71,7 @@ function variable_realm_features_export_render($module_name, $data, $export = NU
   $code = array();
   $code[] = '$realm_variables = array();';
   foreach ($data as $machine_name) {
-    list ($realm, $key) = explode(':', $machine_name);
+    list($realm, $key) = explode(':', $machine_name, 2); // limit 2 because keys can contain colons
     $variable_realm = variable_realm($realm, $key);
     $variables = $variable_realm->variable_list();
     $code[] = "  \$realm_variables['{$realm}']['{$key}'] = " . features_var_export($variables) .";";
@@ -95,7 +95,7 @@ function variable_realm_features_rebuild($module) {
   if ($defaults = variable_realm_features_load($module, 'variable_realm_default_variables', TRUE)) {
     foreach ($defaults as $realm => $realm_data) {
       foreach ($realm_data as $key => $variables) {
-        $variable_realm = variable_realm_controller_build($realm, $key);
+        $variable_realm = variable_realm($realm, $key);
         foreach ($variables as $name => $value) {
           $variable_realm->variable_set($name, $value);
         }
