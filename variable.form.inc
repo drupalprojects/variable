@@ -166,6 +166,54 @@ function variable_form_element_validate($element, &$form_state, $form) {
 }
 
 /**
+ * Add default buttons to a form and set its prefix.
+ *
+ * @param $form
+ *   An associative array containing the structure of the form.
+ *
+ * @return
+ *   The form structure.
+ *
+ * @see system_settings_form_submit()
+ * @ingroup forms
+ */
+function variable_settings_form($form) {
+  $form['actions']['#type'] = 'actions';
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+
+  if (!empty($_POST) && form_get_errors()) {
+    drupal_set_message(t('The settings have not been saved because of the errors.'), 'error');
+  }
+  $form['#submit'][] = 'variable_settings_form_submit';
+  // By default, render the form using theme_system_settings_form().
+  if (!isset($form['#theme'])) {
+    $form['#theme'] = 'system_settings_form';
+  }
+  return $form;
+}
+
+/**
+ * Execute the system_settings_form.
+ *
+ * If you want node type configure style handling of your checkboxes,
+ * add an array_filter value to your form.
+ */
+function variable_settings_form_submit($form, &$form_state) {
+  // Exclude unnecessary elements.
+  form_state_values_clean($form_state);
+
+  foreach ($form_state['values'] as $key => $value) {
+    if (is_array($value) && isset($form_state['values']['array_filter'])) {
+      $value = array_keys(array_filter($value));
+    }
+    // Using this function will invoke variable_update hook.
+    variable_set_value($key, $value);
+  }
+
+  drupal_set_message(t('The configuration options have been saved.'));
+}
+
+/**
  * Form to select variables
  */
 function theme_variable_table_select($variables) {
