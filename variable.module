@@ -419,7 +419,7 @@ function variable_hook_info() {
 function variable_edit_form($form, $form_state, $list, $options = array()) {
   module_load_include('form.inc', 'variable');
   $form += variable_edit_subform($list, $options);
-  return variable_settings_form($form);
+  return variable_settings_form($form, $options);
 }
 
 /**

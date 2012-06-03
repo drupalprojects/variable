@@ -170,6 +170,8 @@ function variable_form_element_validate($element, &$form_state, $form) {
  *
  * @param $form
  *   An associative array containing the structure of the form.
+ * @param $options
+ *   Aditional options to pass on, like variable realm.
  *
  * @return
  *   The form structure.
@@ -177,7 +179,8 @@ function variable_form_element_validate($element, &$form_state, $form) {
  * @see system_settings_form_submit()
  * @ingroup forms
  */
-function variable_settings_form($form) {
+function variable_settings_form($form, $options = array()) {
+  $form['#options'] = $options;
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
@@ -201,13 +204,14 @@ function variable_settings_form($form) {
 function variable_settings_form_submit($form, &$form_state) {
   // Exclude unnecessary elements.
   form_state_values_clean($form_state);
-
+  // This may contain some realm options.
+  $options = $form['#options'];
   foreach ($form_state['values'] as $key => $value) {
     if (is_array($value) && isset($form_state['values']['array_filter'])) {
       $value = array_keys(array_filter($value));
     }
     // Using this function will invoke variable_update hook.
-    variable_set_value($key, $value);
+    variable_set_value($key, $value, $options);
   }
 
   drupal_set_message(t('The configuration options have been saved.'));
