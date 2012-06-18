@@ -1,4 +1,3 @@
 name = Variable realm
-description = API to use variable realms from different modules
-dependencies[] = variable
+description = Variable API - Realms
 core = 6.x

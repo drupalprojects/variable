@@ -1,4 +1,3 @@
 name = Variable admin
-description = Variable Administration UI
-dependencies[] = variable
+description = Variable API - Admin UI
 core = 6.x
