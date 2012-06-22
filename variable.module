@@ -63,6 +63,20 @@ function variable_edit_form(&$form_state, $variable_name) {
 }
 
 /**
+ * Form for module variables
+ */
+function variable_module_form(&$form_state, $module) {
+  return variable_edit_form($form_state, array_keys(variable_list_module($module)));
+}
+
+/**
+ * Form for group variables
+ */
+function variable_group_form(&$form_state, $group) {
+  return variable_edit_form($form_state, array_keys(variable_list_group($group)));
+}
+
+/**
  * Get value for simple scalar variable
  * 
  * @param $options
@@ -308,4 +322,30 @@ function variable_include($name = 'variable') {
   if (!isset($included[$name])) {
     module_load_include('inc', 'variable', $name);
   }
+}
+
+/**
+ * List variables for a group
+ */
+function variable_list_group($group) {
+  $list = array();
+  foreach (variable_info() as $name => $variable) {
+    if ($variable['group'] == $group) {
+      $list[$name] = $variable;
+    }
+  }
+  return $list;
+}
+
+/**
+ * List variables for a module
+ */
+function variable_list_module($module) {
+  $list = array();
+  foreach (variable_info() as $name => $variable) {
+    if ($variable['module'] == $module) {
+      $list[$name] = $variable;
+    }
+  }
+  return $list;
 }

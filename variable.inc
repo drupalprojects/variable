@@ -125,7 +125,7 @@ function variable_variable_type_defaults() {
   );
   // Select single option from multiple choices
   $types['select'] = array(
-    'form_element' => array('#type' => 'radios'),
+    'form_element' => array('#type' => 'select'),
     'form_callback' => 'variable_form_element_options',
   );
   // Select multiple options from multiple choices
