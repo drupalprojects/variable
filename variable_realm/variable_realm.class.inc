@@ -83,6 +83,10 @@ interface VariableRealmControllerInterface {
    */
   public function getWeight();
   /**
+   * Set current realm weight.
+   */
+  public function setWeight($weight);
+  /**
    * Implementation of VariableRealmControllerInterface::getWeight().
    */
   public function getDefaultWeight();
@@ -324,6 +328,12 @@ class VariableRealmDefaultController implements VariableRealmControllerInterface
    */
   public function getWeight() {
     return isset($this->current_weight) ? $this->current_weight : $this->controller_data['weight'];
+  }
+  /**
+   * Implementation of VariableRealmControllerInterface::setWeight().
+   */
+  public function setWeight($weight) {
+    $this->current_weight = $weight;
   }
   /**
    * Implementation of VariableRealmControllerInterface::getWeight().
