@@ -77,7 +77,9 @@ function variable_realm_list() {
 function variable_realm_list_all() {
   $list = array();
   foreach (array_keys(variable_realm_info()) as $name) {
-    $list[$name] = variable_realm_controller($name);
+    if ($controller = variable_realm_controller($name)) {
+      $list[$name] = $controller;
+    }
     uasort($list, '_variable_realm_sort_default');
   }
   return $list;
@@ -471,7 +473,7 @@ function variable_realm_features_api() {
  * Check whether realm is active.
  */
 function _variable_realm_active($realm_controller) {
-  return $realm_controller->isActive();
+  return $realm_controller && $realm_controller->isActive();
 }
 
 /**
