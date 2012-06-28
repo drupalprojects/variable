@@ -658,7 +658,7 @@ function _variable_unknown($name) {
  * to act on settings forms after other contrib modules have added their variables.
  */
 function variable_form_alter(&$form, &$form_state, $form_id) {
-  if (is_array($form['#submit']) && in_array('system_settings_form_submit', $form['#submit'])) {
+  if (isset($form['#submit']) && is_array($form['#submit']) && in_array('system_settings_form_submit', $form['#submit'])) {
     // Replace submit callback and use our own function.
     $form['#submit'] = str_replace('system_settings_form_submit', 'variable_settings_form_submit', $form['#submit']);
     foreach (module_implements('variable_settings_form_alter') as $module) {
