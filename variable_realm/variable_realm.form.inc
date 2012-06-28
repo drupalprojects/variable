@@ -40,7 +40,7 @@ function variable_realm_select_variables_form($form, &$form_state, $realm_name) 
         '#type' => 'checkbox',
         '#default_value' => in_array($name, $group_current),
         '#variable_name' => $name,
-        '#parents' => array('variables', $name),
+        '#parents' => array('variables', $safename),
       );
     }
   }

@@ -174,7 +174,12 @@ function theme_variable_table_select($variables) {
   $fields = array_keys($header);
   $rows = array();
   foreach (element_children($element) as $name) {
-    $variable_name = isset($element[$name]['#variable_name']) ? $element[$name]['#variable_name'] : $name;
+    if (isset($element[$name]['#variable_name'])) {
+      $variable_name = $element[$name]['#variable_name'];
+    }
+    else {
+      $variable_name = str_replace(array('<', '>'), array('[', ']'), $name);
+    }
     $variable = _variable_variable($variable_name);
     $row = array();
     foreach ($fields as $field) {
