@@ -56,14 +56,6 @@ function hook_variable_realm_info() {
 }
 
 /**
- * Alter variable realm information provided by modules.
- *
- * @see hook_variable_realm_info().
- */
-function hook_variable_realm_info_alter(&$realms) {
-}
-
-/**
  * Allow other modules to act when enabling a realm.
  *
  * This hook is invoked right after the realm controller is enabled

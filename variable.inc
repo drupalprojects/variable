@@ -14,7 +14,6 @@ function variable_build_info($type, $options) {
       return variable_build_list_info($options);
     case 'group':
     case 'type':
-    case 'realm':
       $info = variable_invoke_all('variable_' . $type . '_info');
       drupal_alter('variable_' . $type . '_info', $info);
       return $info;
