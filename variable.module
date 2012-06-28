@@ -228,6 +228,7 @@ function variable_get_value($variable, $options = array()) {
     return $variable['value'];
   }
   elseif (!empty($variable['value callback'])) {
+    variable_include($variable);
     return variable_callback($variable['value callback'], $variable, _variable_options($options));
   }
   else {
