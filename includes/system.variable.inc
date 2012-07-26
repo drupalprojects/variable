@@ -202,13 +202,21 @@ function system_variable_info($options) {
     'default' => 0,
     'group' => 'system_performance',
   );
+  // This one belongs to a different module, block, but it won't do any harm having it here.
+  $variables['block_cache'] = array(
+    'type' => 'boolean',
+    'title' => t('Cache blocks'),
+    'default' => FALSE,
+    'description' => t('Block caching is inactive if you have enabled modules defining content access restrictions.', array(), $options),
+    'group' => 'system_performance',
+  );
   $interval = array(0, 60, 180, 300, 600, 900, 1800, 2700, 3600, 10800, 21600, 32400, 43200, 86400);
   $variables['cache_lifetime'] = array(
     'type' => 'time_interval',
     'title' => t('Minimum cache lifetime', array(), $options),
     'default' => 0,
     'interval values' => $interval,
-    'description' => t('Cached pages will not be re-created until at least this much time has elapsed.'),
+    'description' => t('Cached pages will not be re-created until at least this much time has elapsed.', array(), $options),
     'group' => 'system_performance',
   );
   $variables['page_cache_maximum_age'] = array(
@@ -216,9 +224,10 @@ function system_variable_info($options) {
     'title' => t('Expiration of cached pages', array(), $options),
     'default' =>  0,
     'interval values' => $interval,
-    'description' => t('The maximum time an external cache can use an old version of a page.'),
+    'description' => t('The maximum time an external cache can use an old version of a page.', array(), $options),
     'group' => 'system_performance',
   );
+
   $description = t('External resources can be optimized automatically, which can reduce both the size and number of requests made to your website.', array(), $options);
   $variables['page_compression'] = array(
     'type' => 'enable',
