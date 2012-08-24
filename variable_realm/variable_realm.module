@@ -239,10 +239,16 @@ function variable_realm_add($realm, $key, $values = array(), $weight = NULL, $re
  */
 function variable_realm_set($realm, $key, $name, $value, $rebuild = TRUE) {
   if ($store = variable_realm($realm, $key)) {
+    $old_value = variable_realm_get($realm, $key, $name);
     $store->variable_set($name, $value);
     if ($rebuild) {
       variable_realm_refresh($realm, $key, $name);
     }
+    $options = array(
+      'realm' => $store->realm,
+      'key' => $store->key,
+    );
+    module_invoke_all('variable_update', $name, $value, $old_value, $options);
   }
 }
 
