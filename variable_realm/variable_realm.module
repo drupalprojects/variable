@@ -610,7 +610,7 @@ function _variable_realm_invoke_all() {
  * Implements hook_form_FORM_ID_alter()
  */
 function variable_realm_form_system_theme_settings_alter(&$form, &$form_state, $form_id) {
-  module_load_include('form.inc', 'variable_realm');
+  form_load_include($form_state, 'form.inc', 'variable_realm');
   $theme_variable = $form['var']['#value'];
   foreach (_variable_realm_variable_settings_form_list() as $realm_name => $variables) {
     if (in_array($theme_variable, variable_children($variables))) {
