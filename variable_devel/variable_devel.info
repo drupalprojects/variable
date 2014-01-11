@@ -1,7 +1,0 @@
-name = Variable devel
-description = Development information for Variable
-dependencies[] = variable
-dependencies[] = variable_admin
-dependencies[] = devel
-package = Development
-core = 7.x
