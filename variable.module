@@ -682,7 +682,19 @@ function variable_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
-
+/**
+ * Implement validate callback.
+ *
+ * This needs to be in the module as it may be needed by form ajax callbacks.
+ */
+function variable_form_element_validate($element, &$form_state, $form) {
+  $variable = $element['#variable'];
+  variable_include($variable);
+  $variable['value'] = isset($element['#value']) ? $element['#value'] : NULL;
+  if ($error = call_user_func($variable['validate callback'], $variable)) {
+    form_error($element, $error);
+  }
+}
 
 /**
  * Implements hook_module_implements_alter().

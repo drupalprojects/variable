@@ -154,18 +154,6 @@ function variable_form_element_options($variable, $options = array()) {
 }
 
 /**
- * Implement validate callback
- */
-function variable_form_element_validate($element, &$form_state, $form) {
-  $variable = $element['#variable'];
-  variable_include($variable);
-  $variable['value'] = isset($element['#value']) ? $element['#value'] : NULL;
-  if ($error = call_user_func($variable['validate callback'], $variable)) {
-    form_error($element, $error);
-  }
-}
-
-/**
  * Form to select variables
  */
 function theme_variable_table_select($variables) {
