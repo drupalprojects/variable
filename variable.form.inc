@@ -154,6 +154,23 @@ function variable_form_element_options($variable, $options = array()) {
 }
 
 /**
+ * Execute submit callbacks for variables in form.
+ */
+function variable_form_submit_callback($form, &$form_state) {
+  if (isset($form['#variable_edit_form'])) {
+    // This may contain some realm options.
+    $options = isset($form['#variable_options']) ? $form['#variable_options'] : array();
+    foreach ($form['#variable_edit_form'] as $name) {
+      $variable = variable_get_info($name);
+      if ($variable && isset($variable['submit callback'])) {
+        variable_include($variable);
+        $variable['submit callback']($variable, $options, $form, $form_state);
+      }
+    }
+  }
+}
+
+/**
  * Form to select variables
  */
 function theme_variable_table_select($variables) {
