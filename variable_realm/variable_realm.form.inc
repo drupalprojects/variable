@@ -89,6 +89,8 @@ function variable_realm_edit_variables_form($form, &$form_state, $realm_name, $r
 
   if ($variable_list = $controller->getEnabledVariables()) {
     $form = variable_base_form($form, $form_state, $variable_list, $options);
+    // variable_base_form() adds its own submit handler overriding the default.
+    $form['#submit'][] = 'variable_realm_edit_variables_form_submit';
 
     // Group variables by variable group for vertical tabls
     $group_list = array();
