@@ -16,7 +16,7 @@ function variable_token_info() {
     'description' => t("Tokens for variable values."),
   );
   $variable = array();
-  foreach (variable_get_info() as $name => $info) {
+  foreach (variable_info() as $name => $info) {
     if (!empty($info['token'])) {
       $variable[$name] = array(
         'name' => $info['title'],
@@ -29,7 +29,7 @@ function variable_token_info() {
     'tokens' => array(
       'variable' => $variable,
     ),
-  );  
+  );
 }
 
 /**
@@ -40,9 +40,9 @@ function variable_tokens($type, $tokens, array $data = array(), array $options =
 
   if ($type == 'variable') {
     foreach ($tokens as $name => $original) {
-      $variable = variable_get_info($name, $options);
+      $variable = variable_info($name, $options);
       if ($variable && !empty($variable['token'])) {
-        $replacements[$original] = variable_format_value($variable, $options); 
+        $replacements[$original] = variable_format_value($variable, $options);
       }
     }
   }
