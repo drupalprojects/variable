@@ -1,0 +1,4 @@
+mkalkbrenner: fixed fatal error, variable_get_info() is called variable_info() in 6.x
+mkalkbrenner: removed unfinished backport of variable_realm 7.x module
+mkalkbrenner: removed unfinished backport of variable_store 7.x module
+

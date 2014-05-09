@@ -6,7 +6,7 @@
 
 /**
  * Implementation of hook_boot()
- * 
+ *
  * Though we don't do anything here, we ensure the module is loaded at boot stage
  * for other modules (like variable_realm) to be able to use the API
  */
@@ -46,7 +46,7 @@ function variable_access($name, $account = NULL) {
 
 /**
  * Build edit form for one or multiple variables
- * 
+ *
  * @param $form_state
  * @param $variable
  *   Variable name or array of variable names
@@ -78,7 +78,7 @@ function variable_group_form(&$form_state, $group) {
 
 /**
  * Get value for simple scalar variable
- * 
+ *
  * @param $options
  *   Options array, it may have the following elements
  *   - language => Language object
@@ -129,7 +129,7 @@ function variable_global_get($name) {
 
 /**
  * Switch global variable
- * 
+ *
  * @param $name
  *   Optional global variable name. If not set, it will reset all global variables to its original value.
  * @param $value
@@ -154,7 +154,7 @@ function variable_global_reset($name = NULL) {
     foreach ($original as $key => $value) {
       $GLOBALS[$key] = $value;
     }
-  }    
+  }
   elseif (isset($original[$name])) {
     $GLOBALS[$name] = $original[$name];
   }
@@ -162,7 +162,7 @@ function variable_global_reset($name = NULL) {
 
 /**
  * Get variable information
- * 
+ *
  * Variable information is collected from modules and cached by language
  */
 function variable_info($name = NULL, $options = array()) {
@@ -239,7 +239,7 @@ function variable_cache_clear($name = NULL, $langcode = NULL) {
 
 /**
  * Get global language object.
- * 
+ *
  * Initialize the language system if needed as we absolutely need a language here
  */
 function variable_language() {
@@ -247,12 +247,12 @@ function variable_language() {
   if (!isset($language)) {
     drupal_bootstrap(DRUPAL_BOOTSTRAP_LANGUAGE);
   }
-  return $language; 
+  return $language;
 }
 
 /**
  * Central static variable storage, Drupal 7 core backport
- * 
+ *
  * See http://api.drupal.org/api/function/drupal_static/7
  */
 function &variable_static($name, $default_value = NULL, $reset = FALSE) {
@@ -289,9 +289,9 @@ function &variable_static($name, $default_value = NULL, $reset = FALSE) {
 
 /**
  * Reset static variable. Drupal 7 core backport.
- * 
+ *
  * See http://api.drupal.org/api/function/drupal_static_reset/7
- * 
+ *
  * @param $name
  *   Name of the static variable to reset. Omit to reset all variables.
  */
@@ -311,7 +311,7 @@ function variable_status($options = NULL) {
   if ($options) {
     $status = array_merge($status, $options);
   }
-  return $status;  
+  return $status;
 }
 
 /**
