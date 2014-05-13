@@ -17,12 +17,12 @@ function variable_build_info($options) {
       $defaults = array('module' => $module);
       foreach ($result as $name => $variable) {
         $variable_build = variable_build_variable($name, $variable, $options, $defaults);
-        $variables += $variable_build;        
+        $variables += $variable_build;
       }
     }
   }
 
-  // Last chance for modules to alter variable infoa
+  // Last chance for modules to alter variable info
   drupal_alter('variable_info', $variables, $options);
   return $variables;
 }
@@ -39,7 +39,7 @@ function variable_build_groups() {
 
 /**
  * Build single variable
- * 
+ *
  * Some variables may spawn into multiple ones
  */
 function variable_build_variable($name, $variable, $options, $defaults = array()) {
@@ -112,7 +112,7 @@ function variable_variable_type_defaults() {
   $types['url'] = array(
     'form_element' => array('#type' => 'textfield', '#size' => 30, '#maxlength' => 255),
   );
-  // Enable/Disable 
+  // Enable/Disable
   $types['enable'] = array(
     'form_element' => array('#type' => 'radios', '#options' => array(t('Disabled'), t('Enabled'))),
   );

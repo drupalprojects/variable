@@ -172,7 +172,7 @@ function variable_info($name = NULL, $options = array()) {
   if (!isset($info)) {
     $info = &variable_static('variable_info');
   }
-  if (!isset($info[$language->language])) {
+  if (empty($info) || !isset($info[$language->language])) {
     if ($cache = variable_cache_get('variable_info', $language->language)) {
       $info[$language->language] = $cache->data;
     }
