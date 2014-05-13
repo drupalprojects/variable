@@ -17,7 +17,7 @@ function variable_form_element($variable) {
     $element = variable_form_element_multiple($variable);
   }
   else {
-    $element = variable_form_element_default($variable); 
+    $element = variable_form_element_default($variable);
   }
   if (!empty($variable['access'])) {
     $element['#access'] = $variable['access'];
@@ -54,7 +54,7 @@ function variable_form_element_default($variable) {
     '#description' => $variable['description'],
   );
   if (!isset($element['#default_value'])) {
-    $element['#default_value'] = variable_get_value($variable['name']); 
+    $element['#default_value'] = variable_get_value($variable['name']);
   }
   return $element;
 }
