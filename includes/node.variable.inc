@@ -68,7 +68,7 @@ function node_variable_info($options) {
  */
 function node_variable_group_info() {
   $groups['node_post_settings'] = array(
-    'name' => t('Post settings'),
+    'title' => t('Post settings'),
     'access' => 'administer nodes',
     'path' => 'admin/content/node-settings',
   );

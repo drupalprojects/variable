@@ -9,7 +9,6 @@
  * Build form element for a variable
  */
 function variable_form_element($variable) {
-  $name = $variable['name'];
   if (!empty($variable['form_callback'])) {
     $element = call_user_func($variable['form_callback'], $variable);
   }

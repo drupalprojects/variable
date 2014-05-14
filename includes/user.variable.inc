@@ -169,7 +169,7 @@ function user_variable_info($options) {
  */
 function user_variable_group_info() {
   $groups['user_settings'] = array(
-    'name' => t('User settings'),
+    'title' => t('User settings'),
     'access' => 'administer users',
     'path' => 'admin/user/settings',
   );

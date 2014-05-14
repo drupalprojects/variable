@@ -13,7 +13,7 @@ function variable_admin_page_overview() {
     $group_info = variable_group($group);
     $display[$group] = array(
       '#type' => 'fieldset',
-      '#title' => $group_info['name'],
+      '#title' => $group_info['title'],
       '#collapsible' => TRUE, '#collapsed' => TRUE,
       '#children' => variable_admin_list($variables),
       '#description' => l(t('Edit group variables'), 'admin/settings/variable/group/' . $group),
@@ -30,7 +30,7 @@ function variable_admin_page_overview() {
 function variable_admin_page_group($group) {
   $groups = variable_admin_build_groups();
   if (!empty($groups[$group]) && $group_info = variable_group($group)) {
-    drupal_set_title($group_info['name']);
+    drupal_set_title($group_info['title']);
     $variables = array_keys($groups[$group]);
     return drupal_get_form('variable_edit_form', $variables);
   }

@@ -66,13 +66,13 @@ function system_variable_info($options) {
  */
 function system_variable_group_info() {
   $groups['system_site_information'] = array(
-    'name' => t('Site information'),
+    'title' => t('Site information'),
     'access' => 'administer site configuration',
     'path' => 'admin/settings'
   );
   // Group for variable that have no group
   $groups['others'] = array(
-    'name' => t('Others'),
+    'title' => t('Others'),
     'access' => 'administer site configuration',
   );
   return $groups;
