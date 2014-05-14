@@ -12,16 +12,16 @@ function node_variable_info($options) {
   // Post settings
   $defaults = array('module' => 'node', 'group' => 'node_post_settings');
   $variables['default_nodes_main'] = array(
-    'type' => 'select', 
+    'type' => 'select',
     'title' => t('Number of posts on main page'),
-    'default_value' => 10,
+    'default' => 10,
     'options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30)),
     'description' => t('The default maximum number of posts to display per page on overview pages such as the main page.')
   ) + $defaults;
   $variables['teaser_length'] = array(
     'type' => 'select',
     'title' => t('Length of trimmed posts'),
-    'default_value' => 600,
+    'default' => 600,
     'options' => array(
       0 => t('Unlimited'),
       200 => t('200 characters'),
@@ -40,7 +40,7 @@ function node_variable_info($options) {
   $variables['node_preview'] = array(
     'type' => 'options',
     'title' => t('Preview post'),
-    'default_value' => 0,
+    'default' => 0,
     'options' => array(t('Optional'), t('Required')),
     'description' => t('Must users preview posts before submitting?'),
   ) + $defaults;
@@ -51,7 +51,7 @@ function node_variable_info($options) {
     'build_callback' => 'node_variable_content_type_build',
     'type' => 'options',
     'title' => t('Default options'),
-    'default_value' => array('status', 'promote'),
+    'default' => array('status', 'promote'),
     'options' => array(
       'status' => t('Published'),
       'promote' => t('Promoted to front page'),
@@ -66,11 +66,11 @@ function node_variable_info($options) {
 /**
  * Node module variable groups
  */
-function node_variable_groups() {
+function node_variable_group_info() {
   $groups['node_post_settings'] = array(
     'name' => t('Post settings'),
     'access' => 'administer nodes',
-    'path' => 'admin/content/node-settings', 
+    'path' => 'admin/content/node-settings',
   );
   return $groups;
 }

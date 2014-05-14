@@ -104,8 +104,8 @@ function variable_get_default($name, $options = array()) {
     if (isset($variable['default_callback'])) {
       return call_user_func($variable['default_callback'], $variable, $options);
     }
-    elseif (isset($variable['default_value'])) {
-      return $variable['default_value'];
+    elseif (isset($variable['default'])) {
+      return $variable['default'];
     }
   }
   return NULL;
@@ -194,7 +194,7 @@ function variable_info($name = NULL, $options = array()) {
  * Get variable group information
  */
 function variable_group($name = NULL) {
-  $groups = &variable_static('variable_groups');
+  $groups = &variable_static('variable_group_info');
   if (!isset($groups)) {
     variable_include();
     $groups = variable_build_groups();

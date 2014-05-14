@@ -1,4 +1,6 @@
 mkalkbrenner: fixed fatal error, variable_get_info() is called variable_info() in 6.x
 mkalkbrenner: removed unfinished backport of variable_realm 7.x module
 mkalkbrenner: removed unfinished backport of variable_store 7.x module
+mkalkbrenner: renamed hook_variable_groups to hook_variable_group_info (like 7.x)
+mkalkbrenner: renamed hook_variable_groups_alter to hook_variable_group_info_alter (like 7.x)
 

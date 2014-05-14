@@ -32,8 +32,8 @@ function variable_build_info($options) {
  */
 function variable_build_groups() {
   variable_module_include();
-  $groups = module_invoke_all('variable_groups');
-  drupal_alter('variable_groups', $groups);
+  $groups = module_invoke_all('variable_group_info');
+  drupal_alter('variable_group_info', $groups);
   return $groups;
 }
 
@@ -145,13 +145,13 @@ function variable_mail_build($variable, $options) {
     'parent' => $variable['name'],
     'type' => 'string',
     'title' => t('Subject'),
-    'default_value' => $variable['default_value']['subject'],
+    'default' => $variable['default']['subject'],
   );
   $build[$variable['name'] . '_body'] = array(
     'parent' => $variable['name'],
     'type' => 'text',
     'title' => t('Body'),
-    'default_value' => $variable['default_value']['body'],
+    'default' => $variable['default']['body'],
   );
   return $build;
 }

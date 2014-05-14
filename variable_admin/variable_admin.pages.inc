@@ -46,10 +46,10 @@ function variable_admin_build_groups() {
   $groups = array();
   foreach (variable_info() as $name => $variable) {
     if (empty($variable['parent'])) {
-      $groups[$variable['group']][$name] = $variable; 
+      $groups[$variable['group']][$name] = $variable;
     }
   }
-  return $groups;  
+  return $groups;
 }
 
 /**
@@ -59,7 +59,7 @@ function variable_admin_page_modules() {
   $groups = $display = array();
   foreach (variable_info() as $name => $variable) {
     if (empty($variable['parent'])) {
-      $groups[$variable['module']][$name] = $variable; 
+      $groups[$variable['module']][$name] = $variable;
     }
   }
   $modules = module_rebuild_cache();
@@ -82,7 +82,7 @@ function variable_admin_page_modules() {
 function variable_admin_reset_form() {
   $form['controls'] = array('#type' => 'fieldset');
   $form['controls']['rebuild'] = array('#type' => 'submit', '#value' => t('Rebuild information'));
-  return $form;  
+  return $form;
 }
 
 function variable_admin_reset_form_submit($form, &$form_state) {
@@ -143,5 +143,5 @@ function variable_admin_list($list) {
       $variable['description'],
     );
   }
-  return theme('table', $header, $rows);  
+  return theme('table', $header, $rows);
 }
