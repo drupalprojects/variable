@@ -186,7 +186,7 @@ function hook_variable_group_info() {
     'title' => t('Site information'),
     'description' => t('Site information and maintenance mode'),
     'access' => 'administer site configuration',
-    'path' => array('admin/config/system/site-information', 'admin/config/development/maintenance'),
+    'path' => array('admin/settings/site-information', 'admin/settings/site-maintenance'),
   );
   $groups['system_feed_settings'] = array(
     'title' => t('Feed settings'),
