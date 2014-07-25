@@ -66,14 +66,20 @@ function variable_edit_form(&$form_state, $variable_name) {
  * Form for module variables
  */
 function variable_module_form(&$form_state, $module) {
-  return variable_edit_form($form_state, array_keys(variable_list_module($module)));
+  $form = variable_edit_form($form_state, array_keys(variable_list_module($module)));
+  // Pass on the values on the form for further reference.
+  $form['#variable_module_form'] = $module;
+  return $form;
 }
 
 /**
  * Form for group variables
  */
 function variable_group_form(&$form_state, $group) {
-  return variable_edit_form($form_state, array_keys(variable_list_group($group)));
+  $form = variable_edit_form($form_state, array_keys(variable_list_group($group)));
+  // Pass on the values on the form for further reference.
+  $form['#variable_group_form'] = $group;
+  return $form;
 }
 
 /**

@@ -4,3 +4,5 @@ mkalkbrenner: removed unfinished backport of variable_store 7.x module
 mkalkbrenner: renamed hook_variable_groups to hook_variable_group_info (like 7.x)
 mkalkbrenner: renamed hook_variable_groups_alter to hook_variable_group_info_alter (like 7.x)
 mkalkbrenner: renamed $group_info['name'] to $group_info['title'] (like 7.x)
+mkalkbrenner: include #variable_module_form and #variable_group_form information form arrays (like 7.x)
+
